@@ -1,0 +1,67 @@
+= Whide - While IDE
+Alaric Whitehead <aw548@sussex.ac.uk>, Supervisor: Dr Bernhard Reus <bernhard@sussex.ac.uk>
+1.0, 14 November, 2020
+:doctype: article
+:icons: font
+
+One Paragraph of project description goes here
+
+[#sect:getting-started]
+== Getting Started
+
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+
+[#subsect:prerequisites]
+=== Prerequisites
+
+What things you need to install the software and how to install them
+
+```
+Give examples
+```
+
+[#subsect:installing]
+=== Installing
+
+A step by step series of examples that tell you how to get a development env running
+
+Say what the step will be
+
+```
+Give the example
+```
+
+And repeat
+
+```
+until finished
+```
+
+End with an example of getting some data out of the system or using it for a little demo
+
+[#subsect:testing]
+== Running the tests
+
+Explain how to run the automated tests for this system
+
+[#subsect:deployment]
+== Deployment
+
+Add additional notes about how to deploy this on a live system
+
+[#subsect:buildTools]
+== Built With
+
+* http://www.example.com[Item 1] - Lorem Ipsum
+
+[#subsect:license]
+== License
+
+This project is licensed under the MIT License - see the LICENSE.md[LICENSE.md] file for details
+
+[#subsect:acknowledgments]
+== Acknowledgments
+
+* Hat tip to anyone whose code was used
+* Inspiration
+* etc
