@@ -8,9 +8,9 @@
 
 		<div class="left">
 			<div class="file-select">
-				<div class="filler">
+				<Container class="filler">
 					Select file
-				</div>
+				</Container>
 			</div>
 		</div>
 
@@ -19,15 +19,13 @@
 		</div>
 
 		<div class="right">
-			<div class="filler">
+			<Container class="filler">
 				Other content
-			</div>
+			</Container>
 		</div>
 
 		<div class="footer">
-			<div class="filler">
-				Footer content
-			</div>
+			<Container :collapsible="false" class="filler">Footer content</Container>
 		</div>
 	</div>
 </template>
@@ -87,12 +85,13 @@ Fillers
 </style>
 
 <script>
-// @ is an alias to /src
-import CodeEditor from "@/components/CodeEditor";
+import CodeEditor from "@/components/CodeEditor.vue";
+import Container from "@/components/Container";
 
 export default {
 	name: 'Editor',
 	components: {
+		Container,
 		CodeEditor,
 	}
 }
