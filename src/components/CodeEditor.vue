@@ -4,7 +4,7 @@
 </template>
 
 
-<script>
+<script lang="ts">
 //The code editor
 import CodeMirror from "codemirror";
 //Directly import the CSS for the language syntax
@@ -19,15 +19,15 @@ export default {
 		//Create the code editor in the div, using the provided options
 		let codeHolder = this.$refs.codeHolder;
 		//let codeHolder = this.$refs.textarea;
-		this._editor = CodeMirror(codeHolder, {
+		this.editor = CodeMirror(codeHolder, {
 		//this._editor = CodeMirror.fromTextArea(codeHolder, {
 			lineNumbers: true,
 			tabSize: 4,
 			value: this.code,
 		});
 		//Pass the change event (when the content changes at all) up to the next level
-		this._editor.on("change", () => {
-			this.$emit("change", this._editor?.getValue());
+		this.editor.on("change", () => {
+			this.$emit("change", this.editor.getValue());
 		});
 	},
 	data() {
@@ -43,11 +43,11 @@ export default {
 		 * Update the editor content when the <code>value</code> parameter updates
 		 */
 		onValueChange() {
-			if (!this._editor) return;
-			let cursor = this._editor.getCursor();
+			if (!this.editor) return;
+			let cursor = this.editor.getCursor();
 			this.code = this.$props.value;
-			this._editor.setValue(this.code);
-			this._editor.setCursor(cursor);
+			this.editor.setValue(this.code);
+			this.editor.setCursor(cursor);
 		}
 	}
 }
