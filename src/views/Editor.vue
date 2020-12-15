@@ -1,5 +1,5 @@
 <template>
-	<div class="home">
+	<div class="editor">
 		<div class="header">
 			<div class="filler">
 				Header content
@@ -91,7 +91,7 @@ Fillers
 import CodeEditor from "@/components/CodeEditor";
 
 export default {
-	name: 'Home',
+	name: 'Editor',
 	components: {
 		CodeEditor,
 	}

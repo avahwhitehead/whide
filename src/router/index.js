@@ -1,24 +1,23 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
+import Editor from '../views/Editor.vue'
 
 Vue.use(VueRouter)
 
-const routes = [
-	{
-		path: '/',
-		name: 'Home',
-		component: Home
+const r = {
+	'/': {
+		name: 'Editor',
+		component: Editor,
 	},
-	{
-		path: '/about',
-		name: 'About',
-		// route level code-splitting
-		// this generates a separate chunk (about.[hash].js) for this route
-		// which is lazy-loaded when the route is visited.
-		component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
-	}
-]
+}
+
+//Convert the map to an array, with the key as the `path` value
+const routes = Object.entries(r).map(
+	([k, v]) => ({
+		...v,
+		path: k,
+	})
+);
 
 const router = new VueRouter({
 	mode: 'history',
