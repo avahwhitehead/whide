@@ -4,7 +4,7 @@
 </template>
 
 
-<script lang="ts">
+<script>
 //The code editor
 import CodeMirror from "codemirror";
 //Directly import the CSS for the language syntax
@@ -39,13 +39,16 @@ export default {
 		}
 	},
 	methods: {
-		/**
-		 * Update the editor content when the <code>value</code> parameter updates
-		 */
-		onValueChange() {
+
+	},
+	/**
+	 * Update the editor content when the <code>value</code> parameter updates
+	 */
+	watch: {
+		value: function (val) {
 			if (!this.editor) return;
 			let cursor = this.editor.getCursor();
-			this.code = this.$props.value;
+			this.code = val;
 			this.editor.setValue(this.code);
 			this.editor.setCursor(cursor);
 		}
