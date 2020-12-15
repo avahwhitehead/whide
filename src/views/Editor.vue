@@ -30,6 +30,21 @@
 	</div>
 </template>
 
+
+<script>
+import CodeEditor from "@/components/CodeEditor.vue";
+import Container from "@/components/Container";
+
+export default {
+	name: 'Editor',
+	components: {
+		Container,
+		CodeEditor,
+	}
+}
+</script>
+
+
 <style>
 .home {
 
@@ -83,16 +98,3 @@ Fillers
 	height: 3em;
 }
 </style>
-
-<script>
-import CodeEditor from "@/components/CodeEditor.vue";
-import Container from "@/components/Container";
-
-export default {
-	name: 'Editor',
-	components: {
-		Container,
-		CodeEditor,
-	}
-}
-</script>
