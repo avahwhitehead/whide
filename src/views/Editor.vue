@@ -15,7 +15,7 @@
 		</div>
 
 		<div class="code-editor">
-			<CodeEditor />
+			<CodeEditorContainer />
 		</div>
 
 		<div class="right">
@@ -32,14 +32,14 @@
 
 
 <script>
-import CodeEditor from "@/components/CodeEditor.vue";
+import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
 import Container from "@/components/Container";
 
 export default {
 	name: 'Editor',
 	components: {
 		Container,
-		CodeEditor,
+		CodeEditorContainer,
 	}
 }
 </script>
