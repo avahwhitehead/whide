@@ -37,4 +37,9 @@ export default {
 .content.collapsed {
 	display: none;
 }
+
+.container {
+	overflow: auto;
+	padding: 5px;
+}
 </style>

@@ -7,11 +7,9 @@
 		</div>
 
 		<div class="left">
-			<div class="file-select">
-				<Container class="filler">
-					Select file
-				</Container>
-			</div>
+			<Container class="filler">
+				<FilePicker />
+			</Container>
 		</div>
 
 		<div class="code-editor">
@@ -34,10 +32,12 @@
 <script>
 import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
 import Container from "@/components/Container";
+import FilePicker from "@/components/FilePicker";
 
 export default {
 	name: 'Editor',
 	components: {
+		FilePicker,
 		Container,
 		CodeEditorContainer,
 	}
@@ -46,22 +46,9 @@ export default {
 
 
 <style>
-.home {
-
-}
-
 .header, .footer {
 	width: 100%;
 }
-
-.header {
-
-}
-
-.footer {
-
-}
-
 
 .left, .right {
 	width: 15%
@@ -89,7 +76,6 @@ Fillers
 
 .filler {
 	background: #999;
-	width: 100%;
 	height: 20em;
 }
 
