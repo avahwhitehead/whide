@@ -5,6 +5,7 @@
 				Header content
 				<br/>
 				<button @click="save" :disabled="!focused_file">Save File</button>
+				<button @click="download" :disabled="!focused_file">Download File</button>
 			</div>
 		</div>
 
@@ -43,6 +44,7 @@ import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
 import Container from "@/components/Container";
 import FilePicker from "@/components/FilePicker";
 import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
+import fileDownloader from "js-file-download";
 
 const browserFileStore = new BrowserFileStore();
 
@@ -102,6 +104,13 @@ export default {
 				browserFileStore.deleteFile(file).then(() => console.log("Deleted"));
 			} else {
 				console.log(`Could not find a file with the name '${this.filename}'`);
+			}
+		},
+		download() {
+			if (this.focused_file) {
+				fileDownloader(this.focused_file.content, this.focused_file.name);
+			} else {
+				console.log(`No file open to download`);
 			}
 		},
 		/**
