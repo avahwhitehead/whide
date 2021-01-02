@@ -65,12 +65,13 @@ export class BrowserFileStore implements FileStoreInterface {
 
 		//Remove the file from its parent, if possible
 		if (file.parent) {
-			let index = file.parent.children.indexOf(file);
-			file.parent.children.splice(index, 1);
-
-			//Save the new tree
-			promises.push(this._saveDirectoryTree());
+			file.parent.removeChild(file);
+		} else {
+			let index = this.fileTree.indexOf(file);
+			this.fileTree.splice(index, 1);
 		}
+		//Save the new tree
+		promises.push(this._saveDirectoryTree());
 
 		//Remove the file content/metadata
 		let store : IdbKvStore = this._getStore();
