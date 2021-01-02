@@ -31,6 +31,16 @@ export default {
 			selectedTab: 0,
 		}
 	},
+	watch: {
+		/**
+		 * Emit a change event if selected tab is different after the tab list is updated
+		 */
+		names: function (newTabs, oldTabs) {
+			if (newTabs[this.selectedTab] !== oldTabs[this.selectedTab]) {
+				this.setActiveTab(this.selectedTab, true);
+			}
+		}
+	},
 	methods: {
 		/**
 		 * Handle a tab being selected
@@ -65,8 +75,6 @@ export default {
 			//Limit indexes to between the first and last tabs
 			index = Math.max(index, 0);
 			index = Math.min(index, this.names.length);
-			//Set `null` if there are no tabs
-			if (this.names.length === 0) index = null;
 
 			//Only if the index has changed
 			if (index !== this.selectedTab || force) {

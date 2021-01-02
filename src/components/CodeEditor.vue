@@ -49,7 +49,7 @@ export default {
 			if (!this.editor) return;
 			let cursor = this.editor.getCursor();
 			this.code = val;
-			this.editor.setValue(this.code);
+			this.editor.setValue(this.code || "");
 			this.editor.setCursor(cursor);
 		}
 	}
