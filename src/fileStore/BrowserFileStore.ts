@@ -74,8 +74,8 @@ export class BrowserFileStore implements FileStoreInterface {
 
 		//Remove the file content/metadata
 		let store : IdbKvStore = this._getStore();
-		promises.push(store.remove(`content:${file.id}`, file.toStoredContent()));
-		promises.push(store.remove(`meta:${file.id}`, file.toStoredMetadata()));
+		promises.push(store.remove(`content:${file.id}`));
+		promises.push(store.remove(`meta:${file.id}`));
 
 		//Don't return until all the promises are complete
 		await Promise.all(promises);
@@ -90,10 +90,10 @@ export class BrowserFileStore implements FileStoreInterface {
 		let transaction = this._getStore().transaction('readwrite');
 
 		//Store the file content
-		transaction.set(`content:${file.id}`, file.toStoredContent());
+		transaction.set(`content:${file.id}`, file.content);
 
 		//Store the metadata
-		transaction.set(`meta:${file.id}`, file.toStoredMetadata());
+		transaction.set(`meta:${file.id}`, file.metadata);
 
 		//Wait to complete
 		await transaction.done;
@@ -138,11 +138,21 @@ export class BrowserFileStore implements FileStoreInterface {
 		//Get the store
 		let store : IdbKvStore = this._getStore();
 		//Convert the tree into a storable format
-		let storableTree = this.fileTree.map(v => v.toStored());
+		let storableTree = this.fileTree.map(v => this._toStored(v));
 		store.set('dirtree', storableTree)
 	}
 
-
+	/**
+	 * Convert a FileData object to StoredFile
+	 * @param file	The file to convert
+	 */
+	private _toStored(file : FileData) : StoredFile {
+		return {
+			id: file.id,
+			name: file.name,
+			children: (file.children.length) ? file.children.map(child => this._toStored(child)) : undefined,
+		};
+	}
 
 	/**
 	 * Get the database store object

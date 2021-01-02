@@ -37,37 +37,6 @@ export class FileData {
 		);
 	}
 
-	/**
-	 * TODO: Move this to BrowserFileStore
-	 * Convert to the StoredFile format
-	 * @return
-	 */
-	toStored(): StoredFile {
-		return {
-			id: this.id,
-			name: this.name,
-			children: (this.children.length) ? this.children.map(child => child.toStored()) : undefined,
-		};
-	}
-
-	/**
-	 * TODO: Move this to BrowserFileStore
-	 * @return {{}}
-	 */
-	toStoredMetadata() {
-		return this._metadata;
-	}
-
-	/**
-	 * TODO: Move this to BrowserFileStore
-	 * @return {any}
-	 */
-	toStoredContent() {
-		return this._content;
-	}
-
-
-
 	get name() {
 		return this._name;
 	}

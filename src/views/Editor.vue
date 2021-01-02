@@ -97,8 +97,27 @@ export default {
 			}
 		},
 		del() {
-
+			let file = this._find_by_name(this.files, this.filename);
+			if (file) {
+				browserFileStore.deleteFile(file).then(() => console.log("Deleted"));
+			} else {
+				console.log(`Could not find a file with the name '${this.filename}'`);
+			}
 		},
+		/**
+		 * Recursively find a file using its name
+		 * @param files		Array of files
+		 * @param fileName	The file name
+		 * @return {null|FileData}	The found file or null
+		 */
+		_find_by_name(files, fileName) {
+			for (let file of files) {
+				if (file.name === fileName) return file;
+				let r = this._find_by_name(file.children, fileName);
+				if (r) return r;
+			}
+			return null;
+		}
 	},
 }
 </script>
