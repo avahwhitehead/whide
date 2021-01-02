@@ -15,12 +15,15 @@
   "dependencies": {
     "codemirror": "^5.59.0",
     "core-js": "^3.6.5",
+    "crypto-js": "^4.0.0",
+    "idb-kv-store": "^4.5.0",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0"
   },
   "devDependencies": {
     "@types/node": "^14.14.19",
     "@typescript-eslint/eslint-plugin": "^4.11.0",
+    "@types/crypto-js": "^4.0.1",
     "@typescript-eslint/parser": "^4.11.0",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-eslint": "~4.5.0",

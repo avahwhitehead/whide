@@ -1,7 +1,7 @@
 <template>
 	<div class="editorHolder">
-		<TabbedPanel :names="files.names" @change="onTabChange" @close="onTabClose">
-			<CodeEditor v-bind:value="code" @change="onCodeChange" v-if="files.contents"/>
+		<TabbedPanel :names="files.map(f => f.name)" @change="onTabChange" @close="onTabClose">
+			<CodeEditor v-bind:value="code" @change="onCodeChange" v-if="files.map(f => f.content)"/>
 		</TabbedPanel>
 	</div>
 </template>
@@ -17,19 +17,23 @@ export default {
 		CodeEditor,
 		TabbedPanel,
 	},
+	props: {
+		openFiles: Array
+	},
 	data() {
 		return {
-			files: {
-				names: ["File 1", "File 2", "File 3"],
-				contents: ["File 1 Body", "File 2 Body", "File 3 Body"],
-			},
 			selectedFile: 0,
 			code: ""
 		}
 	},
 	mounted() {
 		//Select the first element by default
-		this.onTabChange(this.files.contents.length ? 0: null);
+		this.onTabChange(this.files.length ? 0 : null);
+	},
+	computed: {
+		files() {
+			return this.$props.openFiles || [];
+		}
 	},
 	methods: {
 		/**
@@ -37,16 +41,24 @@ export default {
 		 * @param index		The new index of the active tab
 		 */
 		onTabChange(index) {
+			index = Math.max(index, 0);
+			index = Math.min(index, this.files.length);
+
 			this.selectedFile = index;
-			this.code = this.files.contents[this.selectedFile] || "";
+			if (this.files.length > 0) {
+				this.code = this.files[this.selectedFile].content;
+				this.$emit("file-focus", this.selectedFile);
+			} else {
+				this.code = "";
+				this.$emit("file-focus", null);
+			}
 		},
 		/**
 		 * Handle a tab closing
 		 * @param index		The index of the tab to close
 		 */
 		onTabClose(index) {
-			this.files.names.splice(index, 1);
-			this.files.contents.splice(index, 1);
+			this.files.splice(index, 1);
 		},
 		/**
 		 * Handle the code in the editor changing
@@ -56,8 +68,10 @@ export default {
 			//Maintain the local copy of the code
 			this.code = code;
 			//Update the code in the open file, if available
-			if (this.files.contents) {
-				this.files.contents[this.selectedFile] = code;
+			if (this.files.length > 0) {
+				this.files[this.selectedFile].content = code;
+			} else {
+				//TODO: Handle code change with no open files
 			}
 		},
 	}

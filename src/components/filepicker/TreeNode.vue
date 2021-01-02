@@ -1,27 +1,31 @@
 <template>
 	<div class="treeNode">
-		<p>{{ name }}</p>
+		<p @click="onChange(file)">{{ file.name }}</p>
 		<div class="children">
-			<TreeNode
-					class="child"
-					v-bind:name="child.name" v-bind:children="child.children"
-					v-for="(child,i) in this.children || []" v-bind:key="i">
+			<TreeNode v-bind:file="child"
+					class="child" @change="v => onChange(v)"
+					v-for="(child,i) in this.file.children" v-bind:key="i">
 			</TreeNode>
 		</div>
 	</div>
 </template>
 
 <script>
+import { FileData } from "@/fileStore/FileData.ts";
+
 export default {
 	name: 'TreeNode',
 	props: {
-		name: String,
-		children: Array,
+		file: FileData,
 	},
 	data() {
 		return { }
 	},
-	methods: {}
+	methods: {
+		onChange(v) {
+			this.$emit("change", v);
+		}
+	}
 }
 </script>
 
