@@ -11,12 +11,12 @@
 </template>
 
 <script>
-import { FileData } from "@/fileStore/FileData.ts";
+import { AbstractFileData } from "@/fileStore/AbstractFileData.ts";
 
 export default {
 	name: 'TreeNode',
 	props: {
-		file: FileData,
+		file: AbstractFileData,
 	},
 	data() {
 		return { }

@@ -1,13 +1,10 @@
 import path from "path";
-import { StoredFile } from "@/fileStore/StoredFile";
 
-export class FileData {
+export class AbstractFileData {
 	private _id: string = "";
 	private _name: string = "";
-	private _parent: FileData|undefined = undefined;
-	private _content?: string = undefined;
+	private _parent?: FolderData;
 	private _metadata: Map<string,string>;
-	private readonly _children: FileData[] = [];
 
 
 	/**
@@ -15,14 +12,11 @@ export class FileData {
 	 * @param id		File identifier
 	 * @param name		File name
 	 * @param parent?	Parent file
-	 * @param children	Any children to this file
 	 */
-	constructor(id: string, name: string, parent?: FileData, children: FileData[] = []) {
+	constructor(id: string, name: string, parent?: FolderData) {
 		this._id = id;
 		this._name = name;
 		this._parent = parent;
-		this._children = children;
-		this._content = undefined;
 		this._metadata = new Map<string, string>();
 	}
 
@@ -61,18 +55,6 @@ export class FileData {
 		this._id = value;
 	}
 
-	get content() {
-		return this._content || "";
-	}
-
-	set content(value) {
-		this._content = value;
-	}
-
-	get children() {
-		return this._children;
-	}
-
 	get metadata() : Map<string, string> {
 		return this._metadata;
 	}
@@ -80,12 +62,45 @@ export class FileData {
 	set metadata(value: Map<string, string>) {
 		this._metadata = value;
 	}
+}
 
-	addChild(child : FileData) : void {
+/**
+ * Represent a file
+ */
+export class FileData extends AbstractFileData {
+	private _content?: string = undefined;
+
+	constructor(id: string, name: string, parent?: FolderData, content: string = "") {
+		super(id, name, parent);
+		this._content = content;
+	}
+
+	get content() {
+		return this._content || "";
+	}
+
+	set content(value) {
+		this._content = value;
+	}
+}
+
+export class FolderData extends AbstractFileData {
+	private readonly _children: AbstractFileData[] = [];
+
+	constructor(id: string, name: string, parent?: FolderData, children: AbstractFileData[] = []) {
+		super(id, name, parent);
+		this._children = children;
+	}
+
+	get children() {
+		return this._children;
+	}
+
+	addChild(child : AbstractFileData) : void {
 		this._children.push(child);
 	}
 
-	removeChild(child : FileData) : void {
+	removeChild(child : AbstractFileData) : void {
 		let index = this._children.indexOf(child);
 		if (index >= 0) this._children.splice(index, 1);
 	}

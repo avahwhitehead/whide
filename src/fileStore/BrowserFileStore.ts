@@ -1,6 +1,6 @@
 import IdbKvStore from "idb-kv-store";
 import Crypto from 'crypto-js';
-import { FileData } from "@/fileStore/FileData";
+import { AbstractFileData, FileData, FolderData } from "@/fileStore/AbstractFileData";
 import { FileStoreInterface } from "@/fileStore/FileStoreInterface";
 import { StoredFile } from "@/fileStore/StoredFile";
 
@@ -10,7 +10,7 @@ import { StoredFile } from "@/fileStore/StoredFile";
 export class BrowserFileStore implements FileStoreInterface {
 	private _DB_NAME = "FileStore";
 	private keyStore : IdbKvStore | undefined;
-	private fileTree : FileData[] = [];
+	private fileTree : AbstractFileData[] = [];
 
 	/**
 	 * Generate a unique ID for files
@@ -30,14 +30,14 @@ export class BrowserFileStore implements FileStoreInterface {
 	}
 
 
-	public async createFile(name : string, parent? : FileData): Promise<FileData> {
+	public async createFile(name : string, parent? : FolderData): Promise<FileData> {
 		//File metadata
 		let metadata = new Map();
 		metadata.set('created', new Date());
 		//Get an ID for the file
 		let id = BrowserFileStore._getId(name, metadata.get('created'));
 		//Create the file object
-		let fileData = new FileData(id, name, parent);
+		let fileData: FileData = new FileData(id, name, parent);
 		fileData.metadata = metadata;
 
 		if (parent) {
@@ -55,12 +55,32 @@ export class BrowserFileStore implements FileStoreInterface {
 		return fileData;
 	}
 
-	public async createFolder() : Promise<FileData> {
-		//TODO: Create Folder
-		return new Promise(() => {});
+	public async createFolder(name : string, parent? : FolderData): Promise<FolderData> {
+		//File metadata
+		let metadata = new Map();
+		metadata.set('created', new Date());
+		//Get an ID for the file
+		let id = BrowserFileStore._getId(name, metadata.get('created'));
+		//Create the file object
+		let folderData: FolderData = new FolderData(id, name, parent, []);
+		folderData.metadata = metadata;
+
+		if (parent) {
+			//Add the file to its parent
+			parent.addChild(folderData);
+		} else {
+			(await this.getDirectoryTree()).push(folderData);
+		}
+		//Save the new directory structure
+		await this._saveDirectoryTree();
+		//Save the file contents
+		await this._writeFolder(folderData);
+
+		//Return the file
+		return folderData;
 	}
 
-	public async deleteFile(file : FileData): Promise<void> {
+	public async deleteFile(file : AbstractFileData): Promise<void> {
 		let promises: Promise<any>[] = [];
 
 		//Remove the file from its parent, if possible
@@ -82,7 +102,7 @@ export class BrowserFileStore implements FileStoreInterface {
 		await Promise.all(promises);
 	}
 
-	public async getDirectoryTree(): Promise<FileData[]> {
+	public async getDirectoryTree(): Promise<AbstractFileData[]> {
 		return await this._loadDirectoryTree();
 	}
 
@@ -98,6 +118,11 @@ export class BrowserFileStore implements FileStoreInterface {
 
 		//Wait to complete
 		await transaction.done;
+	}
+
+	private async _writeFolder(folder : FolderData): Promise<void> {
+		//Store the metadata
+		await this._getStore().set(`meta:${folder.id}`, folder.metadata);
 	}
 
 
@@ -118,7 +143,7 @@ export class BrowserFileStore implements FileStoreInterface {
 	/**
 	 * Load the directory tree from persistent storage, updating the local copy
 	 */
-	public async _loadDirectoryTree(): Promise<FileData[]> {
+	public async _loadDirectoryTree(): Promise<AbstractFileData[]> {
 		//Read the stored tree
 		let tree = await this._getStore().get("dirtree") || [];
 
@@ -147,11 +172,17 @@ export class BrowserFileStore implements FileStoreInterface {
 	 * Convert a FileData object to StoredFile
 	 * @param file	The file to convert
 	 */
-	private _toStored(file : FileData) : StoredFile {
+	private _toStored(file : AbstractFileData) : StoredFile {
+		if (file instanceof FolderData) {
+			return {
+				id: file.id,
+				name: file.name,
+				children: (file.children.length) ? file.children.map(child => this._toStored(child)) : undefined,
+			};
+		}
 		return {
 			id: file.id,
 			name: file.name,
-			children: (file.children.length) ? file.children.map(child => this._toStored(child)) : undefined,
 		};
 	}
 
@@ -170,17 +201,20 @@ export class BrowserFileStore implements FileStoreInterface {
 	 * @param file		The stored file
 	 * @param parent	The parent file, should be undefined on the first level
 	 */
-	private async _convert_from_stored(file : StoredFile, parent? : FileData) : Promise<FileData> {
+	private async _convert_from_stored(file : StoredFile, parent? : FolderData) : Promise<AbstractFileData> {
+		let id = file.id || "";
+		let name = file.name || "unnamed";
+
 		//Create a FileData object from the id/name/parent
-		let fileData : FileData = new FileData(file.id || "", file.name || "unnamed", parent);
-
-		//Recursively load child files, if possible
-		for (const v of file.children || []) {
-			let child = this._convert_from_stored(v, fileData);
-			fileData.addChild(await child);
+		if (file.children) {
+			let folderData: FolderData = new FolderData(id, name, parent);
+			//Recursively load child files, if possible
+			for (const v of file.children || []) {
+				let child = this._convert_from_stored(v, folderData);
+				folderData.addChild(await child);
+			}
+			return folderData;
 		}
-
-		//Return the create object
-		return fileData;
+		return new FileData(id, name, parent);
 	}
 }

@@ -4,7 +4,7 @@
 </template>
 
 
-<script>
+<script type="ts">
 //The code editor
 import CodeMirror from "codemirror";
 //Directly import the CSS for the language syntax
@@ -18,9 +18,7 @@ export default {
 	mounted() {
 		//Create the code editor in the div, using the provided options
 		let codeHolder = this.$refs.codeHolder;
-		//let codeHolder = this.$refs.textarea;
 		this.editor = CodeMirror(codeHolder, {
-		//this._editor = CodeMirror.fromTextArea(codeHolder, {
 			lineNumbers: true,
 			tabSize: 4,
 			value: this.code,

@@ -1,4 +1,4 @@
-import { FileData } from "@/fileStore/FileData";
+import { AbstractFileData, FileData, FolderData } from "@/fileStore/AbstractFileData";
 
 /**
  * An interface defining the methods required by a file store object
@@ -10,7 +10,7 @@ export interface FileStoreInterface {
 	 * @param parent	The parent folder. Undefined means no parent.
 	 * @returns	A FileData object representing the created file
 	 */
-	createFile(name: string, parent?: FileData): Promise<FileData>;
+	createFile(name: string, parent?: FolderData): Promise<FileData>;
 
 	/**
 	 * Create a new folder
@@ -18,11 +18,12 @@ export interface FileStoreInterface {
 	 * @param parent	The parent folder. Undefined means no parent.
 	 * @returns	A FileData object representing the created folder
 	 */
-	createFolder(name: string, parent?: FileData): Promise<FileData>;
+	createFolder(name: string, parent?: FolderData): Promise<FolderData>;
 
 	/**
 	 * Read a file's contents from persistent storage into the provided object
 	 * @param file	The file to read
+	 * @returns file
 	 */
 	readFile(file: FileData): Promise<FileData>;
 
@@ -36,11 +37,11 @@ export interface FileStoreInterface {
 	 * Delete a file
 	 * @param file	The file to delete
 	 */
-	deleteFile(file: FileData): Promise<void>;
+	deleteFile(file: AbstractFileData): Promise<void>;
 
 	/**
 	 *
 	 * @param file
 	 */
-	getDirectoryTree(file?: FileData | undefined): Promise<FileData[]>;
+	getDirectoryTree(file?: AbstractFileData | undefined): Promise<AbstractFileData[]>;
 }
