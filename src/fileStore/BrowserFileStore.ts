@@ -44,7 +44,7 @@ export class BrowserFileStore implements FileStoreInterface {
 			//Add the file to its parent
 			parent.addChild(fileData);
 		} else {
-			(await this.getDirectoryTree()).push(fileData);
+			this.fileTree.push(fileData);
 		}
 		//Save the new directory structure
 		await this._saveDirectoryTree();
@@ -69,7 +69,7 @@ export class BrowserFileStore implements FileStoreInterface {
 			//Add the file to its parent
 			parent.addChild(folderData);
 		} else {
-			(await this.getDirectoryTree()).push(folderData);
+			this.fileTree.push(folderData);
 		}
 		//Save the new directory structure
 		await this._saveDirectoryTree();
@@ -177,7 +177,7 @@ export class BrowserFileStore implements FileStoreInterface {
 			return {
 				id: file.id,
 				name: file.name,
-				children: (file.children.length) ? file.children.map(child => this._toStored(child)) : undefined,
+				children:file.children.map(child => this._toStored(child)),
 			};
 		}
 		return {

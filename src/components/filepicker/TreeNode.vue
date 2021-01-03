@@ -1,11 +1,13 @@
 <template>
 	<div class="treeNode">
-		<p @click="onChange(file)">{{ file.name }}</p>
-		<div class="children">
-			<TreeNode v-bind:file="child"
-					class="child" @change="v => onChange(v)"
-					v-for="(child,i) in this.file.children" v-bind:key="i">
-			</TreeNode>
+		<div v-if="file">
+			<p @click="onChange(file)">{{ file.name + (!!this.file.children ? '/' : '') }}</p>
+			<div class="children" v-if="!!this.file.children">
+				<TreeNode v-bind:file="child"
+						class="child" @change="v => onChange(v)"
+						v-for="(child,i) in this.file.children" v-bind:key="i">
+				</TreeNode>
+			</div>
 		</div>
 	</div>
 </template>
