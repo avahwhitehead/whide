@@ -49,6 +49,83 @@ Explain how to run the automated tests for this system
 
 Add additional notes about how to deploy this on a live system
 
+[#subsect:program-information]
+== Program Information
+
+=== File Storage
+
+Files are managed using a File Store.
+At the moment, the only way to store files is in the browser's Indexed DB.
+However, the store is written extensibly so that other stores may be added
+(e.g. the local file system when using electron).
+
+While files are in the editor, they are represented by `+FileData+` objects.
+
+To save unnecessary loading, while maintaining extensibility,
+file loading/saving is handled by the file store;
+`FileData` objects have empty `content`/`metadata` until `fileStore.readFile(fileData)`
+is called to load the data into the object.
+
+==== Browser File Storage
+
+File storage in the browser is done using the Indexed DB.
+
+The file structure is stored as an array in a single key in the database (`dirtree`).
+
+Example `+dirtree+`:
+
+[source,json]
+----
+[
+    {
+        "id": "2c67370499a716e11f0d4307c0880aed44c0f65e",
+        "name": "file1.txt"
+    },
+    {
+        "id":"c37d744560d009ee0104d69ca17f980937146262",
+        "name": "file2.txt"
+    },
+    {
+        "id": "",
+        "name": "folder",
+        "children": [
+            {
+                "id":"c37d744560d009ee0104d69ca17f980937146262",
+                "name": "file2.txt"
+            }
+        ]
+    }
+]
+----
+
+Each file and folder is assigned an ID;
+this is the SHA-1 hash of the time it was created, and it's original name.
+
+    ${createdTimestamp}-${name}
+
+The ID is only used as an internal reference to link files to their content/metadata.
+Metadata is stored under the key `+meta:<<id>>+`, and content is under `+content:<<id>>+`
+
+For the key `meta:2c67370499a716e11f0d4307c0880aed44c0f65e`:
+
+[source,json]
+----
+{
+    "created": "<<timestamp>>",
+    "...": "..."
+}
+----
+
+And under `content:2c67370499a716e11f0d4307c0880aed44c0f65e`:
+
+[source]
+----
+Hello, World!
+This is a file.
+....
+Lorem ipsum dolor sit amet.
+----
+
 [#subsect:buildTools]
 == Built With
 
