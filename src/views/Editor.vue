@@ -1,9 +1,10 @@
 <template>
 	<div class="editor">
 		<div class="header">
+			<div class="headerBar">
+				<MenuElement v-for="(menu, i) in menus" :key="i" :menu="menu"></MenuElement>
+			</div>
 			<div class="filler">
-				Header content
-				<br/>
 				<button @click="save" :disabled="!focused_file">Save File</button>
 				<button @click="download" :disabled="!focused_file">Download File</button>
 			</div>
@@ -43,6 +44,7 @@
 import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
 import Container from "@/components/Container";
 import FilePicker from "@/components/FilePicker";
+import MenuElement from "@/components/menubar/MenuElement";
 import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
 import fileDownloader from "js-file-download";
 
@@ -54,6 +56,7 @@ export default {
 		FilePicker,
 		Container,
 		CodeEditorContainer,
+		MenuElement
 	},
 	data() {
 		return {
@@ -61,13 +64,37 @@ export default {
 			filename: "",
 			focused_file: null,
 			openFiles: [],
+			menus: [
+				{
+					"name": "File",
+					"children": [
+						{ "name": "Open", "command": "run_open" },
+						{
+							"name": "New",
+							"children": [
+								{ "name": "New File", "command": "run_new_file" },
+								{ "name": "New Folder", "command": "run_new_folder" }
+							]
+						},
+						{ "name": "Save", "command": "run_save" },
+						{ "name": "Close", "command": "run_close" }
+					]
+				},
+				{
+					"name": "Run",
+					"children": [
+						{ "name": "Run", "command": "run_code" },
+						{ "name": "Debug", "command": "run_code" },
+					]
+				}
+			],
 		}
 	},
 	mounted() {
 		//Load the directory structure
 		browserFileStore.getDirectoryTree().then(value => {
 			this.files = value;
-		})
+		});
 	},
 	methods: {
 		openFile(file) {
@@ -133,8 +160,17 @@ export default {
 
 
 <style>
+.headerBar {
+	display: block;
+}
+
+.header {
+	text-align: left;
+}
+
 .header, .footer {
 	width: 100%;
+	padding: 2px;
 }
 
 .left, .right {
