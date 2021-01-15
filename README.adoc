@@ -126,6 +126,72 @@ This is a file.
 Lorem ipsum dolor sit amet.
 ----
 
+=== Plugins
+
+The system's plugin architecture is based on a mixture of
+https://www.sublimetext.com/docs/3/packages.html[Sublime Text 3],
+and https://discord.js.org/#/docs/commando/master/class/Command[Discord.js's Command].
+
+The menu items can be extended
+
+//TODO: Where is the user's config directory
+All plugins are stored in the user's config directory.
+//TODO: How to store plugins in the browser?
+Config files are stored in the `+<<config root>>/whide/+` directory, while code is stored in `+<<config root>>/whide/Plugins+`.
+
+To add a new option to the menu bar, create a new file in the config directory ending in `+.whide-menu+` with contents
+similar to this:
+
+.File1
+[source, json]
+----
+[
+    {
+        "name": "File",
+        "children": [
+            { "name": "Open", "command": "run_open.js" },
+            { "name": "New File", "command": "run_new.js" },
+            { "name": "Save", "command": "run_save.js" },
+            { "name": "Close", "command": "run_close.js" }
+        ]
+    },
+    {
+        "name": "Run",
+        "children": [
+            { "name": "Run", "command": "run_code.js" },
+            { "name": "Debug", "command": "debug.js" }
+        ]
+    }
+]
+----
+
+Note that `name` is the name that will be displayed in the menu,
+and `command` is the name of the file (relative to `+<<config>>/plugins/+`)
+
+'''
+
+Commands are added using the following file format
+
+[source]
+----
+function run(args) {
+    //When the function is run
+}
+
+module.exports = {
+    args: [
+        //Argument definitions
+    ],
+    run,
+};
+----
+
+And triggers can be set up in the config files:
+
+* `+*.whide-menu+` - Triggers through the menu bar
+* `+*.whide-keyboard+` - Triggers through keyboard shortcuts
+* `+*.whide-mouse+` - Triggers through the mouse right-click menu
+
 [#subsect:buildTools]
 == Built With
 

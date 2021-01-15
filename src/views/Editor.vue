@@ -47,6 +47,7 @@ import FilePicker from "@/components/FilePicker";
 import MenuElement from "@/components/menubar/MenuElement";
 import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
 import fileDownloader from "js-file-download";
+import { run_load } from "@/api/fileLoader";
 
 const browserFileStore = new BrowserFileStore();
 
@@ -64,31 +65,21 @@ export default {
 			filename: "",
 			focused_file: null,
 			openFiles: [],
-			menus: [
-				{
-					"name": "File",
-					"children": [
-						{ "name": "Open", "command": "run_open" },
-						{
-							"name": "New",
-							"children": [
-								{ "name": "New File", "command": "run_new_file" },
-								{ "name": "New Folder", "command": "run_new_folder" }
-							]
-						},
-						{ "name": "Save", "command": "run_save" },
-						{ "name": "Close", "command": "run_close" }
-					]
-				},
-				{
-					"name": "Run",
-					"children": [
-						{ "name": "Run", "command": "run_code" },
-						{ "name": "Debug", "command": "run_code" },
-					]
-				}
-			],
+			menuManager: null,
 		}
+	},
+	computed: {
+		menus() {
+			if (!this.menuManager) return [];
+			return this.menuManager.menus;
+		}
+	},
+	created() {
+		//Load the plugins
+		//TODO: Also allow external plugins
+		run_load(true, false).then(managers => {
+			this.menuManager = managers.menuManager;
+		});
 	},
 	mounted() {
 		//Load the directory structure
