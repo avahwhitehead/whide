@@ -104,10 +104,43 @@ export class MenuManager {
 	/**
 	 * Recursively remove a menu and its children from the menu
 	 * @param existing_menus	The layer of menus to add to
-	 * @param new_item			The menu item to add
+	 * @param item				The menu item to remove
 	 * @private
 	 */
-	private _unregisterMenu(existing_menus : (Menu|MenuItem)[], new_item : Menu|MenuItem) {
-		//TODO: Unregister menus
+	private _unregisterMenu(existing_menus : (Menu|MenuItem)[], item : Menu|MenuItem) : (Menu|MenuItem)[] {
+		let isMenu = MenuManager._isMenu(item);
+
+		let i : number = 0;
+		while (i < existing_menus.length) {
+			//The current element
+			let existingMenu = existing_menus[i];
+			//Whether the current element hsa been removed from the list
+			let removed : boolean = false;
+
+			//Check for different name or different type
+			if (existingMenu.name === item.name && MenuManager._isMenu(existingMenu) !== isMenu) {
+				if (isMenu) {
+					//Cast to the same type
+					let menu: Menu = <Menu>existingMenu;
+					//Remove all the child elements
+					for (let child of (<Menu>item).children) {
+						menu.children = this._unregisterMenu(menu.children, child);
+					}
+					//Remove this menu if it has no more children
+					if (!menu.children.length) {
+						existing_menus.splice(i, 1);
+						removed = true;
+					}
+				} else {
+					//Remove the item
+					existing_menus.splice(i, 1);
+					removed = true;
+				}
+			}
+
+			//Only increment the pointer if the current element was not removed
+			if (!removed) i++;
+		}
+		return existing_menus;
 	}
 }

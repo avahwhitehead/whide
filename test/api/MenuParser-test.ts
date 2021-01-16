@@ -34,6 +34,6 @@ describe('File Menu', function() {
 describe('Empty Names', function() {
 	it('should produce an open/save/close file menu', function() {
 		//TODO: Test empty names
-		let result = parse(`[{"name": "", children: []]`);
+		//let result = parse(`[{"name": "", "children": []]`);
 	});
 });
