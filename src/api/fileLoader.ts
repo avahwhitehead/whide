@@ -2,38 +2,24 @@ import path from "path";
 import xdgBasedir from "xdg-basedir";
 import fs, { Stats } from "fs";
 import parse_menu_file, { Menu } from "@/api/parsers/MenuParser";
-import { MenuManager } from "@/api/managers/MenuManager";
-
-/**
- * A wrapper interface to simplify mapping strings to objects
- */
-interface CustomDict<T> {
-	[key: string]: T;
-}
-
-/**
- * Hold all the manager objects in one place.
- * Saves having loads of arguments in each function.
- */
-interface Managers {
-	menuManager: MenuManager;
-}
-
+import { PluginInfo } from "@/api/types/PluginInfo";
+import { CustomDict } from "@/types/CustomDict";
+import { PluginManager } from "@/api/managers/PluginManager";
+import { PluginManager as LivePluginManager } from "live-plugin-manager";
 
 //1st party config root
 const SYSTEM_CONFIG_ROOT = path.resolve(".", "config");
-console.log(`System Config: ${SYSTEM_CONFIG_ROOT}`);
 //3rd party config root
 const USER_CONFIG_ROOT = xdgBasedir.config || "./whide";
 
 //Map file extensions to file loaders
 //This requires much less code duplication
-type ConfigFileLoader = (path: string, managers: Managers) => void | Promise<void>;
+type ConfigFileLoader = (path: string, info: PluginInfo) => void | Promise<void>;
 const CONFIG_EXTENSIONS : CustomDict<ConfigFileLoader> = {
-	".whide-menu": async (filePath : string, managers : Managers) => {
+	".whide-menu": async (filePath : string, info : PluginInfo) => {
 		let content = await readFile(filePath);
-		let menus : Menu[] = parse_menu_file(content);
-		for (let menu of menus) managers.menuManager.register(menu);
+		let menus : Menu[] = parse_menu_file(content, info);
+		info.menus.push(...menus);
 	},
 };
 
@@ -52,10 +38,11 @@ async function readFile(filePath: string) : Promise<string> {
 
 /**
  * Load all the packages from a given directory.
- * @param fs_root	The file root
- * @param managers	The manager objects
+ * @param fs_root		The file root
+ * @param pluginManager	The pluginManager object
+ * @param isExternal	Whether the plugin is an external plugin
  */
-async function load_all_packages(fs_root: string, managers : Managers) : Promise<void> {
+async function load_all_packages(fs_root: string, pluginManager : PluginManager, isExternal : boolean) : Promise<void> {
 	return new Promise((resolve, reject) => {
 		//Read all the files in the directory
 		fs.readdir(fs_root, async (err : NodeJS.ErrnoException | null, files : string[]) => {
@@ -68,16 +55,14 @@ async function load_all_packages(fs_root: string, managers : Managers) : Promise
 			//Go through each found file
 			for (let file of files) {
 				let fullPath = path.join(fs_root, file);
-				let fileInfo : Stats = fs.lstatSync(fullPath);
+				let fileInfo: Stats = fs.lstatSync(fullPath);
+
 				//Treat directories as if they are plugin packages
 				if (fileInfo.isDirectory()) {
-					await load_package(fullPath, managers);
-				//Treat files as config files
-				} else {
-					await load_config_file(fullPath, managers);
+					let pluginInfo: PluginInfo = await load_package(fullPath, file, isExternal);
+					pluginManager.register(pluginInfo);
 				}
 			}
-
 			//Success
 			resolve();
 		});
@@ -86,11 +71,19 @@ async function load_all_packages(fs_root: string, managers : Managers) : Promise
 
 /**
  * Load the code and config files for a specific package
- * @param filePath	The file path
- * @param managers	The manager objects
+ * @param filePath		The file path
+ * @param name			The name of the package
+ * @param isExternal	Whether the plugin is an external plugin
  */
-async function load_package(filePath: string, managers: Managers) : Promise<void> {
+async function load_package(filePath: string, name: string, isExternal: boolean) : Promise<PluginInfo> {
 	return new Promise((resolve, reject) => {
+		//Make a PluginInfo object
+		let pluginInfo: PluginInfo = new PluginInfo({
+			name: name,
+			path: filePath,
+			external: !isExternal,
+		});
+
 		//Read the files in the directory
 		fs.readdir(filePath, async (err : NodeJS.ErrnoException | null, files : string[]) => {
 			//Error while reading the files
@@ -104,26 +97,24 @@ async function load_package(filePath: string, managers: Managers) : Promise<void
 				let fullPath = path.join(filePath, file);
 				let fileInfo : Stats = fs.lstatSync(fullPath);
 
-				//TODO: Load the actual code files as well
-
 				//Load config files
 				if (fileInfo.isFile()) {
 					//This ignores files which don't have the config extensions
-					await load_config_file(fullPath, managers);
+					await load_config_file(fullPath, pluginInfo);
 				}
 			}
 			//Success
-			resolve();
+			resolve(pluginInfo);
 		});
 	});
 }
 
 /**
  * Load the contents of the file into the relevant object(s)
- * @param filePath	The file path
- * @param managers	The manager objects
+ * @param filePath		The path to the configuration file
+ * @param pluginInfo	The plugin's object
  */
-async function load_config_file(filePath: string, managers : Managers) : Promise<boolean> {
+async function load_config_file(filePath: string, pluginInfo : PluginInfo) : Promise<boolean> {
 	//Get the file extension
 	let ext = path.extname(filePath).toLowerCase();
 
@@ -131,7 +122,7 @@ async function load_config_file(filePath: string, managers : Managers) : Promise
 	let loader : ConfigFileLoader|undefined = CONFIG_EXTENSIONS[ext] || undefined;
 	if (loader){
 		try {
-			await loader(filePath, managers);
+			await loader(filePath, pluginInfo);
 		} catch (e) {
 			throw new Error("Could not load file:\n" + e.message);
 		}
@@ -147,20 +138,18 @@ async function load_config_file(filePath: string, managers : Managers) : Promise
  * @param watch		Whether to set up file watchers to watch for file changes
  * @param externalModules	Whether to ignore user extensions
  */
-export async function run_load(watch: boolean = true, externalModules : boolean = true) : Promise<Managers> {
+export async function run_load(watch: boolean = true, externalModules : boolean = true) : Promise<PluginManager> {
+	//Make a plugin manager to control which plugins are loaded
+	const pluginManager : PluginManager = new PluginManager();
+
 	//TODO: Unregister all plugins first
 	//TODO: Watch for file changes
 
-	//Hold all the plugin managers
-	const managers : Managers = {
-		menuManager: new MenuManager(),
-	};
-
 	//Load the 1st party plugins
-	await load_all_packages(SYSTEM_CONFIG_ROOT, managers);
+	await load_all_packages(SYSTEM_CONFIG_ROOT, pluginManager, false);
 	//Load the 3rd party plugins, if enabled
-	if (externalModules) await load_all_packages(USER_CONFIG_ROOT, managers);
+	if (externalModules) await load_all_packages(USER_CONFIG_ROOT, pluginManager, true);
 
 	//Return the managers
-	return managers;
+	return pluginManager;
 }
