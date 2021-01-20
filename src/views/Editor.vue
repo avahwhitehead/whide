@@ -77,8 +77,8 @@ export default {
 	created() {
 		//Load the plugins
 		//TODO: Also allow external plugins
-		run_load(true, false).then(managers => {
-			this.menuManager = managers.menuManager;
+		run_load(true, false).then(pluginManager => {
+			this.menuManager = pluginManager.menuManager;
 		});
 	},
 	mounted() {

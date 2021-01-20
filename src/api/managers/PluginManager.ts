@@ -6,14 +6,14 @@ import { MenuManager } from "@/api/managers/MenuManager";
  */
 export class PluginManager {
 	private readonly plugins: Map<string, PluginInfo>;
-	private readonly menuManager: MenuManager;
+	private readonly _menuManager: MenuManager;
 
 	/**
 	 *
 	 */
 	constructor() {
 		this.plugins = new Map();
-		this.menuManager = new MenuManager();
+		this._menuManager = new MenuManager();
 	}
 
 	/**
@@ -94,7 +94,7 @@ export class PluginManager {
 	 */
 	_enable(plugin: PluginInfo) {
 		//Register the menus
-		plugin.menus.forEach(m => this.menuManager.register(m));
+		plugin.menus.forEach(m => this._menuManager.register(m));
 	}
 
 	/**
@@ -103,6 +103,13 @@ export class PluginManager {
 	 */
 	_disable(plugin: PluginInfo) {
 		//Unregister the menus
-		plugin.menus.forEach(m => this.menuManager.unregister(m));
+		plugin.menus.forEach(m => this._menuManager.unregister(m));
+	}
+
+	/**
+	 * Get the menu manager
+	 */
+	get menuManager(): MenuManager {
+		return this._menuManager;
 	}
 }
