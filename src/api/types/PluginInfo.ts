@@ -119,21 +119,43 @@ export class PluginInfo {
 			return undefined;
 		}
 
-		//TODO: Allow this to be an array of `PluginFunction`s
-		let func: PluginFunction;
+		let loadedFunc: PluginFunction|PluginFunction[];
 		try {
 			//Attempt to require the plugin
-			func = this._livePluginManager.require(this._name);
+			loadedFunc = this._livePluginManager.require(this._name);
 		} catch (e) {
 			//Error while requiring
 			console.error(e);
 			return undefined;
 		}
 
-		//Store the function in memory
-		this.funcs.set(funcName, func);
+		if ((<PluginFunction[]>loadedFunc).length !== undefined) {
+			//If the plugin exports an array of functions
+			this._loadFuncArray(<PluginFunction[]>loadedFunc);
+		} else {
+			//If the plugin exports a single function
+			this._loadFunc(<PluginFunction>loadedFunc);
+		}
 
 		//Return the function
-		return func;
+		return this.funcs.get(funcName);
+	}
+
+	/**
+	 * Register an array of plugin functions
+	 * @param funcs	The array of functions
+	 */
+	private _loadFuncArray(funcs : PluginFunction[]) {
+		//Register each individual function
+		for (let f of funcs) this._loadFunc(f)
+	}
+
+	/**
+	 * Register a single plugin function
+	 * @param func	The function to register
+	 */
+	private _loadFunc(func : PluginFunction) {
+		//Store the function in memory
+		this.funcs.set(func.name, func);
 	}
 }
