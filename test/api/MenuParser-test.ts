@@ -33,23 +33,23 @@ describe('File Menu', function() {
 describe('Empty Menu Name', function() {
 	it('should throw an error', function() {
 		expect(
-			parse(`[{"name": "", "children": []]`, undefined!)
-		).to.throw(Error, "Menus must be named");
+			() => parse(`[{ "name": "", "children": [] }]`, undefined!)
+		).to.throw(`Invalid menus: "Menus must be named"`);
 	});
 });
 
 describe('Empty Menu Item Name', function() {
 	it('should throw an error', function() {
 		expect(
-			parse(`[{"name": "hello", "children": [{ "name": "", command: "run_me"}]]`, undefined!)
-		).to.throw(Error, "Menu items must be named");
+			() => parse(`[{ "name": "hello", "children": [{ "name": "", "command": "run_me" }] }]`, undefined!)
+		).to.throw(`Invalid menus: "Menu items must be named"`);
 	});
 });
 
 describe('Empty Menu Item Command', function() {
 	it('should throw an error', function() {
 		expect(
-			parse(`[{"name": "hello", "children": [{ "name": "Click", command: ""}]]`, undefined!)
-		).to.throw(Error, "Menu items must have a command");
+			() => parse(`[{ "name": "hello", "children": [{ "name": "Click", "command": "" }] }]`, undefined!)
+		).to.throw(`Invalid menus: "Menu items must have a command"`);
 	});
 });
