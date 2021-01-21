@@ -8,7 +8,7 @@ export type Menu = {
 export type MenuItem = {
 	name: string,
 	command: string,
-	plugin?: PluginInfo,
+	plugin: PluginInfo,
 };
 
 /**
@@ -77,9 +77,9 @@ function _menuForEach(menus: (Menu | MenuItem)[],
 /**
  * Parse a JSON string into a list of Menus.
  * @param content		The JSON string
- * @param pluginInfo	PluginInfo object. Should only be undefined when testing.
+ * @param pluginInfo	PluginInfo object.
  */
-export default function parse(content: string, pluginInfo? : PluginInfo) : Menu[] {
+export default function parse(content: string, pluginInfo : PluginInfo) : Menu[] {
 	let menus : Menu[];
 	try {
 		//Check for valid JSON and matches the `Menu[]` type definition
