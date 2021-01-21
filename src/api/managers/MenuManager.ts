@@ -40,7 +40,7 @@ export class MenuManager {
 	 * @private
 	 */
 	private static _isMenu(itm : Menu|MenuItem) : boolean {
-		return !!(itm as Menu).children;
+		return (itm as Menu).children !== undefined;
 	}
 
 	/**
@@ -118,23 +118,27 @@ export class MenuManager {
 			let removed : boolean = false;
 
 			//Check for different name or different type
-			if (existingMenu.name === item.name && MenuManager._isMenu(existingMenu) !== isMenu) {
-				if (isMenu) {
+			if (existingMenu.name === item.name) {
+				let existingIsMenu = MenuManager._isMenu(existingMenu);
+				if (isMenu && existingIsMenu) {
 					//Cast to the same type
 					let menu: Menu = <Menu>existingMenu;
 					//Remove all the child elements
 					for (let child of (<Menu>item).children) {
-						menu.children = this._unregisterMenu(menu.children, child);
+						this._unregisterMenu(menu.children, child);
 					}
 					//Remove this menu if it has no more children
 					if (!menu.children.length) {
 						existing_menus.splice(i, 1);
 						removed = true;
 					}
-				} else {
-					//Remove the item
-					existing_menus.splice(i, 1);
-					removed = true;
+				} else if (!isMenu && !existingIsMenu) {
+					//Check the command matches as well
+					if ((<MenuItem>existingMenu).command === (<MenuItem>item).command) {
+						//Remove the item
+						existing_menus.splice(i, 1);
+						removed = true;
+					}
 				}
 			}
 

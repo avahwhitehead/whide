@@ -141,20 +141,20 @@ describe('Unregister child', function() {
 		manager.register({
 			name: "File",
 			children: [
-				{ name: "Open", command: "command_open" },
-				{ name: "Close", command: "command_close" },
+				{ name: "Open", command: "run_open" },
+				{ name: "Close", command: "run_close" },
 			]
 		});
 		manager.unregister({
 			name: "File",
 			children: [
-				{ name: "Open", command: "command_open" },
+				{ name: "Open", command: "run_open" },
 			]
 		});
 
 		expect(manager.menus).to.eql([{
 			name: "File",
-			children: [ { name: "Close", command: "command_close" } ]
+			children: [ { name: "Close", command: "run_close" } ]
 		}]);
 	});
 });
@@ -166,8 +166,8 @@ describe('Unregister nothing', function() {
 		let menu = {
 			name: "File",
 			children: [
-				{ name: "Open", command: "command_open" },
-				{ name: "Close", command: "command_close" },
+				{ name: "Open", command: "run_open" },
+				{ name: "Close", command: "run_close" },
 			]
 		};
 

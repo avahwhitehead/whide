@@ -1,8 +1,7 @@
 import { expect } from "chai";
 import { describe, it } from "mocha";
 
-import parse, { Menu } from "../../src/api/parsers/MenuParser";
-
+import parse from "../../src/api/parsers/MenuParser";
 
 describe('File Menu', function() {
 	it('should produce an open/save/close file menu', function() {
@@ -31,9 +30,26 @@ describe('File Menu', function() {
 });
 
 
-describe('Empty Names', function() {
-	it('should produce an open/save/close file menu', function() {
-		//TODO: Test empty names
-		//let result = parse(`[{"name": "", "children": []]`);
+describe('Empty Menu Name', function() {
+	it('should throw an error', function() {
+		expect(
+			parse(`[{"name": "", "children": []]`)
+		).to.throw(Error, "Menus must be named");
+	});
+});
+
+describe('Empty Menu Item Name', function() {
+	it('should throw an error', function() {
+		expect(
+			parse(`[{"name": "hello", "children": [{ "name": "", command: "run_me"}]]`)
+		).to.throw(Error, "Menu items must be named");
+	});
+});
+
+describe('Empty Menu Item Command', function() {
+	it('should throw an error', function() {
+		expect(
+			parse(`[{"name": "hello", "children": [{ "name": "Click", command: ""}]]`)
+		).to.throw(Error, "Menu items must have a command");
 	});
 });
