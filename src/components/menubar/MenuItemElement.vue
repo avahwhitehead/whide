@@ -47,11 +47,13 @@ export default Vue.extend({
 			//Shorthand access to the menu item
 			let item : MenuItem = this.$props.item;
 
-			// this.runPluginFunc();
-			this.$emit("run", {
-				plugin: item.plugin,
-				command: item.command,
-			});
+			//Don't do anything if the item doesn't have a command to run
+			if (item.command) {
+				this.$emit("run", {
+					plugin: item.plugin,
+					command: item.command,
+				});
+			}
 		},
 	}
 });
