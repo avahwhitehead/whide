@@ -1,9 +1,6 @@
 import { Menu } from "@/api/parsers/MenuParser";
 import { PluginManager as LivePluginManager } from "live-plugin-manager";
-import { PluginFunction } from "@/api/types/PluginFunction";
-
-//Plugin manager object to control loading/unloading plugin packages
-const _livePluginManager = new LivePluginManager();
+import { PluginFunction, PluginFunctionParameters } from "@/api/types/PluginFunction";
 
 /**
  * The parameters used to initialise the PluginInfo object
@@ -29,6 +26,10 @@ export interface PluginInfoProps {
 	 * The menu items defined by the plugin
 	 */
 	menus?: Menu[];
+	/**
+	 * The live plugin manager object to use to load the packages
+	 */
+	livePluginManager: LivePluginManager;
 }
 
 /**
@@ -42,7 +43,7 @@ export class PluginInfo {
 	private readonly _menus: Menu[];
 
 	private readonly _livePluginManager : LivePluginManager;
-	private funcs : Map<string, PluginFunction>;
+	private readonly funcs : Map<string, PluginFunction>;
 
 	/**
 	 *
@@ -61,9 +62,17 @@ export class PluginInfo {
 		this._menus = props.menus || [];
 
 		//The manager to use to load/unload the plugin
-		this._livePluginManager = _livePluginManager;
+		this._livePluginManager = props.livePluginManager;
 		//Functions defined by the plugin
 		this.funcs = new Map();
+
+		if (this._livePluginManager.alreadyInstalled(this.name)) {
+			this._livePluginManager.uninstall(this.name)
+				.then(() => { /* Uninstall completed successfully */ })
+				.catch(e => {
+					console.error(e);
+				});
+		}
 	}
 
 	get name(): string {
@@ -111,8 +120,9 @@ export class PluginInfo {
 		if (this.funcs.has(funcName)) return this.funcs.get(funcName);
 
 		try {
-			//Attempt to install the plugin
-			await this._livePluginManager.installFromPath(this.filePath);
+			//Attempt to install the plugin, forcing reinstallation if it already exists
+			//Forces using the latest version
+			await this._livePluginManager.installFromPath(this.filePath, {force: true});
 		} catch (e) {
 			//Error while installing
 			console.error(e);
