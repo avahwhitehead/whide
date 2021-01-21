@@ -2,7 +2,9 @@
 	<div class="editor">
 		<div class="header">
 			<div class="headerBar">
-				<MenuElement v-for="(menu, i) in menus" :key="i" :menu="menu"></MenuElement>
+				<MenuElement :menu="menu" @run="runPluginFunc"
+					v-for="(menu, i) in menus" :key="i"
+				/>
 			</div>
 			<div class="filler">
 				<button @click="save" :disabled="!focused_file">Save File</button>
@@ -17,7 +19,7 @@
 		</div>
 
 		<div class="code-editor">
-			<CodeEditorContainer v-bind:openFiles="openFiles" @file-focus="onOpenFileChange" />
+			<CodeEditorContainer v-bind:openFiles="openFiles" @editorChange="onEditorObjectChange" @file-focus="onOpenFileChange" />
 		</div>
 
 		<div class="right">
@@ -48,6 +50,7 @@ import MenuElement from "@/components/menubar/MenuElement";
 import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
 import fileDownloader from "js-file-download";
 import { run_load } from "@/api/fileLoader";
+import EditorController from "@/api/controllers/EditorController";
 
 const browserFileStore = new BrowserFileStore();
 
@@ -66,6 +69,7 @@ export default {
 			focused_file: null,
 			openFiles: [],
 			menuManager: null,
+			codeEditor: undefined,
 		}
 	},
 	computed: {
@@ -103,6 +107,9 @@ export default {
 			if (fileIndex < 0 || fileIndex >= this.openFiles.length) this.focused_file = null;
 			else this.focused_file = this.openFiles[fileIndex];
 		},
+		onEditorObjectChange(editor) {
+			this.codeEditor = editor;
+		},
 		async create() {
 			//Create a new file with the given file name
 			await browserFileStore.createFile(this.filename, undefined);
@@ -129,6 +136,29 @@ export default {
 				fileDownloader(this.focused_file.content, this.focused_file.name);
 			} else {
 				console.log(`No file open to download`);
+			}
+		},
+		async runPluginFunc(data) {
+			//TODO: Remove these aliases when this file is converted to TypeScript
+			let plugin = data.plugin;
+			let command = data.command;
+
+			//Get the function linked to the menu item
+			let pluginFunction = await plugin.getFunc(command);
+
+			//Run the function if possible
+			if (pluginFunction) {
+				//Make sure the code editor exists (this should never run)
+				if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
+				//Run the function
+				pluginFunction.run({
+					args: {},
+					console: console,
+					editorController: new EditorController(this.codeEditor),
+				});
+			} else {
+				//Error otherwise
+				console.error(`Couldn't find function ${command} in plugin ${plugin.name}`);
 			}
 		},
 		/**

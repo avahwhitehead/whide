@@ -5,7 +5,9 @@
 			'dropdown': true,
 			'visible':(dropdownVisible && (item.children || []).length)}"
 		>
-			<MenuItemElement v-for="(child,i) in item.children" :item="child" :key="i"></MenuItemElement>
+			<MenuItemElement @run="passRunUp"
+				v-for="(child,i) in item.children" :item="child" :key="i"
+			/>
 		</div>
 	</div>
 </template>
@@ -13,7 +15,7 @@
 <script lang="ts">
 import { MenuItem } from "@/api/parsers/MenuParser";
 import Vue from "vue";
-import { PluginFunction } from "@/api/types/PluginFunction";
+import { PluginInfo } from "@/api/types/PluginInfo";
 
 export default Vue.extend({
 	name: 'MenuItemElement',
@@ -38,17 +40,18 @@ export default Vue.extend({
 		onMouseLeave() {
 			this.dropdownVisible = false;
 		},
+		passRunUp(data : { plugin: PluginInfo, command: string }) {
+			this.$emit("run", data);
+		},
 		async onClick() {
 			//Shorthand access to the menu item
 			let item : MenuItem = this.$props.item;
-			//Get the function linked to the menu item
-			let pluginFunction : PluginFunction|undefined = await item.plugin.getFunc(item.command);
 
-			//TODO: Find better way of passing parameters
-			//Run the function if possible
-			if (pluginFunction) pluginFunction.run({args: {}, console: console});
-			//Error otherwise
-			else console.error(`Couldn't find function ${item.command} in plugin ${item.plugin.name}`);
+			// this.runPluginFunc();
+			this.$emit("run", {
+				plugin: item.plugin,
+				command: item.command,
+			});
 		},
 	}
 });

@@ -1,3 +1,5 @@
+import EditorController from "@/api/controllers/EditorController";
+
 /**
  * Describe an argument to prompt the user for
  */
@@ -21,6 +23,10 @@ export type PluginFunctionParameters = {
 	 * The `console` object to allow plugins to output to the console
 	 */
 	console: Console,
+	/**
+	 * The code editor object
+	 */
+	editorController: EditorController,
 }
 
 /**

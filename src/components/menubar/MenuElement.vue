@@ -2,7 +2,9 @@
 	<div class="menuElement" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
 		<div class="name">{{ menu.name }}</div>
 		<div :class="{'dropdown': true, 'visible':dropdownVisible}">
-			<MenuItemElement v-for="(child,i) in menu.children" :item="child" :key="i"></MenuItemElement>
+			<MenuItemElement @run="passRunUp"
+				v-for="(child,i) in menu.children" :item="child" :key="i"
+			/>
 		</div>
 	</div>
 </template>
@@ -11,6 +13,7 @@
 import MenuItemElement from "@/components/menubar/MenuItemElement.vue";
 import { Menu } from "@/api/parsers/MenuParser";
 import Vue from "vue";
+import { PluginInfo } from "@/api/types/PluginInfo";
 
 export default Vue.extend({
 	name: 'Menu',
@@ -34,6 +37,9 @@ export default Vue.extend({
 		onMouseLeave() {
 			this.dropdownVisible = false;
 		},
+		passRunUp(data : { plugin: PluginInfo, command: string }) {
+			this.$emit("run", data);
+		}
 	}
 });
 </script>

@@ -98,6 +98,11 @@ export default Vue.extend({
 		onTabClose(index : number) : void {
 			this.openFiles.splice(index, 1);
 		},
+	},
+	watch: {
+		editor(new_val) {
+			this.$emit("editorChange", new_val);
+		}
 	}
 });
 </script>
