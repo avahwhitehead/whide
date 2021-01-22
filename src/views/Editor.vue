@@ -1,9 +1,12 @@
 <template>
 	<div class="editor">
 		<div class="header">
+			<div class="headerBar">
+				<MenuElement :menu="menu" @run="runPluginFunc"
+					v-for="(menu, i) in menus" :key="i"
+				/>
+			</div>
 			<div class="filler">
-				Header content
-				<br/>
 				<button @click="save" :disabled="!focused_file">Save File</button>
 				<button @click="download" :disabled="!focused_file">Download File</button>
 			</div>
@@ -16,7 +19,7 @@
 		</div>
 
 		<div class="code-editor">
-			<CodeEditorContainer v-bind:openFiles="openFiles" @file-focus="onOpenFileChange" />
+			<CodeEditorContainer v-bind:openFiles="openFiles" @editorChange="onEditorObjectChange" @file-focus="onOpenFileChange" />
 		</div>
 
 		<div class="right">
@@ -43,8 +46,11 @@
 import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
 import Container from "@/components/Container";
 import FilePicker from "@/components/FilePicker";
+import MenuElement from "@/components/menubar/MenuElement";
 import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
 import fileDownloader from "js-file-download";
+import { run_load } from "@/api/fileLoader";
+import EditorController from "@/api/controllers/EditorController";
 
 const browserFileStore = new BrowserFileStore();
 
@@ -54,6 +60,7 @@ export default {
 		FilePicker,
 		Container,
 		CodeEditorContainer,
+		MenuElement
 	},
 	data() {
 		return {
@@ -61,13 +68,28 @@ export default {
 			filename: "",
 			focused_file: null,
 			openFiles: [],
+			menuManager: null,
+			codeEditor: undefined,
 		}
+	},
+	computed: {
+		menus() {
+			if (!this.menuManager) return [];
+			return this.menuManager.menus;
+		}
+	},
+	created() {
+		//Load the plugins
+		//TODO: Also allow external plugins
+		run_load(true, false).then(pluginManager => {
+			this.menuManager = pluginManager.menuManager;
+		});
 	},
 	mounted() {
 		//Load the directory structure
 		browserFileStore.getDirectoryTree().then(value => {
 			this.files = value;
-		})
+		});
 	},
 	methods: {
 		openFile(file) {
@@ -84,6 +106,9 @@ export default {
 			//Keep track of the currently focussed file
 			if (fileIndex < 0 || fileIndex >= this.openFiles.length) this.focused_file = null;
 			else this.focused_file = this.openFiles[fileIndex];
+		},
+		onEditorObjectChange(editor) {
+			this.codeEditor = editor;
 		},
 		async create() {
 			//Create a new file with the given file name
@@ -113,6 +138,29 @@ export default {
 				console.log(`No file open to download`);
 			}
 		},
+		async runPluginFunc(data) {
+			//TODO: Remove these aliases when this file is converted to TypeScript
+			let plugin = data.plugin;
+			let command = data.command;
+
+			//Get the function linked to the menu item
+			let pluginFunction = await plugin.getFunc(command);
+
+			//Run the function if possible
+			if (pluginFunction) {
+				//Make sure the code editor exists (this should never run)
+				if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
+				//Run the function
+				pluginFunction.run({
+					args: {},
+					console: console,
+					editorController: new EditorController(this.codeEditor),
+				});
+			} else {
+				//Error otherwise
+				console.error(`Couldn't find function ${command} in plugin ${plugin.name}`);
+			}
+		},
 		/**
 		 * Recursively find a file using its name
 		 * @param files		Array of files
@@ -133,8 +181,17 @@ export default {
 
 
 <style>
+.headerBar {
+	display: block;
+}
+
+.header {
+	text-align: left;
+}
+
 .header, .footer {
 	width: 100%;
+	padding: 2px;
 }
 
 .left, .right {
