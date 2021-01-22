@@ -14,8 +14,10 @@ import TabbedPanel from "@/components/TabbedPanel.vue";
 import { FileData } from "@/fileStore/AbstractFileData";
 //The code editor
 import CodeMirror from "codemirror";
-//Directly import the CSS for the language syntax
+//CodeMirror styling
 import 'codemirror/lib/codemirror.css';
+//While language syntax definition
+import WHILE from "@/assets/whileSyntaxMode.ts";
 
 type DataType = {
 	selectedFile: number,
@@ -44,6 +46,7 @@ export default Vue.extend({
 			lineNumbers: true,
 			tabSize: 4,
 			value: "",
+			mode: WHILE,
 		});
 
 		//Pass the change event (when the content changes at all) up to the next level

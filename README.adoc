@@ -68,6 +68,9 @@ This project is licensed under the MIT License - see the LICENSE.md[LICENSE.md] 
 [#subsect:acknowledgments]
 == Acknowledgments
 
+The syntax highlighting and code completion in the code editor is adapted from that of
+link:https://github.com/davidpomerenke/while-syntax-vscode][David Pomerenke's VS Code Extension].
+
 * Hat tip to anyone whose code was used
 * Inspiration
 * etc
