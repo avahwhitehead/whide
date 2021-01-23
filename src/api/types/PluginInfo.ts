@@ -88,6 +88,9 @@ export class PluginInfo {
 	}
 
 	set disabled(value: boolean) {
+		//Don't disable system plugins
+		if (this.isFirstParty && value) throw new Error("Can't disable system plugins");
+		//Change the disabled value
 		this._disabled = value;
 	}
 
@@ -116,6 +119,8 @@ export class PluginInfo {
 	 * @param funcName	The name of the function
 	 */
 	async getFunc(funcName: string) : Promise<PluginFunction | undefined> {
+		if (this.disabled) throw new Error(`Plugin ${this.name} is disabled`);
+
 		//If the function has already been loaded, use that
 		if (this.funcs.has(funcName)) return this.funcs.get(funcName);
 

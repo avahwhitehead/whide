@@ -1,0 +1,98 @@
+<template>
+	<div class="pluginToggler">
+		<table>
+			<thead>
+				<tr>
+					<th class="min-width">Enabled</th>
+					<th class="max-width border">Name</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="([name,plugin],i) in plugins" :key="i">
+					<td class="toggle-cell min-width">
+						<input type="checkbox" @change="togglePlugin($event, plugin)"/>
+					</td>
+					<td class="name-cell max-width border">{{name}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</template>
+
+<script lang="ts">
+import vue from "vue";
+import { PluginManager } from "@/api/managers/PluginManager";
+import { PluginInfo } from "@/api/types/PluginInfo";
+
+//TODO: `Enabled` comboboxes always show disabled at first
+
+export default vue.extend({
+	name: 'PluginToggler',
+	props: {
+		pluginManager: {
+			type: PluginManager,
+		}
+	},
+	computed: {
+		plugins() : [string,PluginInfo][] {
+			if (!this.$props.pluginManager) return [];
+			return this.$props.pluginManager.getPlugins();
+		}
+	},
+	methods: {
+		togglePlugin(event : Event, plugin: PluginInfo) {
+			if (!plugin) return;
+			try {
+				this.pluginManager.setEnabled(plugin.name, plugin.disabled);
+			} catch (e) {
+				console.error(e);
+			}
+			//Update the combobox value
+			(event.target as HTMLInputElement).checked = !plugin.disabled;
+		}
+	}
+})
+</script>
+
+
+<style scoped>
+.pluginToggler {
+	text-align: left;
+}
+
+table {
+	/* Table fills the space */
+	width: 100%;
+	/* Borders should touch */
+	border-spacing: 0;
+}
+
+table .min-width {
+	/* Set the checkbox cell to the minimum width */
+	white-space: nowrap;
+}
+
+table .max-width {
+	/* Name cell fills remaining width */
+	width: 99%;
+}
+
+table thead th {
+	text-align: left;
+	/* Border under the headers */
+	border-bottom: 1px solid black;
+}
+
+table .border {
+	/* Border between the columns */
+	border-left: 1px solid black;
+}
+
+table .toggle-cell {
+	text-align: center;
+}
+
+table .name-cell {
+	text-align: left;
+}
+</style>

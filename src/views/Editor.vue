@@ -24,7 +24,7 @@
 
 		<div class="right">
 			<Container class="filler">
-				Other content
+				<PluginToggler :plugin-manager="this.pluginManager" />
 			</Container>
 		</div>
 
@@ -51,6 +51,7 @@ import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
 import fileDownloader from "js-file-download";
 import { run_load } from "@/api/fileLoader";
 import EditorController from "@/api/controllers/EditorController";
+import PluginToggler from "@/components/PluginToggler.vue";
 
 const browserFileStore = new BrowserFileStore();
 
@@ -60,7 +61,8 @@ export default {
 		FilePicker,
 		Container,
 		CodeEditorContainer,
-		MenuElement
+		MenuElement,
+		PluginToggler,
 	},
 	data() {
 		return {
@@ -70,6 +72,7 @@ export default {
 			openFiles: [],
 			menuManager: null,
 			codeEditor: undefined,
+			pluginManager: undefined,
 		}
 	},
 	computed: {
@@ -82,6 +85,7 @@ export default {
 		//Load the plugins
 		//TODO: Also allow external plugins
 		run_load(true, false).then(pluginManager => {
+			this.pluginManager = pluginManager;
 			this.menuManager = pluginManager.menuManager;
 		});
 	},

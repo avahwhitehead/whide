@@ -76,6 +76,12 @@ export class PluginManager {
 		//Do nothing if the plugin name doesn't exist
 		if (!info) return;
 
+		//Do nothing if the plugin is already in the requested state
+		if (enabled === !info.disabled) throw new Error(`Plugin is already ${info.disabled ? "disabled" : "enabled"}`);
+
+		//Toggle the plugin's disabled state
+		info.disabled = !enabled;
+
 		//Enable/disable the plugin
 		if (enabled) this._enable(info);
 		else this._disable(info);
@@ -86,6 +92,13 @@ export class PluginManager {
 	 */
 	names(): string[] {
 		return Array.from(this.plugins.keys());
+	}
+
+	/**
+	 * Get an array of the plugins
+	 */
+	getPlugins(): [string, PluginInfo][] {
+		return Array.from(this.plugins.entries());
 	}
 
 	/**
