@@ -35,7 +35,8 @@ export class PluginManager {
 
 		//Store the plugin object
 		this.plugins.set(info.name, info);
-		this._enable(info);
+		//Enable the plugin
+		info.disabled = false;
 	}
 
 	/**
@@ -43,48 +44,14 @@ export class PluginManager {
 	 * @param name	The name of the plugin
 	 */
 	unregister(name: string): void {
-		//Disable the plugin
-		this.setEnabled(name, false);
-		//Remove the plugin from the map
-		this.plugins.delete(name);
-	}
-
-	/**
-	 * Enable a plugin
-	 * @param name	The name of the plugin
-	 */
-	enable(name: string) {
-		this.setEnabled(name, true)
-	}
-
-	/**
-	 * Disable a plugin
-	 * @param name	The name of the plugin
-	 */
-	disable(name: string) {
-		this.setEnabled(name, false)
-	}
-
-	/**
-	 * Enable or disable a plugin
-	 * @param name		The name of the plugin
-	 * @param enabled	{@code true} to enable the plugin, {@code false} to disable
-	 */
-	setEnabled(name: string, enabled: boolean = true) {
 		//Get the plugin object
 		let info: PluginInfo | undefined = this.plugins.get(name);
-		//Do nothing if the plugin name doesn't exist
 		if (!info) return;
 
-		//Do nothing if the plugin is already in the requested state
-		if (enabled === !info.disabled) throw new Error(`Plugin is already ${info.disabled ? "disabled" : "enabled"}`);
-
-		//Toggle the plugin's disabled state
-		info.disabled = !enabled;
-
-		//Enable/disable the plugin
-		if (enabled) this._enable(info);
-		else this._disable(info);
+		//Disable the plugin
+		info.disabled = true;
+		//Remove the plugin from the map
+		this.plugins.delete(name);
 	}
 
 	/**
@@ -99,24 +66,6 @@ export class PluginManager {
 	 */
 	getPlugins(): [string, PluginInfo][] {
 		return Array.from(this.plugins.entries());
-	}
-
-	/**
-	 * Enable a plugin
-	 * @param plugin	The plugin object
-	 */
-	_enable(plugin: PluginInfo) {
-		//Register the menus
-		plugin.menus.forEach(m => this._menuManager.register(m));
-	}
-
-	/**
-	 * Disable a plugin
-	 * @param plugin	The plugin object
-	 */
-	_disable(plugin: PluginInfo) {
-		//Unregister the menus
-		plugin.menus.forEach(m => this._menuManager.unregister(m));
 	}
 
 	/**

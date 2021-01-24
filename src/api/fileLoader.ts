@@ -60,7 +60,7 @@ async function load_all_packages(fs_root: string, pluginManager : PluginManager,
 
 				//Treat directories as if they are plugin packages
 				if (fileInfo.isDirectory()) {
-					let pluginInfo: PluginInfo = await load_package(fullPath, file, isExternal, livePluginManager);
+					let pluginInfo: PluginInfo = await load_package(fullPath, file, isExternal, pluginManager, livePluginManager);
 					pluginManager.register(pluginInfo);
 				}
 			}
@@ -75,9 +75,10 @@ async function load_all_packages(fs_root: string, pluginManager : PluginManager,
  * @param filePath			The file path
  * @param name				The name of the package
  * @param isExternal		Whether the plugin is an external plugin
+ * @param pluginManager		THe plugin manager
  * @param livePluginManager	Live plugin manager object to use
  */
-async function load_package(filePath: string, name: string, isExternal: boolean, livePluginManager: LivePluginManager) : Promise<PluginInfo> {
+async function load_package(filePath: string, name: string, isExternal: boolean, pluginManager: PluginManager, livePluginManager: LivePluginManager) : Promise<PluginInfo> {
 	return new Promise((resolve, reject) => {
 		//Make a PluginInfo object
 		let pluginInfo: PluginInfo = new PluginInfo({
@@ -85,6 +86,7 @@ async function load_package(filePath: string, name: string, isExternal: boolean,
 			path: filePath,
 			external: !isExternal,
 			livePluginManager: livePluginManager,
+			menuManager: pluginManager.menuManager,
 		});
 
 		//Read the files in the directory

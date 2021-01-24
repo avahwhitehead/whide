@@ -10,7 +10,7 @@
 			<tbody>
 				<tr v-for="([name,plugin],i) in plugins" :key="i">
 					<td class="toggle-cell min-width">
-						<input type="checkbox" @change="togglePlugin($event, plugin)"/>
+						<input type="checkbox" :checked="!plugin.disabled" @change="togglePlugin($event, plugin)"/>
 					</td>
 					<td class="name-cell max-width border">{{name}}</td>
 				</tr>
@@ -43,12 +43,13 @@ export default vue.extend({
 		togglePlugin(event : Event, plugin: PluginInfo) {
 			if (!plugin) return;
 			try {
-				this.pluginManager.setEnabled(plugin.name, plugin.disabled);
+				plugin.disabled = !plugin.disabled;
 			} catch (e) {
 				console.error(e);
 			}
 			//Update the combobox value
 			(event.target as HTMLInputElement).checked = !plugin.disabled;
+			console.log(`Plugin ${plugin.name} is ${plugin.disabled ? 'dis' : 'en'}abled`)
 		}
 	}
 })

@@ -1,6 +1,7 @@
 import { Menu } from "@/api/parsers/MenuParser";
 import { PluginManager as LivePluginManager } from "live-plugin-manager";
-import { PluginFunction, PluginFunctionParameters } from "@/api/types/PluginFunction";
+import { PluginFunction } from "@/api/types/PluginFunction";
+import { MenuManager } from "@/api/managers/MenuManager";
 
 /**
  * The parameters used to initialise the PluginInfo object
@@ -30,6 +31,7 @@ export interface PluginInfoProps {
 	 * The live plugin manager object to use to load the packages
 	 */
 	livePluginManager: LivePluginManager;
+	menuManager: MenuManager,
 }
 
 /**
@@ -44,6 +46,7 @@ export class PluginInfo {
 
 	private readonly _livePluginManager : LivePluginManager;
 	private readonly funcs : Map<string, PluginFunction>;
+	private readonly _menuManager : MenuManager;
 
 	/**
 	 *
@@ -65,6 +68,8 @@ export class PluginInfo {
 		this._livePluginManager = props.livePluginManager;
 		//Functions defined by the plugin
 		this.funcs = new Map();
+		//The menu manager to use
+		this._menuManager = props.menuManager;
 
 		if (this._livePluginManager.alreadyInstalled(this.name)) {
 			this._livePluginManager.uninstall(this.name)
@@ -73,6 +78,9 @@ export class PluginInfo {
 					console.error(e);
 				});
 		}
+
+		//Whether the plugin should be disabled (default: false)
+		this.disabled = !!props.disabled;
 	}
 
 	get name(): string {
@@ -87,11 +95,19 @@ export class PluginInfo {
 		return this._disabled;
 	}
 
+	/**
+	 * Enable or disable a plugin
+	 * @param value	{@code true} to disable the plugin, {@code false} to enable
+	 */
 	set disabled(value: boolean) {
 		//Don't disable system plugins
 		if (this.isFirstParty && value) throw new Error("Can't disable system plugins");
 		//Change the disabled value
 		this._disabled = value;
+
+		//Enable/disable the plugin
+		if (value) this._disable();
+		else this._enable();
 	}
 
 	get isFirstParty(): boolean {
@@ -112,6 +128,10 @@ export class PluginInfo {
 
 	get menus(): Menu[] {
 		return this._menus;
+	}
+
+	get menuManager() : MenuManager {
+		return this._menuManager;
 	}
 
 	/**
@@ -172,5 +192,21 @@ export class PluginInfo {
 	private _loadFunc(func : PluginFunction) {
 		//Store the function in memory
 		this.funcs.set(func.name, func);
+	}
+
+	/**
+	 * Enable the plugin
+	 */
+	private _enable() {
+		//Register the menus
+		this.menus.forEach(m => this._menuManager.register(m));
+	}
+
+	/**
+	 * Disable the plugin
+	 */
+	private _disable() {
+		//Unregister the menus
+		this.menus.forEach(m => this._menuManager.unregister(m));
 	}
 }
