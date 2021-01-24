@@ -170,8 +170,10 @@ export default {
 		_find_by_name(files, fileName) {
 			for (let file of files) {
 				if (file.name === fileName) return file;
-				let r = this._find_by_name(file.children, fileName);
-				if (r) return r;
+				if (file.children) {
+					let r = this._find_by_name(file.children, fileName);
+					if (r) return r;
+				}
 			}
 			return null;
 		}
