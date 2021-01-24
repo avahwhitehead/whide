@@ -17,7 +17,7 @@ import CodeMirror from "codemirror";
 //CodeMirror styling
 import 'codemirror/lib/codemirror.css';
 //While language syntax definition
-import WHILE from "@/lexer/whileMode.ts";
+import WHILE from "@/assets/whileSyntaxMode.ts";
 
 type DataType = {
 	selectedFile: number,
