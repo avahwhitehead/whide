@@ -40,7 +40,12 @@
 		</div>
 
 		<div class="inputElements" v-if="input.showInput">
-			<inputPrompt :get-input="input.expectingInput" :message="input.message" @submit="onInputSubmit"/>
+			<inputPrompt
+				:get-input="input.expectingInput"
+				:message="input.message"
+				:error="input.error"
+				@submit="onInputSubmit"
+			/>
 		</div>
 	</div>
 </template>
@@ -83,6 +88,7 @@ export default {
 			input: {
 				showInput: false,
 				message: "",
+				error: "",
 				expectingInput: true,
 				callback: () => {},
 			}
@@ -138,12 +144,13 @@ export default {
 					this.input.callback = (val) => {
 						//Check with the validator
 						if (validator(val)) {
+							this.input.error = "";
 							//Hide the prompt
 							this.hideInput();
 							//Done
 							resolve(val);
-						//} else {
-							// TODO: Handle invalid input
+						} else {
+							this.input.error = "Invalid input";
 						}
 					};
 				});
