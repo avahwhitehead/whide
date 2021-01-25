@@ -1,4 +1,5 @@
 import EditorController from "@/api/controllers/EditorController";
+import IOController from "@/api/types/IOController";
 
 /**
  * Describe an argument to prompt the user for
@@ -27,6 +28,7 @@ export type PluginFunctionParameters = {
 	 * The code editor object
 	 */
 	editorController: EditorController,
+	ioController: IOController
 }
 
 /**

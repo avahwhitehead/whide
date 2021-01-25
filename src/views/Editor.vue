@@ -38,6 +38,10 @@
 			<br/>
 			<button @click="del">Delete</button>
 		</div>
+
+		<div class="inputElements" v-if="input.showInput">
+			<inputPrompt :get-input="input.expectingInput" :message="input.message" @submit="onInputSubmit"/>
+		</div>
 	</div>
 </template>
 
@@ -52,12 +56,14 @@ import fileDownloader from "js-file-download";
 import { run_load } from "@/api/fileLoader";
 import EditorController from "@/api/controllers/EditorController";
 import PluginToggler from "@/components/PluginToggler.vue";
+import InputPrompt from "@/components/InputPrompt";
 
 const browserFileStore = new BrowserFileStore();
 
 export default {
 	name: 'Editor',
 	components: {
+		InputPrompt,
 		FilePicker,
 		Container,
 		CodeEditorContainer,
@@ -73,6 +79,13 @@ export default {
 			menuManager: null,
 			codeEditor: undefined,
 			pluginManager: undefined,
+			ioController: undefined,
+			input: {
+				showInput: false,
+				message: "",
+				expectingInput: true,
+				callback: () => {},
+			}
 		}
 	},
 	computed: {
@@ -93,6 +106,50 @@ export default {
 		});
 	},
 	mounted() {
+		this.ioController = {
+			showOutput: (message) => {
+				return new Promise(resolve => {
+					//Make visible
+					this.input.showInput = true;
+					//Don't the text box
+					this.input.expectingInput = false;
+					//Set the message to show
+					this.input.message = message;
+					//When the user submits
+					this.input.callback = () => {
+						//Hide the prompt
+						this.hideInput();
+						//Done
+						resolve();
+					};
+				});
+			},
+			getInput: (message, validator) => {
+				//Use the provided validator, or always return true
+				validator = validator || (() => true);
+				return new Promise(resolve => {
+					//Make visible
+					this.input.showInput = true;
+					//Show the text box
+					this.input.expectingInput = true;
+					//Show the message
+					this.input.message = message;
+					//When the user enters the value
+					this.input.callback = (val) => {
+						//Check with the validator
+						if (validator(val)) {
+							//Hide the prompt
+							this.hideInput();
+							//Done
+							resolve(val);
+						//} else {
+							// TODO: Handle invalid input
+						}
+					};
+				});
+			},
+		};
+
 		//Load the directory structure
 		browserFileStore.getDirectoryTree().then(value => {
 			this.files = value;
@@ -145,6 +202,24 @@ export default {
 				console.log(`No file open to download`);
 			}
 		},
+
+		async hideInput() {
+			//Make the input invisible
+			this.input.showInput = false;
+			//Default to allowing input
+			this.input.expectingInput = true;
+			//Clear the message
+			this.input.message = "";
+			//Clear the callback
+			this.input.callback = () => {};
+		},
+		onInputSubmit(val) {
+			//Call the input's callback
+			if (this.input.callback) {
+				this.input.callback(val);
+			}
+		},
+
 		async runPluginFunc(data) {
 			//TODO: Remove these aliases when this file is converted to TypeScript
 			let plugin = data.plugin;
@@ -162,6 +237,7 @@ export default {
 					args: {},
 					console: console,
 					editorController: this._editorController,
+					ioController: this.ioController,
 				});
 			} else {
 				//Error otherwise
@@ -221,6 +297,10 @@ export default {
 	height: 20em;
 	width: 70%;
 	display: inline-block;
+}
+
+.inputElements {
+	border: 1px solid black;
 }
 
 /*
