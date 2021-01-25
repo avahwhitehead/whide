@@ -21,6 +21,12 @@ export interface FileStoreInterface {
 	createFolder(name: string, parent?: FolderData): Promise<FolderData>;
 
 	/**
+	 * Get a file or folder from a string path
+	 * @param path	The path to the file/folder
+	 */
+	resolvePath(path: string) : Promise<AbstractFileData|undefined>;
+
+	/**
 	 * Read a file's contents from persistent storage into the provided object
 	 * @param file	The file to read
 	 * @returns file

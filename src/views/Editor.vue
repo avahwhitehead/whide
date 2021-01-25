@@ -79,6 +79,9 @@ export default {
 		menus() {
 			if (!this.menuManager) return [];
 			return this.menuManager.menus;
+		},
+		_editorController() {
+			return new EditorController(this.codeEditor, browserFileStore);
 		}
 	},
 	created() {
@@ -158,7 +161,7 @@ export default {
 				pluginFunction.run({
 					args: {},
 					console: console,
-					editorController: new EditorController(this.codeEditor),
+					editorController: this._editorController,
 				});
 			} else {
 				//Error otherwise

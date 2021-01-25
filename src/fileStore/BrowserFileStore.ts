@@ -3,6 +3,7 @@ import Crypto from 'crypto-js';
 import { AbstractFileData, FileData, FolderData } from "@/fileStore/AbstractFileData";
 import { FileStoreInterface } from "@/fileStore/FileStoreInterface";
 import { StoredFile } from "@/fileStore/StoredFile";
+import path from "path";
 
 /**
  * A file store using the browser's Indexed DB as backend.
@@ -29,6 +30,15 @@ export class BrowserFileStore implements FileStoreInterface {
 		})
 	}
 
+	public async resolvePath(file_path: string) : Promise<AbstractFileData|undefined> {
+		//Make sure the path is absolute
+		if (!path.isAbsolute(file_path)) throw new Error("Only absolute paths can be resolved");
+
+		//Resolve any `./` and `../` etc in the path
+		const normalised: string = path.normalize(file_path);
+		//Navigate through the file tree, following the path
+		return this._follow_path(this.fileTree, normalised.split(file_path));
+	}
 
 	public async createFile(name : string, parent? : FolderData): Promise<FileData> {
 		//File metadata
@@ -166,6 +176,34 @@ export class BrowserFileStore implements FileStoreInterface {
 		//Convert the tree into a storable format
 		let storableTree = this.fileTree.map(v => this._toStored(v));
 		store.set('dirtree', storableTree)
+	}
+
+	/**
+	 * Recursively find a file using its name
+	 * @return {null|FileData}	The found file or null
+	 */
+	private _follow_path(files: AbstractFileData[], path_elements: string[]) : AbstractFileData | undefined {
+		if (path_elements.length === 0) return undefined;
+
+		//Remove the first element from the path, and store it
+		let root_name: string = path_elements.slice(1, path_elements.length)[0];
+
+		//See if any files at this level match the name
+		let file: AbstractFileData|undefined = files.find(f => f.name === root_name);
+		if (!file) return undefined;
+
+		//If it is a folder
+		if (file.type === "folder") {
+			//The search path stops here, return this folder
+			if (path_elements.length === 0) return file;
+			//Search this folder's children
+			return this._follow_path((<FolderData>file).children, path_elements);
+		}
+
+		//The path stops here, return this file
+		if (path_elements.length === 0) return file;
+		//The requested file is supposed to be a child
+		return undefined;
 	}
 
 	/**
