@@ -51,9 +51,13 @@ export class BrowserFileStore implements FileStoreInterface {
 		fileData.metadata = metadata;
 
 		if (parent) {
+			//Make sure a file/folder doesn't already have this name
+			if (parent.children.find(f => f.name === name)) throw new Error("A file with that name already exists");
 			//Add the file to its parent
 			parent.addChild(fileData);
 		} else {
+			//Make sure a file/folder doesn't already have this name
+			if (this.fileTree.find(f => f.name === name)) throw new Error("A file with that name already exists");
 			this.fileTree.push(fileData);
 		}
 		//Save the new directory structure
@@ -76,9 +80,13 @@ export class BrowserFileStore implements FileStoreInterface {
 		folderData.metadata = metadata;
 
 		if (parent) {
+			//Make sure a file/folder doesn't already have this name
+			if (parent.children.find(f => f.name === name)) throw new Error("A file with that name already exists");
 			//Add the file to its parent
 			parent.addChild(folderData);
 		} else {
+			//Make sure a file/folder doesn't already have this name
+			if (this.fileTree.find(f => f.name === name)) throw new Error("A file with that name already exists");
 			this.fileTree.push(folderData);
 		}
 		//Save the new directory structure
