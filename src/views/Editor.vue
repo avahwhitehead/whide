@@ -39,13 +39,15 @@
 			<button @click="del">Delete</button>
 		</div>
 
-		<div class="inputElements" v-if="input.showInput">
-			<inputPrompt
-				:get-input="input.expectingInput"
-				:message="input.message"
-				:error="input.error"
-				@submit="onInputSubmit"
-			/>
+		<div class="inputModal" v-if="input.showInput">
+			<div class="content">
+				<inputPrompt
+					:get-input="input.expectingInput"
+					:message="input.message"
+					:error="input.error"
+					@submit="onInputSubmit"
+				/>
+			</div>
 		</div>
 	</div>
 </template>
@@ -305,8 +307,31 @@ export default {
 	display: inline-block;
 }
 
-.inputElements {
-	border: 1px solid black;
+/*
+Popup stylings based broadly on W3Schools':
+https://www.w3schools.com/howto/howto_css_modals.asp
+*/
+.inputModal {
+	position: fixed;
+	z-index: 5;
+
+	/*Fill the entire screen*/
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+
+	/*Transparent background, with non-transparent fallback*/
+	background-color: rgb(0,0,0);
+	background-color: rgba(0,0,0,0.4);
+}
+.inputModal .content {
+	background-color: #FFFFFF;
+	padding: 20px;
+	border: 1px solid #888;
+	margin: 15% auto;
+	width: 50%;
+	overflow: auto;
 }
 
 /*
