@@ -73,7 +73,7 @@ async function load_all_packages(fs_root: string, pluginManager : PluginManager,
  * @param filePath			The file path
  * @param name				The name of the package
  * @param isExternal		Whether the plugin is an external plugin
- * @param pluginManager		THe plugin manager
+ * @param pluginManager		The plugin manager
  */
 async function load_package(filePath: string, name: string, isExternal: boolean, pluginManager: PluginManager) : Promise<PluginInfo> {
 	return new Promise((resolve, reject) => {

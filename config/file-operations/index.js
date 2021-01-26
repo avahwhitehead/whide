@@ -1,8 +1,8 @@
-const open = require("./commands/open.js");
-const new_file = require("./commands/new_file.js");
-const new_folder = require("./commands/new_folder.js");
+import open from "./commands/open";
+import new_file from "./commands/new_file";
+import new_folder from "./commands/new_folder";
 
-module.exports = [
+export default [
 	open,
 	new_file,
 	new_folder,
