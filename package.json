@@ -19,7 +19,6 @@
     "crypto-js": "^4.0.0",
     "idb-kv-store": "^4.5.0",
     "js-file-download": "^0.4.12",
-    "live-plugin-manager": "^0.15.0",
     "vue": "^2.6.11",
     "vue-router": "^3.2.0",
     "xdg-basedir": "^4.0.0"

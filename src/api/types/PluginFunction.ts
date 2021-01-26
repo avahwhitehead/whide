@@ -21,10 +21,6 @@ export type PluginFunctionParameters = {
 	 */
 	args: {[key: string]: string},
 	/**
-	 * The `console` object to allow plugins to output to the console
-	 */
-	console: Console,
-	/**
 	 * The code editor object
 	 */
 	editorController: EditorController,

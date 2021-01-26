@@ -1,5 +1,4 @@
 import { Menu } from "@/api/parsers/MenuParser";
-import { PluginManager as LivePluginManager } from "live-plugin-manager";
 import { PluginFunction } from "@/api/types/PluginFunction";
 import { MenuManager } from "@/api/managers/MenuManager";
 
@@ -28,9 +27,8 @@ export interface PluginInfoProps {
 	 */
 	menus?: Menu[];
 	/**
-	 * The live plugin manager object to use to load the packages
+	 * The menu manager object to use
 	 */
-	livePluginManager: LivePluginManager;
 	menuManager: MenuManager,
 }
 
@@ -44,7 +42,6 @@ export class PluginInfo {
 	private _filePath: string;
 	private readonly _menus: Menu[];
 
-	private readonly _livePluginManager : LivePluginManager;
 	private readonly funcs : Map<string, PluginFunction>;
 	private readonly _menuManager : MenuManager;
 
@@ -64,22 +61,12 @@ export class PluginInfo {
 		//The menus created by the plugin (default: [])
 		this._menus = props.menus || [];
 
-		//The manager to use to load/unload the plugin
-		this._livePluginManager = props.livePluginManager;
 		//Functions defined by the plugin
 		this.funcs = new Map();
 		//The menu manager to use
 		this._menuManager = props.menuManager;
 
-		if (this._livePluginManager.alreadyInstalled(this.name)) {
-			this._livePluginManager.uninstall(this.name)
-				.then(() => { /* Uninstall completed successfully */ })
-				.catch(e => {
-					console.error(e);
-				});
-		}
-
-		//Whether the plugin should be disabled (default: false)
+		//Disable/enable the plugin on load
 		this.disabled = !!props.disabled;
 	}
 
@@ -144,22 +131,17 @@ export class PluginInfo {
 		//If the function has already been loaded, use that
 		if (this.funcs.has(funcName)) return this.funcs.get(funcName);
 
-		try {
-			//Attempt to install the plugin, forcing reinstallation if it already exists
-			//Forces using the latest version
-			await this._livePluginManager.installFromPath(this.filePath, {force: true});
-		} catch (e) {
-			//Error while installing
-			console.error(e);
-			return undefined;
-		}
-
 		let loadedFunc: PluginFunction|PluginFunction[];
 		try {
-			//Attempt to require the plugin
-			loadedFunc = this._livePluginManager.require(this._name);
+			//Import the plugin code
+			//Requires a static prefix to load the module. See here: https://github.com/webpack/webpack/issues/6680#issuecomment-370800037
+			//TODO: How to import user plugins?
+			const module: any = await import("../../../config/" + this.name);
+
+			//The module's default export is a function, or array of functions
+			loadedFunc = module.default;
 		} catch (e) {
-			//Error while requiring
+			//Error while installing
 			console.error(e);
 			return undefined;
 		}

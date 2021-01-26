@@ -242,7 +242,6 @@ export default {
 				//Run the function
 				pluginFunction.run({
 					args: {},
-					console: console,
 					editorController: this._editorController,
 					ioController: this.ioController,
 				});
