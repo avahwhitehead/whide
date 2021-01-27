@@ -47,6 +47,7 @@
 					:message="input.message"
 					:error="input.error"
 					@submit="onInputSubmit"
+					@cancel="onInputCancel"
 				/>
 			</div>
 		</div>
@@ -232,11 +233,18 @@ export default {
 			this.input.message = "";
 			//Clear the callback
 			this.input.callback = () => {};
+			this.input.cancelCallback = () => {};
 		},
 		onInputSubmit(val) {
 			//Call the input's callback
 			if (this.input.callback) {
 				this.input.callback(val);
+			}
+		},
+		onInputCancel() {
+			//Call the input's cancel callback
+			if (this.input.cancelCallback) {
+				this.input.cancelCallback();
 			}
 		},
 
