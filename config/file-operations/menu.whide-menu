@@ -10,6 +10,7 @@
 					{ "name": "New Folder", "command": "run_new_folder" }
 				]
 			},
+			{ "name": "Delete", "command": "run_delete" },
 			{ "name": "Save", "command": "run_save" },
 			{ "name": "Close", "command": "run_close" }
 		]
