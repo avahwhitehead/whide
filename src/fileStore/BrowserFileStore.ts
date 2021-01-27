@@ -34,8 +34,8 @@ export class BrowserFileStore implements FileStoreInterface {
 		//Make sure the path is absolute
 		if (!path.isAbsolute(file_path)) throw new Error("Only absolute paths can be resolved");
 
-		//Resolve any `./` and `../` etc in the path
-		const normalised: string = path.normalize(file_path);
+		//Resolve any `./` and `../` etc in the path, acting as if from root
+		const normalised: string = path.join("/", file_path);
 
 		//Split the path into an array
 		let pathElements = normalised.split(path.sep);
