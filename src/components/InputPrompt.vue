@@ -1,12 +1,18 @@
 <template>
 	<div class="InputPrompt">
 		<div class="messageHolder">
-			<p>{{ message }}</p>
+			<h1 class="title" v-if="title">{{title}}</h1>
+			<p class="message">{{ message }}</p>
 		</div>
 		<div>
 			<div class="inputHolder" v-if="getInput">
-				<input v-model="input" />
-				<input type="button" @click="onSubmitClick" value="Submit" />
+				<div>
+					<input v-model="input" />
+					<input type="button" @click="onSubmitClick" value="Submit" />
+				</div>
+
+				<input type="button" @click="onCancelClick" value="Cancel" />
+
 				<div class="errorHolder" v-if="error">
 					<p class="error">{{error}}</p>
 				</div>
@@ -36,6 +42,10 @@ export default vue.extend({
 		error: {
 			type: String,
 			default: "",
+		},
+		title: {
+			type: String,
+			default: "",
 		}
 	},
 	data() {
@@ -47,6 +57,9 @@ export default vue.extend({
 		onSubmitClick() {
 			if (!this.getInput) this.$emit("submit");
 			else this.$emit("submit", this.input);
+		},
+		onCancelClick() {
+			this.$emit("cancel");
 		}
 	}
 })
@@ -55,6 +68,15 @@ export default vue.extend({
 
 <style scoped>
 .InputPrompt {
+
+}
+
+.InputPrompt .title {
+	font-size: larger;
+	text-decoration: underline;
+}
+
+.InputPrompt .message {
 
 }
 

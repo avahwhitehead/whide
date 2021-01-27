@@ -43,6 +43,7 @@
 			<div class="content">
 				<inputPrompt
 					:get-input="input.expectingInput"
+					:title="input.title"
 					:message="input.message"
 					:error="input.error"
 					@submit="onInputSubmit"
@@ -58,9 +59,9 @@ import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
 import Container from "@/components/Container";
 import FilePicker from "@/components/FilePicker";
 import MenuElement from "@/components/menubar/MenuElement";
-import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
+import {BrowserFileStore} from "@/fileStore/BrowserFileStore.ts";
 import fileDownloader from "js-file-download";
-import { run_load } from "@/api/fileLoader";
+import {run_load} from "@/api/fileLoader";
 import EditorController from "@/api/controllers/EditorController";
 import PluginToggler from "@/components/PluginToggler.vue";
 import InputPrompt from "@/components/InputPrompt";
@@ -89,10 +90,12 @@ export default {
 			ioController: undefined,
 			input: {
 				showInput: false,
+				title: "",
 				message: "",
 				error: "",
 				expectingInput: true,
 				callback: () => {},
+				cancelCallback: () => {},
 			}
 		}
 	},
@@ -115,13 +118,14 @@ export default {
 	},
 	mounted() {
 		this.ioController = {
-			showOutput: (message) => {
+			showOutput: (message, title = "") => {
 				return new Promise(resolve => {
 					//Make visible
 					this.input.showInput = true;
 					//Don't the text box
 					this.input.expectingInput = false;
 					//Set the message to show
+					this.input.title = title;
 					this.input.message = message;
 					//When the user submits
 					this.input.callback = () => {
@@ -132,7 +136,7 @@ export default {
 					};
 				});
 			},
-			getInput: (message, validator) => {
+			getInput: (message, validator = null, title = "") => {
 				//Use the provided validator, or always return true
 				validator = validator || (() => true);
 				return new Promise(resolve => {
@@ -141,6 +145,7 @@ export default {
 					//Show the text box
 					this.input.expectingInput = true;
 					//Show the message
+					this.input.title = title;
 					this.input.message = message;
 					//When the user enters the value
 					this.input.callback = (val) => {
@@ -154,6 +159,11 @@ export default {
 						} else {
 							this.input.error = "Invalid input";
 						}
+					};
+					//If the user cancels the operation
+					this.input.cancelCallback = () => {
+						this.hideInput();
+						resolve(undefined);
 					};
 				});
 			},
@@ -218,6 +228,7 @@ export default {
 			//Default to allowing input
 			this.input.expectingInput = true;
 			//Clear the message
+			this.input.title = "";
 			this.input.message = "";
 			//Clear the callback
 			this.input.callback = () => {};
@@ -239,11 +250,26 @@ export default {
 
 			//Run the function if possible
 			if (pluginFunction) {
+				let args = {};
+				for (let arg of (pluginFunction.args || [])) {
+					//Prompt the user for the argument input
+					let val = await this.ioController.getInput(
+						arg.description,
+						//Allow empty optional arguments, or validate the input
+						async (s) => (arg.optional && !s || await arg.validator(s)),
+						`INPUT: ${arg.name}`
+					);
+					//End here if the user presses cancel
+					if (val === undefined) return;
+					//Otherwise store the value
+					args[arg.name] = val;
+				}
+
 				//Make sure the code editor exists (this should never run)
 				if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
 				//Run the function
 				pluginFunction.run({
-					args: {},
+					args: args,
 					editorController: this._editorController,
 					ioController: this.ioController,
 				});

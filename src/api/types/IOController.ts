@@ -7,7 +7,7 @@ export default interface IOController {
 	 * @param message	The prompt message
 	 * @param validator	Input validator functions. Returns `true` if valid, `false` otherwise
 	 */
-	getInput(message: string, validator?: ((val: string) => boolean)) : Promise<string>;
+	getInput(message: string, validator?: ((val: string) => boolean|Promise<boolean>)) : Promise<string|undefined>;
 
 	/**
 	 * Function to show output to the user
