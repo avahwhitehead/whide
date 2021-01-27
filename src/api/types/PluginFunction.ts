@@ -24,6 +24,9 @@ export type PluginFunctionParameters = {
 	 * The code editor object
 	 */
 	editorController: EditorController,
+	/**
+	 * Object allowing user input/output
+	 */
 	ioController: IOController
 }
 
