@@ -5,7 +5,6 @@ import parse_menu_file, { Menu } from "@/api/parsers/MenuParser";
 import { PluginInfo } from "@/api/types/PluginInfo";
 import { CustomDict } from "@/types/CustomDict";
 import { PluginManager } from "@/api/managers/PluginManager";
-import { PluginManager as LivePluginManager } from "live-plugin-manager";
 
 //1st party config root
 const SYSTEM_CONFIG_ROOT = path.resolve(".", "config");
@@ -40,10 +39,9 @@ async function readFile(filePath: string) : Promise<string> {
  * Load all the packages from a given directory.
  * @param fs_root			The file root
  * @param pluginManager		The pluginManager object
- * @param livePluginManager	Live plugin manager object to use
  * @param isExternal		Whether the plugin is an external plugin
  */
-async function load_all_packages(fs_root: string, pluginManager : PluginManager, livePluginManager: LivePluginManager, isExternal : boolean) : Promise<void> {
+async function load_all_packages(fs_root: string, pluginManager : PluginManager, isExternal : boolean) : Promise<void> {
 	return new Promise((resolve, reject) => {
 		//Read all the files in the directory
 		fs.readdir(fs_root, async (err : NodeJS.ErrnoException | null, files : string[]) => {
@@ -60,7 +58,7 @@ async function load_all_packages(fs_root: string, pluginManager : PluginManager,
 
 				//Treat directories as if they are plugin packages
 				if (fileInfo.isDirectory()) {
-					let pluginInfo: PluginInfo = await load_package(fullPath, file, isExternal, livePluginManager);
+					let pluginInfo: PluginInfo = await load_package(fullPath, file, isExternal, pluginManager);
 					pluginManager.register(pluginInfo);
 				}
 			}
@@ -75,16 +73,16 @@ async function load_all_packages(fs_root: string, pluginManager : PluginManager,
  * @param filePath			The file path
  * @param name				The name of the package
  * @param isExternal		Whether the plugin is an external plugin
- * @param livePluginManager	Live plugin manager object to use
+ * @param pluginManager		The plugin manager
  */
-async function load_package(filePath: string, name: string, isExternal: boolean, livePluginManager: LivePluginManager) : Promise<PluginInfo> {
+async function load_package(filePath: string, name: string, isExternal: boolean, pluginManager: PluginManager) : Promise<PluginInfo> {
 	return new Promise((resolve, reject) => {
 		//Make a PluginInfo object
 		let pluginInfo: PluginInfo = new PluginInfo({
 			name: name,
 			path: filePath,
 			external: !isExternal,
-			livePluginManager: livePluginManager,
+			menuManager: pluginManager.menuManager,
 		});
 
 		//Read the files in the directory
@@ -147,13 +145,10 @@ export async function run_load(watch: boolean = true, externalModules : boolean 
 
 	//TODO: Watch for plugin file changes
 
-	//Live plugin manager object to use to load plugins
-	const livePluginManager : LivePluginManager = new LivePluginManager();
-
 	//Load the 1st party plugins
-	await load_all_packages(SYSTEM_CONFIG_ROOT, pluginManager, livePluginManager, false);
+	await load_all_packages(SYSTEM_CONFIG_ROOT, pluginManager, false);
 	//Load the 3rd party plugins, if enabled
-	if (externalModules) await load_all_packages(USER_CONFIG_ROOT, pluginManager, livePluginManager, true);
+	if (externalModules) await load_all_packages(USER_CONFIG_ROOT, pluginManager, true);
 
 	//Return the managers
 	return pluginManager;

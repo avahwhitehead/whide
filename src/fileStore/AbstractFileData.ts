@@ -5,19 +5,21 @@ export class AbstractFileData {
 	private _name: string = "";
 	private _parent?: FolderData;
 	private _metadata: Map<string,string>;
-
+	private _type: "file"|"folder";
 
 	/**
 	 *
 	 * @param id		File identifier
 	 * @param name		File name
+	 * @param type		String representing whether this is a file or a folder.
 	 * @param parent?	Parent file
 	 */
-	constructor(id: string, name: string, parent?: FolderData) {
+	constructor(id: string, name: string, type: "file" | "folder", parent?: FolderData) {
 		this._id = id;
 		this._name = name;
 		this._parent = parent;
 		this._metadata = new Map<string, string>();
+		this._type = type;
 	}
 
 	/**
@@ -62,6 +64,10 @@ export class AbstractFileData {
 	set metadata(value: Map<string, string>) {
 		this._metadata = value;
 	}
+
+	get type(): string {
+		return this._type;
+	}
 }
 
 /**
@@ -71,7 +77,7 @@ export class FileData extends AbstractFileData {
 	private _content?: string = undefined;
 
 	constructor(id: string, name: string, parent?: FolderData, content: string = "") {
-		super(id, name, parent);
+		super(id, name, "file", parent);
 		this._content = content;
 	}
 
@@ -88,7 +94,7 @@ export class FolderData extends AbstractFileData {
 	private readonly _children: AbstractFileData[] = [];
 
 	constructor(id: string, name: string, parent?: FolderData, children: AbstractFileData[] = []) {
-		super(id, name, parent);
+		super(id, name, "folder", parent);
 		this._children = children;
 	}
 
