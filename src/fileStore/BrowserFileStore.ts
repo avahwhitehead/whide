@@ -36,8 +36,17 @@ export class BrowserFileStore implements FileStoreInterface {
 
 		//Resolve any `./` and `../` etc in the path
 		const normalised: string = path.normalize(file_path);
+
+		//Split the path into an array
+		let pathElements = normalised.split(path.sep);
+		//Removing empty items (only the start/end)
+		pathElements = pathElements.filter(value => !!value);
+
+		//If the path is `/` return an object wrapping around the file tree
+		//TODO: Refactor to make `this.fileTree` into a `FolderData` object
+		if (pathElements.length === 0) return new FolderData('root', 'root', undefined, this.fileTree);
 		//Navigate through the file tree, following the path
-		return this._follow_path(this.fileTree, normalised.split(file_path));
+		return this._follow_path(this.fileTree, pathElements);
 	}
 
 	public async createFile(name : string, parent? : FolderData): Promise<FileData> {
@@ -188,13 +197,15 @@ export class BrowserFileStore implements FileStoreInterface {
 
 	/**
 	 * Recursively find a file using its name
+	 * @param files			Array of files/folders to recursively search through
+	 * @param path_elements	Array of folder names (optionally ending with a file) representing a file path
 	 * @return {null|FileData}	The found file or null
 	 */
 	private _follow_path(files: AbstractFileData[], path_elements: string[]) : AbstractFileData | undefined {
 		if (path_elements.length === 0) return undefined;
 
 		//Remove the first element from the path, and store it
-		let root_name: string = path_elements.slice(1, path_elements.length)[0];
+		let root_name: string = path_elements.splice(0, 1)[0];
 
 		//See if any files at this level match the name
 		let file: AbstractFileData|undefined = files.find(f => f.name === root_name);
