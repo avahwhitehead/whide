@@ -255,15 +255,22 @@ export default {
 
 				//Make sure the code editor exists (this should never run)
 				if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
-				//Run the function
-				pluginFunction.run({
-					args: args,
-					editorController: this._editorController,
-					ioController: this.ioController,
-				});
+				try {
+					//Run the function
+					pluginFunction.run({
+						args: args,
+						editorController: this._editorController,
+						ioController: this.ioController,
+					});
+				} catch (e) {
+					//Handle errors produced in the plugin function
+					console.error(e);
+					this.ioController.showOutput(e, `Error in plugin function '${plugin.name}.${pluginFunction}'`);
+				}
 			} else {
 				//Error otherwise
 				console.error(`Couldn't find function ${command} in plugin ${plugin.name}`);
+				this.ioController.showOutput(`Couldn't find function ${command} in plugin ${plugin.name}`, "Error");
 			}
 		},
 	},
