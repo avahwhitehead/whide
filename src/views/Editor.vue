@@ -32,13 +32,6 @@
 			<Container :collapsible="false" class="filler">Footer content</Container>
 		</div>
 
-		<div>
-			<input v-model="filename" placeholder="File Name"/>
-			<button @click="create">Create</button>
-			<br/>
-			<button @click="del">Delete</button>
-		</div>
-
 		<div class="inputModal" v-if="input.showInput">
 			<div class="content">
 				<inputPrompt
@@ -82,7 +75,6 @@ export default {
 	data() {
 		return {
 			files: [],
-			filename: "",
 			focused_file: null,
 			openFiles: [],
 			menuManager: null,
@@ -194,10 +186,6 @@ export default {
 		onEditorObjectChange(editor) {
 			this.codeEditor = editor;
 		},
-		async create() {
-			//Create a new file with the given file name
-			await browserFileStore.createFile(this.filename, undefined);
-		},
 		save() {
 			if (this.focused_file) {
 				browserFileStore.writeFile(this.focused_file)
@@ -205,14 +193,6 @@ export default {
 					.catch((e) => console.error(e));
 			} else {
 				console.log(`No file open to save`);
-			}
-		},
-		del() {
-			let file = this._find_by_name(this.files, this.filename);
-			if (file) {
-				browserFileStore.deleteFile(file).then(() => console.log("Deleted"));
-			} else {
-				console.log(`Could not find a file with the name '${this.filename}'`);
 			}
 		},
 		download() {
@@ -286,22 +266,6 @@ export default {
 				console.error(`Couldn't find function ${command} in plugin ${plugin.name}`);
 			}
 		},
-		/**
-		 * Recursively find a file using its name
-		 * @param files		Array of files
-		 * @param fileName	The file name
-		 * @return {null|FileData}	The found file or null
-		 */
-		_find_by_name(files, fileName) {
-			for (let file of files) {
-				if (file.name === fileName) return file;
-				if (file.children) {
-					let r = this._find_by_name(file.children, fileName);
-					if (r) return r;
-				}
-			}
-			return null;
-		}
 	},
 }
 </script>
