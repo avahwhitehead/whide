@@ -63,7 +63,7 @@ import InputPrompt from "@/components/InputPrompt";
 const browserFileStore = new BrowserFileStore();
 
 //Loader for system (1st party) plugins
-const serverSidePluginLoader = new SystemPluginLoader();
+const systemPluginLoader = new SystemPluginLoader();
 
 export default {
 	name: 'Editor',
@@ -106,8 +106,8 @@ export default {
 	},
 	created() {
 		//Load the plugins
-		serverSidePluginLoader.run_load().then(() => {
-			this.pluginManager = serverSidePluginLoader.pluginManager;
+		systemPluginLoader.run_load().then(() => {
+			this.pluginManager = systemPluginLoader.pluginManager;
 			this.menuManager = this.pluginManager.menuManager;
 		});
 	},

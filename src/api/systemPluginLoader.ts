@@ -3,7 +3,7 @@ import { PluginManager } from "@/api/managers/PluginManager";
 import { PluginModule } from "@/api/types/PluginModule";
 import path from "path";
 
-export default class ServerSidePluginLoader {
+export default class SystemPluginLoader {
 	private readonly _pluginManager: PluginManager;
 
 	constructor() {
