@@ -53,14 +53,17 @@ import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
 import Container from "@/components/Container";
 import FilePicker from "@/components/FilePicker";
 import MenuElement from "@/components/menubar/MenuElement";
-import {BrowserFileStore} from "@/fileStore/BrowserFileStore.ts";
+import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
 import fileDownloader from "js-file-download";
-import {run_load} from "@/api/fileLoader";
+import SystemPluginLoader from "@/api/systemPluginLoader";
 import EditorController from "@/api/controllers/EditorController";
 import PluginToggler from "@/components/PluginToggler.vue";
 import InputPrompt from "@/components/InputPrompt";
 
 const browserFileStore = new BrowserFileStore();
+
+//Loader for system (1st party) plugins
+const serverSidePluginLoader = new SystemPluginLoader();
 
 export default {
 	name: 'Editor',
@@ -103,10 +106,9 @@ export default {
 	},
 	created() {
 		//Load the plugins
-		//TODO: Also allow external plugins
-		run_load(true, false).then(pluginManager => {
-			this.pluginManager = pluginManager;
-			this.menuManager = pluginManager.menuManager;
+		serverSidePluginLoader.run_load().then(() => {
+			this.pluginManager = serverSidePluginLoader.pluginManager;
+			this.menuManager = this.pluginManager.menuManager;
 		});
 	},
 	mounted() {

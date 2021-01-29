@@ -1,6 +1,7 @@
-import { Menu } from "@/api/parsers/MenuParser";
+import setupMenus, { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
 import { MenuManager } from "@/api/managers/MenuManager";
+import { PluginModule } from "@/api/types/PluginModule";
 
 /**
  * The parameters used to initialise the PluginInfo object
@@ -30,6 +31,10 @@ export interface PluginInfoProps {
 	 * The menu manager object to use
 	 */
 	menuManager: MenuManager,
+	/**
+	 * The module exporting this plugin
+	 */
+	module: PluginModule,
 }
 
 /**
@@ -59,7 +64,7 @@ export class PluginInfo {
 		//Whether the plugin should be disabled (default: false)
 		this._disabled = !!props.disabled;
 		//The menus created by the plugin (default: [])
-		this._menus = props.menus || [];
+		this._menus = props.module.menus || [];
 
 		//Functions defined by the plugin
 		this.funcs = new Map();
@@ -68,6 +73,25 @@ export class PluginInfo {
 
 		//Disable/enable the plugin on load
 		this.disabled = !!props.disabled;
+
+		//Load the menus
+		if (this.menus) {
+			setupMenus(this.menus, this);
+			//Register menu items
+			for (let menu of this.menus) {
+				this.menuManager.register(menu);
+			}
+		}
+
+		//Load the functions
+		const loadedFunc: PluginFunction|PluginFunction[] = props.module.default;
+		if ((<PluginFunction[]>loadedFunc).length !== undefined) {
+			//If the plugin exports an array of functions
+			this._loadFuncArray(<PluginFunction[]>loadedFunc);
+		} else {
+			//If the plugin exports a single function
+			this._loadFunc(<PluginFunction>loadedFunc);
+		}
 	}
 
 	get name(): string {
@@ -127,33 +151,6 @@ export class PluginInfo {
 	 */
 	async getFunc(funcName: string) : Promise<PluginFunction | undefined> {
 		if (this.disabled) throw new Error(`Plugin ${this.name} is disabled`);
-
-		//If the function has already been loaded, use that
-		if (this.funcs.has(funcName)) return this.funcs.get(funcName);
-
-		let loadedFunc: PluginFunction|PluginFunction[];
-		try {
-			//Import the plugin code
-			//Requires a static prefix to load the module. See here: https://github.com/webpack/webpack/issues/6680#issuecomment-370800037
-			//TODO: How to import user plugins?
-			const module: any = await import("../../../config/" + this.name);
-
-			//The module's default export is a function, or array of functions
-			loadedFunc = module.default;
-		} catch (e) {
-			//Error while installing
-			console.error(e);
-			return undefined;
-		}
-
-		if ((<PluginFunction[]>loadedFunc).length !== undefined) {
-			//If the plugin exports an array of functions
-			this._loadFuncArray(<PluginFunction[]>loadedFunc);
-		} else {
-			//If the plugin exports a single function
-			this._loadFunc(<PluginFunction>loadedFunc);
-		}
-
 		//Return the function
 		return this.funcs.get(funcName);
 	}

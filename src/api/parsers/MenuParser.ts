@@ -76,18 +76,10 @@ function _menuForEach(menus: (Menu | MenuItem)[],
 
 /**
  * Parse a JSON string into a list of Menus.
- * @param content		The JSON string
+ * @param menus
  * @param pluginInfo	PluginInfo object.
  */
-export default function parse(content: string, pluginInfo : PluginInfo) : Menu[] {
-	let menus : Menu[];
-	try {
-		//Check for valid JSON and matches the `Menu[]` type definition
-		menus = JSON.parse(content);
-	} catch (e) {
-		throw new Error("JSON in invalid format");
-	}
-
+export default function setupMenus(menus: Menu[], pluginInfo : PluginInfo) : Menu[] {
 	//Check the menus are valid
 	let error = _getError(menus);
 	if (error) throw new Error(`Invalid menus: "${error}"`);
