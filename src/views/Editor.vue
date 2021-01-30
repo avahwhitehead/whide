@@ -100,9 +100,6 @@ export default {
 			if (!this.menuManager) return [];
 			return this.menuManager.menus;
 		},
-		_editorController() {
-			return new EditorController(this.codeEditor, browserFileStore);
-		}
 	},
 	created() {
 		//Load the plugins
@@ -258,10 +255,13 @@ export default {
 				//Make sure the code editor exists (this should never run)
 				if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
 				try {
+					//Make an editor controller object
+					let editorController = new EditorController(this.codeEditor, browserFileStore);
+
 					//Run the function
 					pluginFunction.run({
 						args: args,
-						editorController: this._editorController,
+						editorController: editorController,
 						ioController: this.ioController,
 					});
 				} catch (e) {
