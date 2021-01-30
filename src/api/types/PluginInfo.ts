@@ -1,7 +1,6 @@
 import setupMenus, { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
 import { MenuManager } from "@/api/managers/MenuManager";
-import { PluginModule } from "@/api/types/PluginModule";
 
 /**
  * The parameters used to initialise the PluginInfo object
@@ -31,10 +30,6 @@ export interface PluginInfoProps {
 	 * The menu manager object to use
 	 */
 	menuManager: MenuManager,
-	/**
-	 * The module exporting this plugin
-	 */
-	module: PluginModule,
 }
 
 /**
@@ -64,7 +59,7 @@ export class PluginInfo {
 		//Whether the plugin should be disabled (default: false)
 		this._disabled = !!props.disabled;
 		//The menus created by the plugin (default: [])
-		this._menus = props.module.menus || [];
+		this._menus = props.menus || [];
 
 		//Functions defined by the plugin
 		this.funcs = new Map();
@@ -81,16 +76,6 @@ export class PluginInfo {
 			for (let menu of this.menus) {
 				this.menuManager.register(menu);
 			}
-		}
-
-		//Load the functions
-		const loadedFunc: PluginFunction|PluginFunction[] = props.module.default;
-		if ((<PluginFunction[]>loadedFunc).length !== undefined) {
-			//If the plugin exports an array of functions
-			this._loadFuncArray(<PluginFunction[]>loadedFunc);
-		} else {
-			//If the plugin exports a single function
-			this._loadFunc(<PluginFunction>loadedFunc);
 		}
 	}
 
@@ -159,16 +144,20 @@ export class PluginInfo {
 	 * Register an array of plugin functions
 	 * @param funcs	The array of functions
 	 */
-	private _loadFuncArray(funcs : PluginFunction[]) {
-		//Register each individual function
-		for (let f of funcs) this._loadFunc(f)
+	public registerFuncs(funcs : PluginFunction|PluginFunction[]) {
+		//The plugin exports a single function
+		if ((<PluginFunction[]>funcs).length === undefined) this.registerFunc(<PluginFunction>funcs);
+		//The plugin exports an array of functions
+		else {
+			for (let f of <PluginFunction[]>funcs) this.registerFunc(f);
+		}
 	}
 
 	/**
 	 * Register a single plugin function
 	 * @param func	The function to register
 	 */
-	private _loadFunc(func : PluginFunction) {
+	public registerFunc(func : PluginFunction) {
 		//Store the function in memory
 		this.funcs.set(func.name, func);
 	}

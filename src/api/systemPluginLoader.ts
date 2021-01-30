@@ -2,6 +2,7 @@ import { PluginInfo } from "@/api/types/PluginInfo";
 import { PluginManager } from "@/api/managers/PluginManager";
 import { PluginModule } from "@/api/types/PluginModule";
 import path from "path";
+import { PluginFunction } from "@/api/types/PluginFunction";
 
 export default class SystemPluginLoader {
 	private readonly _pluginManager: PluginManager;
@@ -38,10 +39,14 @@ export default class SystemPluginLoader {
 			let info: PluginInfo = new PluginInfo({
 				name: path.basename(modulePath),
 				menuManager: this.pluginManager.menuManager,
+				menus: module.menus,
 				external: false,
 				path: modulePath,
-				module: module,
 			});
+
+			//Load the functions
+			const loadedFunc: PluginFunction|PluginFunction[] = module.default;
+			info.registerFuncs(loadedFunc);
 
 			//Register the plugin
 			this.pluginManager.register(info);
