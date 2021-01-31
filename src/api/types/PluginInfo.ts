@@ -57,7 +57,7 @@ export class PluginInfo {
 		//Whether the plugin is first party
 		this._isFirstParty = !!props.external;
 		//Whether the plugin should be disabled (default: false)
-		this._disabled = !!props.disabled;
+		this._disabled = true;
 		//The menus created by the plugin (default: [])
 		this._menus = props.menus || [];
 
@@ -68,15 +68,6 @@ export class PluginInfo {
 
 		//Disable/enable the plugin on load
 		this.disabled = !!props.disabled;
-
-		//Load the menus
-		if (this.menus) {
-			setupMenus(this.menus, this);
-			//Register menu items
-			for (let menu of this.menus) {
-				this.menuManager.register(menu);
-			}
-		}
 	}
 
 	get name(): string {
@@ -98,6 +89,9 @@ export class PluginInfo {
 	set disabled(value: boolean) {
 		//Don't disable system plugins
 		if (this.isFirstParty && value) throw new Error("Can't disable system plugins");
+		//Do nothing if the plugin is already in the requested state
+		if (this._disabled == value) return;
+
 		//Change the disabled value
 		this._disabled = value;
 
