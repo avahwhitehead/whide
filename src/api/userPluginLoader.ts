@@ -27,8 +27,13 @@ export default class UserPluginLoader {
 	 * Load all the plugin files
 	 */
 	public async run_load() : Promise<void> {
-		// return;
-		// noinspection UnreachableCodeJS
+		//Create the plugin folder if it doesn't exist
+		if (!fs.existsSync(USER_CONFIG_ROOT)) {
+			console.log(`Couldn't find plugin root. Creating "${USER_CONFIG_ROOT}"`);
+			fs.mkdirSync(USER_CONFIG_ROOT, {recursive: true});
+		}
+
+		//Read all the folders in the plugin folder
 		const files = fs.readdirSync(USER_CONFIG_ROOT);
 
 		for (let fileName of files) {
