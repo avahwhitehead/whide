@@ -61,6 +61,10 @@ import PluginToggler from "@/components/PluginToggler.vue";
 import InputPrompt from "@/components/InputPrompt";
 import UserPluginLoader from "@/api/userPluginLoader";
 import { PluginManager } from "@/api/managers/PluginManager";
+import electron from "electron";
+
+//Get the command line argument values
+const commandLineArgs = electron.remote.getGlobal("commandLineArgs");
 
 const browserFileStore = new BrowserFileStore();
 
@@ -107,10 +111,13 @@ export default {
 		//Load the system plugins first
 		systemPluginLoader.run_load().then(() => {
 			console.log("Loaded system plugins");
-			//Then load the user plugins
-			clientPluginLoader.run_load().then(() => {
-				console.log("Loaded user plugins");
-			});
+			//Load the user plugins if the app is not in safe mode
+			console.log(commandLineArgs);
+			if (!commandLineArgs.safe) {
+				clientPluginLoader.run_load().then(() => {
+					console.log("Loaded user plugins");
+				});
+			}
 		});
 	},
 	mounted() {
