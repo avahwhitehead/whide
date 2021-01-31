@@ -35,21 +35,19 @@ export default class SystemPluginLoader {
 				throw new Error(`Couldn't load system plugin "${modulePath}"`);
 			}
 
-			//Make an object representing the plugin
-			let info: PluginInfo = new PluginInfo({
+			//Register the plugin
+			let info: PluginInfo = this.pluginManager.register({
+				//TODO: Get the actual module name
 				name: path.basename(modulePath),
-				menuManager: this.pluginManager.menuManager,
+				path: modulePath,
 				menus: module.menus,
 				external: false,
-				path: modulePath,
+				disabled: false,
 			});
 
 			//Load the functions
 			const loadedFunc: PluginFunction|PluginFunction[] = module.default;
 			info.registerFuncs(loadedFunc);
-
-			//Register the plugin
-			this.pluginManager.register(info);
 		}
 	}
 

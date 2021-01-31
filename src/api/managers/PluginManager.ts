@@ -1,71 +1,72 @@
-import { PluginInfo } from "@/api/types/PluginInfo";
+import { PluginInfo, PluginInfoProps } from "@/api/types/PluginInfo";
 import { MenuManager } from "@/api/managers/MenuManager";
+import setupMenus from "@/api/parsers/MenuParser";
 
 /**
  * A manager to control which plugins are currently loaded
  */
 export class PluginManager {
-	private readonly plugins: Map<string, PluginInfo>;
+	private readonly plugins: PluginInfo[];
 	private readonly _menuManager: MenuManager;
 
 	/**
 	 *
 	 */
 	constructor() {
-		this.plugins = new Map();
+		this.plugins = [];
 		this._menuManager = new MenuManager();
 	}
 
 	/**
-	 * Get a plugin by name
-	 * @param name	The plugin's name
-	 * @returns	The plugin's {@link PluginInfo} object, or undefined if not found
-	 */
-	get(name: string): PluginInfo | undefined {
-		return this.plugins.get(name) || undefined;
-	}
-
-	/**
 	 * Load and enable a new plugin
-	 * @param info	The plugin info object to activate
+	 * @param props	The properties used to register the plugin
 	 */
-	register(info: PluginInfo): void {
-		//If a plugin with this name already exists, unregister it
-		if (this.plugins.has(info.name)) this.unregister(info.name);
+	register(props: PluginInfoProps): PluginInfo {
+		//Make the plugin object
+		let pluginInfo = new PluginInfo({
+			name: props.name,
+			path: props.path,
+			menus: props.menus || [],
+			external: (props.external === undefined) ? true : props.external,
+			disabled: (props.disabled === undefined) ? false : props.disabled,
+		});
+
+		//Setup the menus
+		setupMenus(pluginInfo.menus, pluginInfo);
 
 		//Store the plugin object
-		this.plugins.set(info.name, info);
-		//Enable the plugin
-		info.disabled = false;
+		this.plugins.push(pluginInfo);
+
+		//Enable the plugin, if required
+		if (!props.disabled) this.enablePlugin(pluginInfo);
+
+		//Return the plugin object
+		return pluginInfo;
 	}
 
 	/**
 	 * Disable and remove a plugin
-	 * @param name	The name of the plugin
+	 * @param pluginInfo	The plugin to unregister
 	 */
-	unregister(name: string): void {
-		//Get the plugin object
-		let info: PluginInfo | undefined = this.plugins.get(name);
-		if (!info) return;
+	unregister(pluginInfo: PluginInfo): void {
+		this.disablePlugin(pluginInfo);
 
-		//Disable the plugin
-		info.disabled = true;
 		//Remove the plugin from the map
-		this.plugins.delete(name);
+		this.plugins.splice(this.plugins.indexOf(pluginInfo), 1);
 	}
 
 	/**
 	 * Get an array of the plugins names
 	 */
 	names(): string[] {
-		return Array.from(this.plugins.keys());
+		return this.plugins.map(p => p.name);
 	}
 
 	/**
 	 * Get an array of the plugins
 	 */
-	getPlugins(): [string, PluginInfo][] {
-		return Array.from(this.plugins.entries());
+	getPlugins(): PluginInfo[] {
+		return this.plugins;
 	}
 
 	/**
@@ -73,5 +74,33 @@ export class PluginManager {
 	 */
 	get menuManager(): MenuManager {
 		return this._menuManager;
+	}
+
+
+	/**
+	 * Enable the plugin
+	 */
+	public enablePlugin(pluginInfo: PluginInfo) {
+		//Register the menus
+		pluginInfo.menus.forEach(m => this._menuManager.register(m));
+
+		//mark the plugin as disabled
+		pluginInfo.disabled = false;
+	}
+
+	/**
+	 * Disable the plugin
+	 */
+	public disablePlugin(pluginInfo: PluginInfo) {
+		//Don't disable system plugins
+		if (pluginInfo.isExternal) {
+			throw new Error("Can't disable system plugins");
+		}
+
+		//Unregister the menus
+		pluginInfo.menus.forEach(m => this._menuManager.unregister(m));
+
+		//mark the plugin as disabled
+		pluginInfo.disabled = true;
 	}
 }

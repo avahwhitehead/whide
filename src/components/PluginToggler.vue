@@ -8,11 +8,11 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="([name,plugin],i) in plugins" :key="i">
+				<tr v-for="(plugin,i) in plugins" :key="i">
 					<td class="toggle-cell min-width">
 						<input type="checkbox" :checked="!plugin.disabled" @change="togglePlugin($event, plugin)"/>
 					</td>
-					<td class="name-cell max-width border">{{name}}</td>
+					<td class="name-cell max-width border">{{plugin.name}}</td>
 				</tr>
 			</tbody>
 		</table>
@@ -34,7 +34,7 @@ export default vue.extend({
 		}
 	},
 	computed: {
-		plugins() : [string,PluginInfo][] {
+		plugins() : PluginInfo[] {
 			if (!this.$props.pluginManager) return [];
 			return this.$props.pluginManager.getPlugins();
 		}
@@ -43,7 +43,8 @@ export default vue.extend({
 		togglePlugin(event : Event, plugin: PluginInfo) {
 			if (!plugin) return;
 			try {
-				plugin.disabled = !plugin.disabled;
+				if (plugin.disabled) this.pluginManager.enablePlugin(plugin);
+				else this.pluginManager.disablePlugin(plugin);
 			} catch (e) {
 				console.error(e);
 			}
