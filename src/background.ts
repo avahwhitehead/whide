@@ -3,7 +3,14 @@
 import { app, protocol, BrowserWindow } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
+import { ExtendedCommand, makeCommandLineParser } from "@/types/CommandLine";
 const isDevelopment = process.env.NODE_ENV !== 'production';
+
+//Parse command line arguments
+const program : ExtendedCommand = makeCommandLineParser();
+program.parse();
+//Store the values in a global variable
+(global as any).commandLineArgs = program.opts();
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
