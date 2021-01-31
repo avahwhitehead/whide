@@ -7,8 +7,13 @@ import { PluginFunction } from "@/api/types/PluginFunction";
 export default class SystemPluginLoader {
 	private readonly _pluginManager: PluginManager;
 
-	constructor() {
-		this._pluginManager = new PluginManager();
+	/**
+	 *
+	 * @param pluginManager	The plugin manager to use.
+	 * 						If not provided, a new one will be created.
+	 */
+	constructor(pluginManager? : PluginManager) {
+		this._pluginManager = pluginManager || new PluginManager();
 	}
 
 	/**

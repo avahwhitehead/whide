@@ -59,11 +59,15 @@ import SystemPluginLoader from "@/api/systemPluginLoader";
 import EditorController from "@/api/controllers/EditorController";
 import PluginToggler from "@/components/PluginToggler.vue";
 import InputPrompt from "@/components/InputPrompt";
+import UserPluginLoader from "@/api/userPluginLoader";
+import { PluginManager } from "@/api/managers/PluginManager";
 
 const browserFileStore = new BrowserFileStore();
 
-//Loader for system (1st party) plugins
-const systemPluginLoader = new SystemPluginLoader();
+//Plugin loaders for 1st and 3rd party plugins
+const pluginManager = new PluginManager();
+const systemPluginLoader = new SystemPluginLoader(pluginManager);
+const clientPluginLoader = new UserPluginLoader(pluginManager);
 
 export default {
 	name: 'Editor',
@@ -80,9 +84,8 @@ export default {
 			files: [],
 			focused_file: null,
 			openFiles: [],
-			menuManager: null,
 			codeEditor: undefined,
-			pluginManager: undefined,
+			pluginManager: pluginManager,
 			ioController: undefined,
 			input: {
 				showInput: false,
@@ -97,15 +100,17 @@ export default {
 	},
 	computed: {
 		menus() {
-			if (!this.menuManager) return [];
-			return this.menuManager.menus;
+			return pluginManager.menuManager.menus;
 		},
 	},
 	created() {
-		//Load the plugins
+		//Load the system plugins first
 		systemPluginLoader.run_load().then(() => {
-			this.pluginManager = systemPluginLoader.pluginManager;
-			this.menuManager = this.pluginManager.menuManager;
+			console.log("Loaded system plugins");
+			//Then load the user plugins
+			clientPluginLoader.run_load().then(() => {
+				console.log("Loaded user plugins");
+			});
 		});
 	},
 	mounted() {
@@ -256,7 +261,19 @@ export default {
 				if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
 				try {
 					//Make an editor controller object
-					let editorController = new EditorController(this.codeEditor, browserFileStore);
+					//TODO: User plugins freeze the editor if a CodeMirror object is passed directly.
+					//	I'm pretty sure it's because of this: https://www.electronjs.org/docs/api/remote#passing-callbacks-to-the-main-process
+					//TODO: Write a proper wrapper around the editor to allow control from within in plugins.
+					let editorWrapper = {
+						getValue: () => {
+							return this.codeEditor.getValue();
+						},
+						setValue: (value) => {
+							this.codeEditor.setValue(value);
+						},
+					};
+					//noinspection JSCheckFunctionSignatures
+					let editorController = new EditorController(editorWrapper, browserFileStore);
 
 					//Run the function
 					pluginFunction.run({
