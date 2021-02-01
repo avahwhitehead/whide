@@ -112,7 +112,6 @@ export default {
 		systemPluginLoader.run_load().then(() => {
 			console.log("Loaded system plugins");
 			//Load the user plugins if the app is not in safe mode
-			console.log(commandLineArgs);
 			if (!commandLineArgs.safe) {
 				clientPluginLoader.run_load().then(() => {
 					console.log("Loaded user plugins");
