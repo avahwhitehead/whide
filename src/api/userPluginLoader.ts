@@ -4,8 +4,7 @@ import { PluginInfo } from "@/api/types/PluginInfo";
 import { PluginManager } from "@/api/managers/PluginManager";
 import { PluginModule } from "@/api/types/PluginModule";
 import electron from "electron";
-import * as fs from "fs";
-import { Stats } from "fs";
+import fs, { Stats } from "fs";
 import { PluginFunction } from "@/api/types/PluginFunction";
 
 //3rd party plugins root
@@ -49,10 +48,12 @@ export default class UserPluginLoader {
 					throw new Error(`Couldn't load system plugin "${fileName}"`);
 				}
 
+				//Get the module name
+				let moduleName : string = UserPluginLoader._getModuleName(filePath);
+
 				//Register the plugin
 				let info: PluginInfo = this.pluginManager.register({
-					//TODO: Get the actual module name
-					name: fileName,
+					name: moduleName,
 					path: filePath,
 					menus: pluginModule.menus || [],
 					external: true,
@@ -64,6 +65,25 @@ export default class UserPluginLoader {
 				info.registerFuncs(funcs);
 			}
 		}
+	}
+
+	/**
+	 * Get a module's name from its path
+	 * @param modulePath	Full path to the module root
+	 */
+	private static _getModuleName(modulePath: string) {
+		let moduleName: string;
+		try {
+			//Load the module's package.json file
+			let packageJson: any = electron.remote.require(path.join(modulePath, "package.json"));
+			//Read the module name from the package
+			moduleName = packageJson.name;
+		} catch {
+			//Couldn't read the package.json file
+			moduleName = "";
+		}
+		//Use the folder name if the name couldn't be determined
+		return moduleName || path.basename(modulePath);
 	}
 
 	get pluginManager(): PluginManager {

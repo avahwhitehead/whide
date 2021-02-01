@@ -33,27 +33,48 @@ export default class SystemPluginLoader {
 
 		for (let modulePath of requireContext.keys()) {
 			//Get the actual plugin
-			let module: PluginModule;
+			let pluginModule: PluginModule;
 			try {
-				module = requireContext(modulePath);
+				pluginModule = requireContext(modulePath);
 			} catch (e) {
 				throw new Error(`Couldn't load system plugin "${modulePath}"`);
 			}
 
+			//Get the module name
+			let moduleName = SystemPluginLoader._getModuleName(modulePath);
+
 			//Register the plugin
 			let info: PluginInfo = this.pluginManager.register({
-				//TODO: Get the actual module name
-				name: path.basename(modulePath),
+				name: moduleName,
 				path: modulePath,
-				menus: module.menus,
+				menus: pluginModule.menus,
 				external: false,
 				disabled: false,
 			});
 
 			//Load the functions
-			const loadedFunc: PluginFunction|PluginFunction[] = module.default;
+			const loadedFunc: PluginFunction|PluginFunction[] = pluginModule.default;
 			info.registerFuncs(loadedFunc);
 		}
+	}
+
+	/**
+	 * Get a module's name from its path
+	 * @param modulePath	Path to the module root (relative to ../../config/)
+	 */
+	private static _getModuleName(modulePath: string) {
+		let moduleName: string;
+		try {
+			//Load the module's package.json file
+			let packageJson: any = require("../../config/" + path.join(modulePath, "package.json"));
+			//Read the module name from the package
+			moduleName = packageJson.name;
+		} catch {
+			//Couldn't read the package.json file
+			moduleName = "";
+		}
+		//Use the folder name if the name couldn't be determined
+		return moduleName || path.basename(modulePath);
 	}
 
 	get pluginManager(): PluginManager {
