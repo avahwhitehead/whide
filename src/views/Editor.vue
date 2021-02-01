@@ -2,13 +2,15 @@
 	<div id="app" class="editor">
 		<div class="header">
 			<div class="headerBar">
-				<MenuElement :menu="menu" @run="runPluginFunc"
-					v-for="(menu, i) in menus" :key="i"
-				/>
-			</div>
-			<div class="filler">
-				<button @click="save" :disabled="!focused_file">Save File</button>
-				<button @click="download" :disabled="!focused_file">Download File</button>
+				<div class="filler">
+					<MenuElement :menu="menu" @run="runPluginFunc"
+						v-for="(menu, i) in menus" :key="i"
+					/>
+					<div>
+						<button @click="save" :disabled="!focused_file">Save File</button>
+						<button @click="download" :disabled="!focused_file">Download File</button>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -397,6 +399,15 @@ Fillers
 }
 
 .header .filler, .footer .filler {
+	background: #CCC;
+}
+
+.header .filler {
+	padding: 4px;
+	height: 100%;
+}
+
+.footer .filler {
 	background: #CCC;
 	height: 3em;
 }
