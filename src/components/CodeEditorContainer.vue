@@ -1,9 +1,8 @@
 <template>
 	<div class="editorHolder">
-		<TabbedPanel :names="files.map(f => f.name)" @change="onTabChange" @close="onTabClose">
-			<!-- This div will hold the code editor -->
-			<div ref="codeHolder" class="codeHolder"></div>
-		</TabbedPanel>
+		<TabbedPanel :names="files.map(f => f.name)" @change="onTabChange" @close="onTabClose"></TabbedPanel>
+		<!-- This div will hold the code editor -->
+		<div ref="codeHolder" class="codeHolder"></div>
 	</div>
 </template>
 
