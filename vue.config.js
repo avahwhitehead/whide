@@ -6,6 +6,7 @@ module.exports = {
 		electronBuilder: {
 			nodeIntegration: true,
 			enableRemoteModule: true,
+			contextIsolation: true,
 		}
 	}
 }

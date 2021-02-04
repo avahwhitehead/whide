@@ -1,4 +1,4 @@
-import { Menu } from "@/api/parsers/MenuParser";
+import setupMenus, { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
 import { MenuManager } from "@/api/managers/MenuManager";
 
@@ -26,10 +26,6 @@ export interface PluginInfoProps {
 	 * The menu items defined by the plugin
 	 */
 	menus?: Menu[];
-	/**
-	 * The menu manager object to use
-	 */
-	menuManager: MenuManager,
 }
 
 /**
@@ -38,12 +34,11 @@ export interface PluginInfoProps {
 export class PluginInfo {
 	private _name: string;
 	private _disabled: boolean;
-	private _isFirstParty: boolean;
+	private _isExternal: boolean;
 	private _filePath: string;
 	private readonly _menus: Menu[];
 
 	private readonly funcs : Map<string, PluginFunction>;
-	private readonly _menuManager : MenuManager;
 
 	/**
 	 *
@@ -55,19 +50,13 @@ export class PluginInfo {
 		//Plugin file path
 		this._filePath = props.path;
 		//Whether the plugin is first party
-		this._isFirstParty = !!props.external;
+		this._isExternal = !props.external;
 		//Whether the plugin should be disabled (default: false)
 		this._disabled = !!props.disabled;
 		//The menus created by the plugin (default: [])
 		this._menus = props.menus || [];
-
 		//Functions defined by the plugin
 		this.funcs = new Map();
-		//The menu manager to use
-		this._menuManager = props.menuManager;
-
-		//Disable/enable the plugin on load
-		this.disabled = !!props.disabled;
 	}
 
 	get name(): string {
@@ -82,27 +71,16 @@ export class PluginInfo {
 		return this._disabled;
 	}
 
-	/**
-	 * Enable or disable a plugin
-	 * @param value	{@code true} to disable the plugin, {@code false} to enable
-	 */
 	set disabled(value: boolean) {
-		//Don't disable system plugins
-		if (this.isFirstParty && value) throw new Error("Can't disable system plugins");
-		//Change the disabled value
 		this._disabled = value;
-
-		//Enable/disable the plugin
-		if (value) this._disable();
-		else this._enable();
 	}
 
-	get isFirstParty(): boolean {
-		return this._isFirstParty;
+	get isExternal(): boolean {
+		return this._isExternal;
 	}
 
-	set isFirstParty(value: boolean) {
-		this._isFirstParty = value;
+	set isExternal(value: boolean) {
+		this._isExternal = value;
 	}
 
 	get filePath(): string {
@@ -117,43 +95,12 @@ export class PluginInfo {
 		return this._menus;
 	}
 
-	get menuManager() : MenuManager {
-		return this._menuManager;
-	}
-
 	/**
 	 * Get a function by its name
 	 * @param funcName	The name of the function
 	 */
 	async getFunc(funcName: string) : Promise<PluginFunction | undefined> {
 		if (this.disabled) throw new Error(`Plugin ${this.name} is disabled`);
-
-		//If the function has already been loaded, use that
-		if (this.funcs.has(funcName)) return this.funcs.get(funcName);
-
-		let loadedFunc: PluginFunction|PluginFunction[];
-		try {
-			//Import the plugin code
-			//Requires a static prefix to load the module. See here: https://github.com/webpack/webpack/issues/6680#issuecomment-370800037
-			//TODO: How to import user plugins?
-			const module: any = await import("../../../config/" + this.name);
-
-			//The module's default export is a function, or array of functions
-			loadedFunc = module.default;
-		} catch (e) {
-			//Error while installing
-			console.error(e);
-			return undefined;
-		}
-
-		if ((<PluginFunction[]>loadedFunc).length !== undefined) {
-			//If the plugin exports an array of functions
-			this._loadFuncArray(<PluginFunction[]>loadedFunc);
-		} else {
-			//If the plugin exports a single function
-			this._loadFunc(<PluginFunction>loadedFunc);
-		}
-
 		//Return the function
 		return this.funcs.get(funcName);
 	}
@@ -162,33 +109,21 @@ export class PluginInfo {
 	 * Register an array of plugin functions
 	 * @param funcs	The array of functions
 	 */
-	private _loadFuncArray(funcs : PluginFunction[]) {
-		//Register each individual function
-		for (let f of funcs) this._loadFunc(f)
+	public registerFuncs(funcs : PluginFunction|PluginFunction[]) {
+		//The plugin exports a single function
+		if ((<PluginFunction[]>funcs).length === undefined) this.registerFunc(<PluginFunction>funcs);
+		//The plugin exports an array of functions
+		else {
+			for (let f of <PluginFunction[]>funcs) this.registerFunc(f);
+		}
 	}
 
 	/**
 	 * Register a single plugin function
 	 * @param func	The function to register
 	 */
-	private _loadFunc(func : PluginFunction) {
+	public registerFunc(func : PluginFunction) {
 		//Store the function in memory
 		this.funcs.set(func.name, func);
-	}
-
-	/**
-	 * Enable the plugin
-	 */
-	private _enable() {
-		//Register the menus
-		this.menus.forEach(m => this._menuManager.register(m));
-	}
-
-	/**
-	 * Disable the plugin
-	 */
-	private _disable() {
-		//Unregister the menus
-		this.menus.forEach(m => this._menuManager.unregister(m));
 	}
 }

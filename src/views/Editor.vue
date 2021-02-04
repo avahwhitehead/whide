@@ -2,13 +2,15 @@
 	<div id="app" class="editor">
 		<div class="header">
 			<div class="headerBar">
-				<MenuElement :menu="menu" @run="runPluginFunc"
-					v-for="(menu, i) in menus" :key="i"
-				/>
-			</div>
-			<div class="filler">
-				<button @click="save" :disabled="!focused_file">Save File</button>
-				<button @click="download" :disabled="!focused_file">Download File</button>
+				<div class="filler">
+					<MenuElement :menu="menu" @run="runPluginFunc"
+						v-for="(menu, i) in menus" :key="i"
+					/>
+					<div>
+						<button @click="save" :disabled="!focused_file">Save File</button>
+						<button @click="download" :disabled="!focused_file">Download File</button>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -53,14 +55,30 @@ import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
 import Container from "@/components/Container";
 import FilePicker from "@/components/FilePicker";
 import MenuElement from "@/components/menubar/MenuElement";
-import {BrowserFileStore} from "@/fileStore/BrowserFileStore.ts";
+import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
 import fileDownloader from "js-file-download";
-import {run_load} from "@/api/fileLoader";
+import SystemPluginLoader from "@/api/systemPluginLoader";
 import EditorController from "@/api/controllers/EditorController";
 import PluginToggler from "@/components/PluginToggler.vue";
 import InputPrompt from "@/components/InputPrompt";
+import UserPluginLoader from "@/api/userPluginLoader";
+import { PluginManager } from "@/api/managers/PluginManager";
+import electron from "electron";
+import wrapEditor from "@/types/codeEditor";
+
+//Get the command line argument values
+const commandLineArgs = electron.remote.getGlobal("commandLineArgs");
 
 const browserFileStore = new BrowserFileStore();
+
+//Plugin loaders for 1st and 3rd party plugins
+const pluginManager = new PluginManager();
+const systemPluginLoader = new SystemPluginLoader(pluginManager);
+const clientPluginLoader = new UserPluginLoader(pluginManager);
+
+async function _runFuncAsync(func, ...args) {
+	await func(...args);
+}
 
 export default {
 	name: 'Editor',
@@ -77,9 +95,8 @@ export default {
 			files: [],
 			focused_file: null,
 			openFiles: [],
-			menuManager: null,
 			codeEditor: undefined,
-			pluginManager: undefined,
+			pluginManager: pluginManager,
 			ioController: undefined,
 			input: {
 				showInput: false,
@@ -94,19 +111,19 @@ export default {
 	},
 	computed: {
 		menus() {
-			if (!this.menuManager) return [];
-			return this.menuManager.menus;
+			return pluginManager.menuManager.menus;
 		},
-		_editorController() {
-			return new EditorController(this.codeEditor, browserFileStore);
-		}
 	},
 	created() {
-		//Load the plugins
-		//TODO: Also allow external plugins
-		run_load(true, false).then(pluginManager => {
-			this.pluginManager = pluginManager;
-			this.menuManager = pluginManager.menuManager;
+		//Load the system plugins first
+		systemPluginLoader.run_load().then(() => {
+			console.log("Loaded system plugins");
+			//Load the user plugins if the app is not in safe mode
+			if (!commandLineArgs.safe) {
+				clientPluginLoader.run_load().then(() => {
+					console.log("Loaded user plugins");
+				});
+			}
 		});
 	},
 	mounted() {
@@ -255,18 +272,22 @@ export default {
 
 				//Make sure the code editor exists (this should never run)
 				if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
-				try {
-					//Run the function
-					pluginFunction.run({
-						args: args,
-						editorController: this._editorController,
-						ioController: this.ioController,
-					});
-				} catch (e) {
+
+				//Build a wrapper around the editor
+				let editorWrapper = wrapEditor(this.codeEditor);
+				//Make the editor controller to pass to the plugin
+				let editorController = new EditorController(editorWrapper, browserFileStore);
+
+				//Run the function
+				_runFuncAsync(pluginFunction.run, {
+					args: args,
+					editorController: editorController,
+					ioController: this.ioController,
+				}).catch((e) => {
 					//Handle errors produced in the plugin function
 					console.error(e);
-					this.ioController.showOutput(e, `Error in plugin function '${plugin.name}.${pluginFunction}'`);
-				}
+					this.ioController.showOutput(e.toString(), `Error in plugin function '${plugin.name}.${pluginFunction.name}'`);
+				});
 			} else {
 				//Error otherwise
 				console.error(`Couldn't find function ${command} in plugin ${plugin.name}`);
@@ -372,6 +393,15 @@ Fillers
 }
 
 .header .filler, .footer .filler {
+	background: #CCC;
+}
+
+.header .filler {
+	padding: 4px;
+	height: 100%;
+}
+
+.footer .filler {
 	background: #CCC;
 	height: 3em;
 }

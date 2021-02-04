@@ -50,6 +50,7 @@ export default Vue.extend({
 	display: inline-block;
 	padding: 2px 5px;
 	border: 1px solid black;
+	background-color: #FFFFFF;
 }
 
 .name {
