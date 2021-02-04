@@ -1,6 +1,6 @@
-import CodeMirror from "codemirror";
 import { EventEmitter } from "events";
 import { FileStoreInterface } from "@/fileStore/FileStoreInterface";
+import CodeEditorWrapper from "@/types/codeEditor/CodeEditorWrapper";
 
 /**
  *
@@ -9,33 +9,19 @@ export default class EditorController extends EventEmitter {
 	/**
 	 * The code editor object
 	 */
-	private readonly _editor : CodeMirror.Editor;
-	private readonly _fileStore : FileStoreInterface;
+	public readonly editor : CodeEditorWrapper;
+	public readonly fileStore : FileStoreInterface;
 
 	/**
 	 *
 	 * @param editor	The code editor
 	 * @param fileStore	The file store
 	 */
-	constructor(editor: CodeMirror.Editor, fileStore: FileStoreInterface) {
+	constructor(editor: CodeEditorWrapper, fileStore: FileStoreInterface) {
 		super();
-		this._editor = editor;
-		this._fileStore = fileStore;
+		this.editor = editor;
+		this.fileStore = fileStore;
 	}
 
-	//TODO: Allow control over files here
-
-	/**
-	 * Get the code editor
-	 */
-	get editor(): CodeMirror.Editor {
-		return this._editor;
-	}
-
-	/**
-	 * Get the file store controller
-	 */
-	get fileStore(): FileStoreInterface {
-		return this._fileStore;
-	}
+	//TODO: Allow control over tabs here
 }
