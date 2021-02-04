@@ -75,6 +75,10 @@ const pluginManager = new PluginManager();
 const systemPluginLoader = new SystemPluginLoader(pluginManager);
 const clientPluginLoader = new UserPluginLoader(pluginManager);
 
+async function _runFuncAsync(func, ...args) {
+	await func(...args);
+}
+
 export default {
 	name: 'Editor',
 	components: {
@@ -267,33 +271,32 @@ export default {
 
 				//Make sure the code editor exists (this should never run)
 				if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
-				try {
-					//Make an editor controller object
-					//TODO: User plugins freeze the editor if a CodeMirror object is passed directly.
-					//	I'm pretty sure it's because of this: https://www.electronjs.org/docs/api/remote#passing-callbacks-to-the-main-process
-					//TODO: Write a proper wrapper around the editor to allow control from within in plugins.
-					let editorWrapper = {
-						getValue: () => {
-							return this.codeEditor.getValue();
-						},
-						setValue: (value) => {
-							this.codeEditor.setValue(value);
-						},
-					};
-					//noinspection JSCheckFunctionSignatures
-					let editorController = new EditorController(editorWrapper, browserFileStore);
 
-					//Run the function
-					pluginFunction.run({
-						args: args,
-						editorController: editorController,
-						ioController: this.ioController,
-					});
-				} catch (e) {
+				//Make an editor controller object
+				//TODO: User plugins freeze the editor if a CodeMirror object is passed directly.
+				//	I'm pretty sure it's because of this: https://www.electronjs.org/docs/api/remote#passing-callbacks-to-the-main-process
+				//TODO: Write a proper wrapper around the editor to allow control from within in plugins.
+				let editorWrapper = {
+					getValue: () => {
+						return this.codeEditor.getValue();
+					},
+					setValue: (value) => {
+						this.codeEditor.setValue(value);
+					},
+				};
+				//noinspection JSCheckFunctionSignatures
+				let editorController = new EditorController(editorWrapper, browserFileStore);
+
+				//Run the function
+				_runFuncAsync(pluginFunction.run, {
+					args: args,
+					editorController: editorController,
+					ioController: this.ioController,
+				}).catch((e) => {
 					//Handle errors produced in the plugin function
 					console.error(e);
-					this.ioController.showOutput(e, `Error in plugin function '${plugin.name}.${pluginFunction}'`);
-				}
+					this.ioController.showOutput(e.toString(), `Error in plugin function '${plugin.name}.${pluginFunction.name}'`);
+				});
 			} else {
 				//Error otherwise
 				console.error(`Couldn't find function ${command} in plugin ${plugin.name}`);
