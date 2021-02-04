@@ -64,6 +64,7 @@ import InputPrompt from "@/components/InputPrompt";
 import UserPluginLoader from "@/api/userPluginLoader";
 import { PluginManager } from "@/api/managers/PluginManager";
 import electron from "electron";
+import wrapEditor from "@/types/codeEditor";
 
 //Get the command line argument values
 const commandLineArgs = electron.remote.getGlobal("commandLineArgs");
@@ -272,19 +273,9 @@ export default {
 				//Make sure the code editor exists (this should never run)
 				if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
 
-				//Make an editor controller object
-				//TODO: User plugins freeze the editor if a CodeMirror object is passed directly.
-				//	I'm pretty sure it's because of this: https://www.electronjs.org/docs/api/remote#passing-callbacks-to-the-main-process
-				//TODO: Write a proper wrapper around the editor to allow control from within in plugins.
-				let editorWrapper = {
-					getValue: () => {
-						return this.codeEditor.getValue();
-					},
-					setValue: (value) => {
-						this.codeEditor.setValue(value);
-					},
-				};
-				//noinspection JSCheckFunctionSignatures
+				//Build a wrapper around the editor
+				let editorWrapper = wrapEditor(this.codeEditor);
+				//Make the editor controller to pass to the plugin
 				let editorController = new EditorController(editorWrapper, browserFileStore);
 
 				//Run the function
