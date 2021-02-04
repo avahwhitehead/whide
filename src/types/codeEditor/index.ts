@@ -1,4 +1,4 @@
-// import CodeMirror from "codemirror";
+import CodeMirror from "codemirror";
 import CodeEditorWrapper from "./CodeEditorWrapper";
 
 /**
