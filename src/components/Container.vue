@@ -3,7 +3,7 @@
 		<div class="buttons">
 			<button v-if="collapsible" @click="toggle_collapse">{{ collapsed ? "Show" : "Collapse" }}</button>
 		</div>
-		<div :class="'content ' + (collapsed ? 'collapsed' : 'open')">
+		<div :class="{ 'content' : true, 'collapsed' : collapsed, 'open' : !collapsed }">
 			<slot></slot>
 		</div>
 	</div>
