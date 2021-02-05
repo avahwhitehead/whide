@@ -5,7 +5,7 @@
 			<div class="children" v-if="!!this.file.children">
 				<TreeNode v-bind:file="child"
 						class="child" @change="v => onChange(v)"
-						v-for="(child,i) in this.file.children" v-bind:key="i">
+						v-for="(child,i) in sortedChildren" v-bind:key="i">
 				</TreeNode>
 			</div>
 		</div>
@@ -14,7 +14,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { AbstractFileData } from "@/fileStore/AbstractFileData";
+import { AbstractFileData, FolderData } from "@/fileStore/AbstractFileData";
 
 interface DataTypeInterface {
 
@@ -27,6 +27,16 @@ export default Vue.extend({
 	},
 	data() : DataTypeInterface {
 		return {};
+	},
+	computed: {
+		sortedChildren() : AbstractFileData[] {
+			let children: AbstractFileData[] = (this.file as FolderData).children || [];
+			children.sort((a, b) => {
+				if (a.name === b.name) return 0;
+				return (a.name > b.name) ? 1 : -1;
+			});
+			return children;
+		}
 	},
 	methods: {
 		onChange(v : AbstractFileData) : void {
