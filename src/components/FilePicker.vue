@@ -8,28 +8,38 @@
 	</div>
 </template>
 
-<script>
-import TreeNode from "@/components/filepicker/TreeNode";
-export default {
+<script lang="ts">
+import Vue from "vue";
+import TreeNode from "@/components/filepicker/TreeNode.vue";
+import { AbstractFileData } from "@/fileStore/AbstractFileData";
+
+interface DataTypeInterface {
+	active_file : AbstractFileData|null;
+}
+
+export default Vue.extend({
 	name: 'FilePicker',
 	components: {
 		TreeNode
 	},
 	props: {
-		files: Array,
+		files: {
+			type: Array,
+			default: () => [],
+		}
 	},
-	data() {
+	data() : DataTypeInterface {
 		return {
 			active_file: null,
 		}
 	},
 	methods: {
-		onChange(file) {
+		onChange(file : AbstractFileData) {
 			this.active_file = file;
 			this.$emit("change", file);
 		}
 	}
-}
+});
 </script>
 
 

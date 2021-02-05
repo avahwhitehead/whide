@@ -5,21 +5,25 @@
 	</div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import Vue from "vue";
+
+interface DataTypeInterface { }
+
+export default Vue.extend({
 	name: 'TabButton',
-	data() {
+	data() : DataTypeInterface {
 		return {}
 	},
 	methods: {
-		handleClick() {
+		handleClick() : void {
 			this.$emit("click");
 		},
-		handleClose() {
+		handleClose() : void {
 			this.$emit("close");
 		},
 	}
-}
+});
 </script>
 
 

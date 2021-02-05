@@ -1,6 +1,5 @@
-import setupMenus, { Menu } from "@/api/parsers/MenuParser";
+import { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
-import { MenuManager } from "@/api/managers/MenuManager";
 
 /**
  * The parameters used to initialise the PluginInfo object

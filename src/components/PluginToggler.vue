@@ -24,8 +24,6 @@ import vue from "vue";
 import { PluginManager } from "@/api/managers/PluginManager";
 import { PluginInfo } from "@/api/types/PluginInfo";
 
-//TODO: `Enabled` comboboxes always show disabled at first
-
 export default vue.extend({
 	name: 'PluginToggler',
 	props: {
@@ -40,7 +38,7 @@ export default vue.extend({
 		}
 	},
 	methods: {
-		togglePlugin(event : Event, plugin: PluginInfo) {
+		togglePlugin(event : Event, plugin: PluginInfo) : void {
 			if (!plugin) return;
 			try {
 				if (plugin.disabled) this.pluginManager.enablePlugin(plugin);

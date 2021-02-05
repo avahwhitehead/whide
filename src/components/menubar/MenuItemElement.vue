@@ -1,10 +1,7 @@
 <template>
 	<div class="menuItem" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
 		<div class="name" @click="onClick">{{ item.name }}</div>
-		<div :class="{
-			'dropdown': true,
-			'visible':(dropdownVisible && (item.children || []).length)}"
-		>
+		<div :class="{ 'dropdown': true, 'visible': isVisible, }">
 			<MenuItemElement @run="passRunUp"
 				v-for="(child,i) in item.children" :item="child" :key="i"
 			/>
@@ -13,37 +10,45 @@
 </template>
 
 <script lang="ts">
-import { MenuItem } from "@/api/parsers/MenuParser";
+import { Menu, MenuItem } from "@/api/parsers/MenuParser";
 import Vue from "vue";
 import { PluginInfo } from "@/api/types/PluginInfo";
 
+interface DataTypeInterface {
+	dropdownVisible: boolean;
+}
+
 export default Vue.extend({
 	name: 'MenuItemElement',
-	components: {},
-	mounted() {
-
-	},
 	props: {
 		item: {
-			type: Object as () => MenuItem,
+			type: Object as () => MenuItem|Menu,
 		}
 	},
-	data() {
+	data() : DataTypeInterface {
 		return {
 			dropdownVisible: false,
 		}
 	},
+	computed: {
+		isVisible() : boolean {
+			if (!this.dropdownVisible) return false;
+			//Invisible if there are no children
+			const children: (Menu | MenuItem)[] = (this.item as Menu).children || [];
+			return children.length > 0;
+		},
+	},
 	methods: {
-		onMouseEnter() {
+		onMouseEnter() : void {
 			this.dropdownVisible = true;
 		},
-		onMouseLeave() {
+		onMouseLeave() : void {
 			this.dropdownVisible = false;
 		},
-		passRunUp(data : { plugin: PluginInfo, command: string }) {
+		passRunUp(data : { plugin: PluginInfo, command: string }) : void {
 			this.$emit("run", data);
 		},
-		async onClick() {
+		async onClick() : Promise<void> {
 			//Shorthand access to the menu item
 			let item : MenuItem = this.$props.item;
 

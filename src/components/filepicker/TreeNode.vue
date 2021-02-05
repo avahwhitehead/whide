@@ -12,23 +12,28 @@
 	</div>
 </template>
 
-<script>
-import { AbstractFileData } from "@/fileStore/AbstractFileData.ts";
+<script lang="ts">
+import Vue from "vue";
+import { AbstractFileData } from "@/fileStore/AbstractFileData";
 
-export default {
+interface DataTypeInterface {
+
+}
+
+export default Vue.extend({
 	name: 'TreeNode',
 	props: {
 		file: AbstractFileData,
 	},
-	data() {
-		return { }
+	data() : DataTypeInterface {
+		return {};
 	},
 	methods: {
-		onChange(v) {
+		onChange(v : AbstractFileData) : void {
 			this.$emit("change", v);
 		}
 	}
-}
+});
 </script>
 
 

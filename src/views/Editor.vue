@@ -50,25 +50,36 @@
 </template>
 
 
-<script>
-import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
-import Container from "@/components/Container";
-import FilePicker from "@/components/FilePicker";
-import MenuElement from "@/components/menubar/MenuElement";
-import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
-import fileDownloader from "js-file-download";
-import SystemPluginLoader from "@/api/systemPluginLoader";
-import EditorController from "@/api/controllers/EditorController";
-import PluginToggler from "@/components/PluginToggler.vue";
-import InputPrompt from "@/components/InputPrompt";
-import UserPluginLoader from "@/api/userPluginLoader";
-import { PluginManager } from "@/api/managers/PluginManager";
+<script lang="ts">
+import Vue from "vue";
+import CodeMirror from "codemirror";
 import electron from "electron";
+import fileDownloader from "js-file-download";
+//Components
+import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
+import Container from "@/components/Container.vue";
+import FilePicker from "@/components/FilePicker.vue";
+import MenuElement from "@/components/menubar/MenuElement.vue";
+import PluginToggler from "@/components/PluginToggler.vue";
+import InputPrompt from "@/components/InputPrompt.vue";
+//Other imports
+import EditorController from "@/api/controllers/EditorController";
+import IOController from "@/api/types/IOController";
+import SystemPluginLoader from "@/api/systemPluginLoader";
+import UserPluginLoader from "@/api/userPluginLoader";
 import wrapEditor from "@/types/codeEditor";
+import { AbstractFileData, FileData } from "@/fileStore/AbstractFileData";
+import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
+import { CustomDict } from "@/types/CustomDict";
+import { Menu } from "@/api/parsers/MenuParser";
+import { PluginFunction } from "@/api/types/PluginFunction";
+import { PluginInfo } from "@/api/types/PluginInfo";
+import { PluginManager } from "@/api/managers/PluginManager";
 
 //Get the command line argument values
 const commandLineArgs = electron.remote.getGlobal("commandLineArgs");
 
+//File store object for in-browser storage
 const browserFileStore = new BrowserFileStore();
 
 //Plugin loaders for 1st and 3rd party plugins
@@ -76,11 +87,33 @@ const pluginManager = new PluginManager();
 const systemPluginLoader = new SystemPluginLoader(pluginManager);
 const clientPluginLoader = new UserPluginLoader(pluginManager);
 
-async function _runFuncAsync(func, ...args) {
+/**
+ * Type declaration for the data() values
+ */
+interface DataTypesDescriptor {
+	files : AbstractFileData[];
+	focused_file : FileData|null;
+	openFiles : FileData[];
+	codeEditor? : CodeMirror.Editor;
+	pluginManager : PluginManager;
+	ioController? : IOController;
+	input : {
+		showInput : boolean;
+		title : string;
+		message : string;
+		error : string;
+		expectingInput : boolean;
+		callback : (v: string) => void;
+		cancelCallback : () => void;
+	}
+}
+
+//Run a function asynchronously
+async function _runFuncAsync(func : Function, ...args : any[]) {
 	await func(...args);
 }
 
-export default {
+export default Vue.extend({
 	name: 'Editor',
 	components: {
 		InputPrompt,
@@ -90,7 +123,7 @@ export default {
 		MenuElement,
 		PluginToggler,
 	},
-	data() {
+	data() : DataTypesDescriptor {
 		return {
 			files: [],
 			focused_file: null,
@@ -110,7 +143,7 @@ export default {
 		}
 	},
 	computed: {
-		menus() {
+		menus() : Menu[] {
 			return pluginManager.menuManager.menus;
 		},
 	},
@@ -128,7 +161,7 @@ export default {
 	},
 	mounted() {
 		this.ioController = {
-			showOutput: (message, title = "") => {
+			showOutput: (message: string, title: string = "") : Promise<void> => {
 				return new Promise(resolve => {
 					//Make visible
 					this.input.showInput = true;
@@ -146,9 +179,7 @@ export default {
 					};
 				});
 			},
-			getInput: (message, validator = null, title = "") => {
-				//Use the provided validator, or always return true
-				validator = validator || (() => true);
+			getInput: (message: string, validator?: ((x:string) => boolean), title: string = "") : Promise<string|undefined> => {
 				return new Promise(resolve => {
 					//Make visible
 					this.input.showInput = true;
@@ -158,9 +189,9 @@ export default {
 					this.input.title = title;
 					this.input.message = message;
 					//When the user enters the value
-					this.input.callback = (val) => {
-						//Check with the validator
-						if (validator(val)) {
+					this.input.callback = (val : string) => {
+						//Check with the validator, or return true
+						if (!validator || validator(val)) {
 							this.input.error = "";
 							//Hide the prompt
 							this.hideInput();
@@ -180,12 +211,12 @@ export default {
 		};
 
 		//Load the directory structure
-		browserFileStore.getDirectoryTree().then(value => {
+		browserFileStore.getDirectoryTree().then((value : AbstractFileData[]) => {
 			this.files = value;
 		});
 	},
 	methods: {
-		openFile(file) {
+		openFile(file : FileData) : void {
 			//Don't open the same file twice
 			if (!this.openFiles.includes(file)) {
 				//Load the file contents
@@ -195,15 +226,15 @@ export default {
 				});
 			}
 		},
-		onOpenFileChange(fileIndex) {
+		onOpenFileChange(fileIndex : number) : void {
 			//Keep track of the currently focussed file
 			if (fileIndex < 0 || fileIndex >= this.openFiles.length) this.focused_file = null;
 			else this.focused_file = this.openFiles[fileIndex];
 		},
-		onEditorObjectChange(editor) {
+		onEditorObjectChange(editor : CodeMirror.Editor) : void {
 			this.codeEditor = editor;
 		},
-		save() {
+		save() : void {
 			if (this.focused_file) {
 				browserFileStore.writeFile(this.focused_file)
 					.then(() => console.log("Saved"))
@@ -212,7 +243,7 @@ export default {
 				console.log(`No file open to save`);
 			}
 		},
-		download() {
+		download() : void {
 			if (this.focused_file) {
 				fileDownloader(this.focused_file.content, this.focused_file.name);
 			} else {
@@ -220,7 +251,7 @@ export default {
 			}
 		},
 
-		async hideInput() {
+		async hideInput() : Promise<void> {
 			//Make the input invisible
 			this.input.showInput = false;
 			//Default to allowing input
@@ -232,70 +263,68 @@ export default {
 			this.input.callback = () => {};
 			this.input.cancelCallback = () => {};
 		},
-		onInputSubmit(val) {
+		onInputSubmit(val : string) : void {
 			//Call the input's callback
 			if (this.input.callback) {
 				this.input.callback(val);
 			}
 		},
-		onInputCancel() {
+		onInputCancel() : void {
 			//Call the input's cancel callback
 			if (this.input.cancelCallback) {
 				this.input.cancelCallback();
 			}
 		},
 
-		async runPluginFunc(data) {
-			//TODO: Remove these aliases when this file is converted to TypeScript
-			let plugin = data.plugin;
-			let command = data.command;
-
+		async runPluginFunc(data : { plugin: PluginInfo, command: string }) : Promise<void> {
 			//Get the function linked to the menu item
-			let pluginFunction = await plugin.getFunc(command);
+			let pluginFunction: PluginFunction|undefined = await data.plugin.getFunc(data.command);
+			if (!pluginFunction) throw new Error(`Couldn't find function ${(data.command)} in plugin ${data.plugin.name}`);
 
-			//Run the function if possible
-			if (pluginFunction) {
-				let args = {};
-				for (let arg of (pluginFunction.args || [])) {
-					//Prompt the user for the argument input
-					let val = await this.ioController.getInput(
-						arg.description,
-						//Allow empty optional arguments, or validate the input
-						async (s) => (arg.optional && !s || await arg.validator(s)),
-						`INPUT: ${arg.name}`
-					);
-					//End here if the user presses cancel
-					if (val === undefined) return;
-					//Otherwise store the value
-					args[arg.name] = val;
-				}
+			//Make sure the IO controller exists
+			if (!this.ioController) throw new Error("Couldn't get IO controller");
 
-				//Make sure the code editor exists (this should never run)
-				if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
-
-				//Build a wrapper around the editor
-				let editorWrapper = wrapEditor(this.codeEditor);
-				//Make the editor controller to pass to the plugin
-				let editorController = new EditorController(editorWrapper, browserFileStore);
-
-				//Run the function
-				_runFuncAsync(pluginFunction.run, {
-					args: args,
-					editorController: editorController,
-					ioController: this.ioController,
-				}).catch((e) => {
-					//Handle errors produced in the plugin function
-					console.error(e);
-					this.ioController.showOutput(e.toString(), `Error in plugin function '${plugin.name}.${pluginFunction.name}'`);
-				});
-			} else {
-				//Error otherwise
-				console.error(`Couldn't find function ${command} in plugin ${plugin.name}`);
-				this.ioController.showOutput(`Couldn't find function ${command} in plugin ${plugin.name}`, "Error");
+			let args: CustomDict<string> = {};
+			for (let arg of (pluginFunction.args || [])) {
+				//Default the validator to allowing anything
+				let validator: (v: string) => (boolean | Promise<boolean>);
+				validator = arg.validator || (() => true);
+				//Prompt the user for the argument input
+				let val = await this.ioController.getInput(
+					arg.description || "",
+					//Allow empty optional arguments, or validate the input
+					async (s) => (arg.optional && !s || await validator(s)),
+					`INPUT: ${arg.name}`
+				);
+				//End here if the user presses cancel
+				if (val === undefined) return;
+				//Otherwise store the value
+				args[arg.name] = val;
 			}
+
+			//Make sure the code editor exists (this should never run)
+			if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
+
+			//Build a wrapper around the editor
+			let editorWrapper = wrapEditor(this.codeEditor);
+			//Make the editor controller to pass to the plugin
+			let editorController = new EditorController(editorWrapper, browserFileStore);
+
+			//Run the function
+			_runFuncAsync(pluginFunction.run, {
+				args: args,
+				editorController: editorController,
+				ioController: this.ioController,
+			}).catch((e) => {
+				//Handle errors produced in the plugin function
+				console.error(e);
+				if (this.ioController) {
+					this.ioController.showOutput(e.toString(), `Error in plugin function '${data.plugin.name}.${pluginFunction!.name}'`);
+				}
+			});
 		},
 	},
-}
+});
 </script>
 
 <style>
@@ -307,6 +336,7 @@ export default {
 	color: #2c3e50;
 }
 
+/*noinspection CssUnusedSymbol*/
 #nav {
 	padding: 30px;
 }
@@ -316,6 +346,7 @@ export default {
 	color: #2c3e50;
 }
 
+/*noinspection CssUnusedSymbol*/
 #nav a.router-link-exact-active {
 	color: #42b983;
 }
