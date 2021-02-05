@@ -52,27 +52,29 @@
 
 <script lang="ts">
 import Vue from "vue";
+import CodeMirror from "codemirror";
+import electron from "electron";
+import fileDownloader from "js-file-download";
+//Components
 import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
 import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuElement from "@/components/menubar/MenuElement.vue";
-import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
-import fileDownloader from "js-file-download";
-import SystemPluginLoader from "@/api/systemPluginLoader";
-import EditorController from "@/api/controllers/EditorController";
 import PluginToggler from "@/components/PluginToggler.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
+//Other imports
+import EditorController from "@/api/controllers/EditorController";
+import IOController from "@/api/types/IOController";
+import SystemPluginLoader from "@/api/systemPluginLoader";
 import UserPluginLoader from "@/api/userPluginLoader";
-import { PluginManager } from "@/api/managers/PluginManager";
-import electron from "electron";
 import wrapEditor from "@/types/codeEditor";
+import { AbstractFileData, FileData } from "@/fileStore/AbstractFileData";
+import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
 import { CustomDict } from "@/types/CustomDict";
 import { Menu } from "@/api/parsers/MenuParser";
-import IOController from "@/api/types/IOController";
 import { PluginFunction } from "@/api/types/PluginFunction";
 import { PluginInfo } from "@/api/types/PluginInfo";
-import { AbstractFileData, FileData } from "@/fileStore/AbstractFileData";
-import CodeMirror from "codemirror";
+import { PluginManager } from "@/api/managers/PluginManager";
 
 //Get the command line argument values
 const commandLineArgs = electron.remote.getGlobal("commandLineArgs");
@@ -334,6 +336,7 @@ export default Vue.extend({
 	color: #2c3e50;
 }
 
+/*noinspection CssUnusedSymbol*/
 #nav {
 	padding: 30px;
 }
@@ -343,6 +346,7 @@ export default Vue.extend({
 	color: #2c3e50;
 }
 
+/*noinspection CssUnusedSymbol*/
 #nav a.router-link-exact-active {
 	color: #42b983;
 }
