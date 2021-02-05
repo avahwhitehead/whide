@@ -1,7 +1,7 @@
 <template>
 	<div class="filePicker">
 		<div class="treeHolder">
-			<TreeNode v-bind:file="file" @change="onChange(file)"
+			<TreeNode v-bind:file="file" @change="f => onChange(f)"
 					v-for="(file,i) in files" v-bind:key="i">
 			</TreeNode>
 		</div>
