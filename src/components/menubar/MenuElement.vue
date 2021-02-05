@@ -15,6 +15,10 @@ import { Menu } from "@/api/parsers/MenuParser";
 import Vue from "vue";
 import { PluginInfo } from "@/api/types/PluginInfo";
 
+interface DataTypeInterface {
+	dropdownVisible: boolean;
+}
+
 export default Vue.extend({
 	name: 'Menu',
 	components: {
@@ -25,19 +29,19 @@ export default Vue.extend({
 			type: Object as () => Menu,
 		}
 	},
-	data() {
+	data() : DataTypeInterface {
 		return {
 			dropdownVisible: false,
 		}
 	},
 	methods: {
-		onMouseEnter() {
+		onMouseEnter() : void {
 			this.dropdownVisible = true;
 		},
-		onMouseLeave() {
+		onMouseLeave() : void {
 			this.dropdownVisible = false;
 		},
-		passRunUp(data : { plugin: PluginInfo, command: string }) {
+		passRunUp(data : { plugin: PluginInfo, command: string }) : void {
 			this.$emit("run", data);
 		}
 	}
