@@ -51,6 +51,7 @@
 
 
 <script>
+import Vue from "vue";
 import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
 import Container from "@/components/Container";
 import FilePicker from "@/components/FilePicker";
@@ -80,7 +81,7 @@ async function _runFuncAsync(func, ...args) {
 	await func(...args);
 }
 
-export default {
+export default Vue.extend({
 	name: 'Editor',
 	components: {
 		InputPrompt,
@@ -295,7 +296,7 @@ export default {
 			}
 		},
 	},
-}
+});
 </script>
 
 <style>
