@@ -33,8 +33,9 @@ export default Vue.extend({
 	computed: {
 		isVisible() : boolean {
 			if (!this.dropdownVisible) return false;
-			if (!(<Menu>this.item).children) return false;
-			return (<Menu>this.item).children.length > 0;
+			//Invisible if there are no children
+			const children: (Menu | MenuItem)[] = (this.item as Menu).children || [];
+			return children.length > 0;
 		},
 	},
 	methods: {
