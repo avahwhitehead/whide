@@ -12,10 +12,15 @@
 	</div>
 </template>
 
-<script>
-import TabButton from "@/components/tabbedPanel/TabButton";
+<script lang="ts">
+import Vue from "vue";
+import TabButton from "@/components/tabbedPanel/TabButton.vue";
 
-export default {
+interface DataTypeInterface {
+	selectedTab: number;
+}
+
+export default Vue.extend({
 	name: 'TabbedPanel',
 	components: {
 		TabButton
@@ -23,7 +28,7 @@ export default {
 	props: {
 		names: Array,
 	},
-	data() {
+	data() : DataTypeInterface {
 		return {
 			selectedTab: 0,
 		}
@@ -45,7 +50,7 @@ export default {
 		 * @param event		The event object
 		 * @param index		The index of the tab requesting focus
 		 */
-		onTabClick(event, index) {
+		onTabClick(event : Event, index : number) : void {
 			this.setActiveTab(index);
 		},
 		/**
@@ -53,7 +58,7 @@ export default {
 		 * @param event		The event object
 		 * @param index		The index of the tab requesting the close
 		 */
-		onTabClose(event, index) {
+		onTabClose(event : Event, index : number) : void {
 			//Emit the close event
 			this.$emit("close", index);
 			//If the selected tab will be affected by an index being removed
@@ -68,7 +73,7 @@ export default {
 		 * @param index		The new index of the tab
 		 * @param force		Whether to emit an event regardless of whether or not the index changed
 		 */
-		setActiveTab(index, force=false) {
+		setActiveTab(index : number, force : boolean = false) : void {
 			//Limit indexes to between the first and last tabs
 			index = Math.max(index, 0);
 			index = Math.min(index, this.names.length);
@@ -80,8 +85,7 @@ export default {
 			}
 		},
 	}
-}
-
+});
 </script>
 
 <style scoped>
