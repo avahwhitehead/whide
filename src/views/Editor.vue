@@ -217,6 +217,9 @@ export default Vue.extend({
 	},
 	methods: {
 		openFile(file : FileData) : void {
+			//Don't edit folders
+			if (file.type !== "file") return;
+
 			//Don't open the same file twice
 			if (!this.openFiles.includes(file)) {
 				//Load the file contents
