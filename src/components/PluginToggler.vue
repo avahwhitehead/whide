@@ -10,7 +10,7 @@
 			<tbody>
 				<tr v-for="(plugin,i) in plugins" :key="i">
 					<td class="toggle-cell min-width">
-						<input type="checkbox" :checked="!plugin.disabled" @change="togglePlugin($event, plugin)"/>
+						<input type="checkbox" :disabled="!plugin.isExternal" :checked="!plugin.disabled" @change="togglePlugin($event, plugin)"/>
 					</td>
 					<td class="name-cell max-width border">{{plugin.name}}</td>
 				</tr>
