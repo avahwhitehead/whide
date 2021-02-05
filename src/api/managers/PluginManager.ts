@@ -93,7 +93,7 @@ export class PluginManager {
 	 */
 	public disablePlugin(pluginInfo: PluginInfo) {
 		//Don't disable system plugins
-		if (pluginInfo.isExternal) {
+		if (!pluginInfo.isExternal) {
 			throw new Error("Can't disable system plugins");
 		}
 

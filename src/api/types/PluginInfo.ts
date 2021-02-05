@@ -49,7 +49,7 @@ export class PluginInfo {
 		//Plugin file path
 		this._filePath = props.path;
 		//Whether the plugin is first party
-		this._isExternal = !props.external;
+		this._isExternal = !!props.external;
 		//Whether the plugin should be disabled (default: false)
 		this._disabled = !!props.disabled;
 		//The menus created by the plugin (default: [])
