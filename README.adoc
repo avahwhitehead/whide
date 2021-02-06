@@ -7,11 +7,13 @@ Alaric Whitehead <aw548@sussex.ac.uk>, Supervisor: Dr Bernhard Reus <bernhard@su
 :license: ./LICENSE.md
 :wiki: ./wiki
 //URL aliases:
+:chai: https://www.npmjs.com/package/chai
 :electron: https://www.electronjs.org/
 :git: https://git-scm.com/
 :github-ssh: https://github.blog/2020-12-15-token-authentication-requirements-for-git-operations/
 :github-ssh-instructions: https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh
 :hwhile: https://github.com/alexj136/HWhile
+:mocha: https://www.npmjs.com/package/mocha
 :n: https://www.npmjs.com/package/n
 :node: https://nodejs.org/en/
 :vscode-syntax-highlight: https://github.com/davidpomerenke/while-syntax-vscode
@@ -38,6 +40,8 @@ You can set up SSH access using link:{github-ssh-instructions}[these instruction
 Once link:{electron}[Electron v12] comes out of beta, Node 14 can be supported here as well.
 +
 After you have a version of npm installed, I recommend using the link:{n}[`n` package] to manage node/npm versions and updates.
+
+* link:{hwhile}[HWhile] - For running WHILE programs
 
 [#subsect:installing]
 === Installing
@@ -90,12 +94,26 @@ npm run electron:serve
 [#subsect:testing]
 == Running the tests
 
-Explain how to run the automated tests for this system
+Simply run the following command to run the tests:
+
+[source]
+----
+npm run test
+----
+
+Testing is done using the link:{mocha}[mocha] testing framework, and the link:{chai}[chai] assertion library.
 
 [#subsect:deployment]
 == Deployment
 
-Add additional notes about how to deploy this on a live system
+To compile Whide into an executable file, run:
+
+[source]
+----
+npm run electron:build
+----
+
+This will place the generated executables in the `+dist_electron/+` folder.
 
 [#subsect:program-information]
 == Program Information
