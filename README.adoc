@@ -121,10 +121,19 @@ This will place the generated executables in the `+dist_electron/+` folder.
 See the link:{wiki}[wiki] for more detailed information on how the editor works under
 the hood.
 
+[#subsect:plugins]
+== Installing Plugins
+
+You can find a guide for writing and installing your own plugins in link:{wiki}/Example-Plugins.adoc[the wiki].
+
 [#subsect:buildTools]
 == Built With
 
-* http://www.example.com[Item 1] - Lorem Ipsum
+* Written in link:{node}[Node.js] and link:{https://www.typescriptlang.org/}[TypeScript].
+
+* Interface built with link:{vuejs}[Vue.js].
+
+* Packaged as a desktop app with link:{electron}[Electron]
 
 [#subsect:license]
 == License
@@ -134,9 +143,8 @@ This project is licensed under the MIT License - see link:{license}[LICENSE.md] 
 [#subsect:acknowledgments]
 == Acknowledgments
 
-The syntax highlighting and code completion in the code editor is adapted from that of
-link:https://github.com/davidpomerenke/while-syntax-vscode][David Pomerenke's VS Code Extension].
+* The code editor is link:{CodeMirror}[CodeMirror].
++
+Using syntax highlighting adapted from link:{vscode-syntax-highlight}[David Pomerenke's VS Code Extension].
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* The link:{hwhile}[HWhile] interpreter is used to execute the programs.
