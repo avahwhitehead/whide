@@ -53,7 +53,6 @@
 <script lang="ts">
 import Vue from "vue";
 import CodeMirror from "codemirror";
-import electron from "electron";
 import fileDownloader from "js-file-download";
 //Components
 import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
@@ -65,8 +64,6 @@ import InputPrompt from "@/components/InputPrompt.vue";
 //Other imports
 import EditorController from "@/api/controllers/EditorController";
 import IOController from "@/api/types/IOController";
-import SystemPluginLoader from "@/api/systemPluginLoader";
-import UserPluginLoader from "@/api/userPluginLoader";
 import wrapEditor from "@/types/codeEditor";
 import { AbstractFileData, FileData } from "@/fileStore/AbstractFileData";
 import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
@@ -75,17 +72,47 @@ import { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
 import { PluginInfo } from "@/api/types/PluginInfo";
 import { PluginManager } from "@/api/managers/PluginManager";
+import { ProgramOptions } from "@/types/CommandLine";
+import isElectron from "@/types/isElectron";
 
-//Get the command line argument values
-const commandLineArgs = electron.remote.getGlobal("commandLineArgs");
+//Type of the imported plugin loaders
+type AbstractPluginLoader = {
+	run_load(m: PluginManager) : Promise<void>;
+}
+
+/**
+ * Get a plugin loader for system plugins
+ */
+async function getSystemPluginLoader() : Promise<AbstractPluginLoader> {
+	return await import("@/api/systemPluginLoader");
+}
+/**
+ * Get a plugin loader for user plugins
+ */
+async function getUserPluginLoader() : Promise<AbstractPluginLoader> {
+	return await import("@/api/userPluginLoader");
+}
+
+/**
+ * Get the command line arguments passed to the app
+ */
+async function getCommandLineArgs() : Promise<ProgramOptions> {
+	//Get the arguments from electron
+	if (isElectron()) {
+		//Import electron
+		const electron = await import("electron");
+		//Get the command line argument values
+		return electron.remote.getGlobal("commandLineArgs");
+	}
+	//Default values
+	return { };
+}
 
 //File store object for in-browser storage
 const browserFileStore = new BrowserFileStore();
 
 //Plugin loaders for 1st and 3rd party plugins
 const pluginManager = new PluginManager();
-const systemPluginLoader = new SystemPluginLoader(pluginManager);
-const clientPluginLoader = new UserPluginLoader(pluginManager);
 
 /**
  * Type declaration for the data() values
@@ -149,12 +176,16 @@ export default Vue.extend({
 	},
 	created() {
 		//Load the system plugins first
-		systemPluginLoader.run_load().then(() => {
+		getSystemPluginLoader().then(async (systemPluginLoader) => {
 			console.log("Loaded system plugins");
-			//Load the user plugins if the app is not in safe mode
-			if (!commandLineArgs.safe) {
-				clientPluginLoader.run_load().then(() => {
+			await systemPluginLoader.run_load(pluginManager);
+
+			//Load the user plugins if the app is in electron, and not in safe mode
+			const commandLineArgs = await getCommandLineArgs();
+			if (isElectron() && !commandLineArgs.safe) {
+				getUserPluginLoader().then(async (clientPluginLoader) => {
 					console.log("Loaded user plugins");
+					await clientPluginLoader.run_load(pluginManager);
 				});
 			}
 		});
