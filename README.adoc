@@ -3,8 +3,21 @@ Alaric Whitehead <aw548@sussex.ac.uk>, Supervisor: Dr Bernhard Reus <bernhard@su
 1.0, 14 November, 2020
 :doctype: article
 :icons: font
+//Local URL aliases:
+:license: ./LICENSE.md
+:wiki: ./wiki
+//URL aliases:
+:electron: https://www.electronjs.org/
+:git: https://git-scm.com/
+:github-ssh: https://github.blog/2020-12-15-token-authentication-requirements-for-git-operations/
+:github-ssh-instructions: https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh
+:hwhile: https://github.com/alexj136/HWhile
+:n: https://www.npmjs.com/package/n
+:node: https://nodejs.org/en/
+:vscode-syntax-highlight: https://github.com/davidpomerenke/while-syntax-vscode
+:vuejs: https://vuejs.org/
 
-One Paragraph of project description goes here
+This is the IDE for DR Reus' WHILE language at link:https://sussex.ac.uk/[The University of Sussex].
 
 [#sect:getting-started]
 == Getting Started
@@ -14,30 +27,65 @@ These instructions will get you a copy of the project up and running on your loc
 [#subsect:prerequisites]
 === Prerequisites
 
-What things you need to install the software and how to install them
+* link:{git}[Git] - for downloading the repository.
++
+Preferably with SSH access configured;
+see link:{github-ssh}[GitHub's post] about requiring tokens for git operations.
+You can set up SSH access using link:{github-ssh-instructions}[these instructions].
 
-```
-Give examples
-```
+* link:{node}[Node.js 12.19 and NPM 6.14] - for running/compiling the code.
++
+Once link:{electron}[Electron v12] comes out of beta, Node 14 can be supported here as well.
++
+After you have a version of npm installed, I recommend using the link:{n}[`n` package] to manage node/npm versions and updates.
 
 [#subsect:installing]
 === Installing
 
-A step by step series of examples that tell you how to get a development env running
+. *Clone the repository:*
++
+Using SSH:
++
+[source]
+----
+git clone git@github.com:sonrad10/Whide.git
+----
++
+Or using a username/password:
++
+[source]
+----
+git clone https://github.com/sonrad10/Whide
+----
 
-Say what the step will be
+. *Navigate into the cloned directory*
++
+[source]
+----
+cd Whide/
+----
 
-```
-Give the example
-```
+. *Optionally, switch to the development branch:*
++
+[source]
+----
+git checkout development
+----
 
-And repeat
 
-```
-until finished
-```
+. *Install the dependencies*
++
+[source]
+----
+npm install
+----
 
-End with an example of getting some data out of the system or using it for a little demo
+. *Run the program*
++
+[source]
+----
+npm run electron:serve
+----
 
 [#subsect:testing]
 == Running the tests
@@ -52,7 +100,7 @@ Add additional notes about how to deploy this on a live system
 [#subsect:program-information]
 == Program Information
 
-See the link:./wiki[wiki] for more detailed information on how the editor works under
+See the link:{wiki}[wiki] for more detailed information on how the editor works under
 the hood.
 
 [#subsect:buildTools]
