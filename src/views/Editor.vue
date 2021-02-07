@@ -21,7 +21,7 @@
 		</div>
 
 		<div class="code-editor">
-			<CodeEditorContainer v-bind:openFiles="openFiles" @editorChange="onEditorObjectChange" @file-focus="onOpenFileChange" />
+			<CodeEditorElement v-bind:openFiles="openFiles" @editorChange="onEditorObjectChange" @file-focus="onOpenFileChange" />
 		</div>
 
 		<div class="right">
@@ -55,7 +55,7 @@ import Vue from "vue";
 import CodeMirror from "codemirror";
 import fileDownloader from "js-file-download";
 //Components
-import CodeEditorContainer from "@/components/CodeEditorContainer.vue";
+import CodeEditorElement from "@/components/CodeEditorElement.vue";
 import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuElement from "@/components/menubar/MenuElement.vue";
@@ -146,7 +146,7 @@ export default Vue.extend({
 		InputPrompt,
 		FilePicker,
 		Container,
-		CodeEditorContainer,
+		CodeEditorElement,
 		MenuElement,
 		PluginToggler,
 	},
