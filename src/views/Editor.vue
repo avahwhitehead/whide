@@ -52,7 +52,6 @@
 
 <script lang="ts">
 import Vue from "vue";
-import CodeMirror from "codemirror";
 import fileDownloader from "js-file-download";
 //Components
 import CodeEditorElement from "@/components/CodeEditorElement.vue";
@@ -64,7 +63,7 @@ import InputPrompt from "@/components/InputPrompt.vue";
 //Other imports
 import EditorController from "@/api/controllers/EditorController";
 import IOController from "@/api/types/IOController";
-import wrapEditor from "@/types/codeEditor";
+import { CodeEditorWrapper } from "@/types/codeEditor";
 import { AbstractFileData, FileData } from "@/fileStore/AbstractFileData";
 import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
 import { CustomDict } from "@/types/CustomDict";
@@ -121,7 +120,7 @@ interface DataTypesDescriptor {
 	files : AbstractFileData[];
 	focused_file : FileData|null;
 	openFiles : FileData[];
-	codeEditor? : CodeMirror.Editor;
+	codeEditor? : CodeEditorWrapper;
 	pluginManager : PluginManager;
 	ioController? : IOController;
 	input : {
@@ -265,7 +264,7 @@ export default Vue.extend({
 			if (fileIndex < 0 || fileIndex >= this.openFiles.length) this.focused_file = null;
 			else this.focused_file = this.openFiles[fileIndex];
 		},
-		onEditorObjectChange(editor : CodeMirror.Editor) : void {
+		onEditorObjectChange(editor : CodeEditorWrapper) : void {
 			this.codeEditor = editor;
 		},
 		save() : void {
@@ -339,10 +338,8 @@ export default Vue.extend({
 			//Make sure the code editor exists (this should never run)
 			if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
 
-			//Build a wrapper around the editor
-			let editorWrapper = wrapEditor(this.codeEditor);
 			//Make the editor controller to pass to the plugin
-			let editorController = new EditorController(editorWrapper, browserFileStore);
+			let editorController: EditorController = new EditorController(this.codeEditor, browserFileStore);
 
 			//Run the function
 			_runFuncAsync(pluginFunction.run, {

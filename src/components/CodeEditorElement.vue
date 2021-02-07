@@ -11,6 +11,7 @@
 import Vue from "vue";
 import TabbedPanel from "@/components/TabbedPanel.vue";
 import { FileData } from "@/fileStore/AbstractFileData";
+import { CodeEditorWrapper, wrapEditor } from "@/types/codeEditor";
 //The code editor
 import CodeMirror from "codemirror";
 //CodeMirror styling
@@ -20,7 +21,7 @@ import WHILE from "@/assets/whileSyntaxMode.ts";
 
 type DataType = {
 	selectedFile: number,
-	editor: CodeMirror.Editor|undefined,
+	editor: CodeEditorWrapper|undefined,
 }
 
 export default Vue.extend({
@@ -41,16 +42,20 @@ export default Vue.extend({
 	},
 	mounted() {
 		//Create the code editor in the div
-		this.editor = CodeMirror(this.$refs.codeHolder as HTMLElement, {
+		let codeMirror : CodeMirror.Editor = CodeMirror(this.$refs.codeHolder as HTMLElement, {
 			lineNumbers: true,
 			tabSize: 4,
 			value: "",
 			mode: WHILE,
 		});
+		//Wrap the editor in an asynchronous wrapper
+		this.editor = wrapEditor(codeMirror);
 
 		//Pass the change event (when the content changes at all) up to the next level
-		this.editor.on("change", () => {
-			let code = this.editor!.getValue();
+		this.editor.on("change", async () => {
+			if (!this.editor) throw new Error("Couldn't get editor");
+
+			let code = await this.editor.getValue();
 			let openFiles = this.openFiles as Array<FileData>;
 			//Update the code in the open file, if available
 			if (openFiles.length > 0) {
@@ -70,7 +75,8 @@ export default Vue.extend({
 	},
 	methods: {
 		updateCode(code : string) {
-			this.editor!.setValue(code);
+			if (!this.editor) throw new Error("Couldn't get editor");
+			this.editor.setValue(code);
 		},
 		/**
 		 * Handle the active tab changing
