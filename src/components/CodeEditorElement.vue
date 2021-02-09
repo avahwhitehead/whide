@@ -11,6 +11,7 @@
 import Vue from "vue";
 import TabbedPanel from "@/components/TabbedPanel.vue";
 import { FileData } from "@/fileStore/AbstractFileData";
+import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
 import { CodeEditorWrapper, wrapEditor } from "@/types/codeEditor";
 //The code editor
 import CodeMirror from "codemirror";
@@ -19,9 +20,63 @@ import 'codemirror/lib/codemirror.css';
 //While language syntax definition
 import WHILE from "@/assets/whileSyntaxMode.ts";
 
-type DataType = {
+interface DataType {
 	selectedFile: number,
 	editor: CodeEditorWrapper|undefined,
+}
+
+export type ExtendedCodeEditorWrapper = CodeEditorWrapper & {
+	editorWrapper: CodeEditorWrapper,
+	_breakpoints: CodeMirror.LineHandle[],
+	/**
+	 * Add a breakpoint to the editor
+	 */
+	addBreakpoint(line: any): Promise<CodeMirror.LineWidget>;
+	/**
+	 * Remove a breakpoint from the editor
+	 */
+	removeBreakpoint(widget: CodeMirror.LineWidget|CodeMirror.LineHandle): Promise<void>;
+};
+
+function wrapExtendedCodeEditor(_editor : CodeEditorWrapper) : ExtendedCodeEditorWrapper {
+	const breakpoints : CodeMirror.LineHandle[] = [];
+	return {
+		editorWrapper: _editor,
+		..._editor,
+		_breakpoints: [],
+		addBreakpoint: async (line: number|CodeMirror.LineHandle) : Promise<CodeMirror.LineWidget> => {
+			//Make a new widget element
+			const node: Vue = new EditorWidget({
+				propsData: {
+					type: 'breakpoint',
+				}
+			});
+			node.$mount();
+
+			//Save the line to the breakpoints list
+			if (typeof(line) === "number") {
+				let h: CodeMirror.LineHandle = await _editor.getLineHandle(line);
+				if (h) breakpoints.push(h);
+			} else {
+				breakpoints.push(line);
+			}
+
+			//Show the widget on the editor
+			return await _editor.addLineWidget(
+				line,
+				node.$el as HTMLElement,
+				{
+					above: true,
+					coverGutter: true,
+					noHScroll: true,
+					handleMouseEvents: true,
+				}
+			);
+		},
+		removeBreakpoint: async (widget : CodeMirror.LineWidget) => {
+			await _editor.removeLineWidget(widget);
+		},
+	};
 }
 
 export default Vue.extend({
@@ -49,7 +104,7 @@ export default Vue.extend({
 			mode: WHILE,
 		});
 		//Wrap the editor in an asynchronous wrapper
-		this.editor = wrapEditor(codeMirror);
+		this.editor = wrapExtendedCodeEditor(wrapEditor(codeMirror));
 
 		//Pass the change event (when the content changes at all) up to the next level
 		this.editor.on("change", async () => {
