@@ -54,7 +54,7 @@
 import Vue from "vue";
 import fileDownloader from "js-file-download";
 //Components
-import CodeEditorElement from "@/components/CodeEditorElement.vue";
+import CodeEditorElement, { ExtendedCodeEditorWrapper } from "@/components/CodeEditorElement.vue";
 import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuElement from "@/components/menubar/MenuElement.vue";
@@ -264,7 +264,7 @@ export default Vue.extend({
 			if (fileIndex < 0 || fileIndex >= this.openFiles.length) this.focused_file = null;
 			else this.focused_file = this.openFiles[fileIndex];
 		},
-		onEditorObjectChange(editor : CodeEditorWrapper) : void {
+		onEditorObjectChange(editor : ExtendedCodeEditorWrapper) : void {
 			this.codeEditor = editor;
 		},
 		save() : void {

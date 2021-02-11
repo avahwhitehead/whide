@@ -17,7 +17,7 @@ export interface CodeMirrorDocWrapper {
     line should be either an integer or a line handle, and node should be a DOM node, which will be displayed below the given line.
     options, when given, should be an object that configures the behavior of the widget.
     Note that the widget node will become a descendant of nodes with CodeMirror-specific CSS classes, and those classes might in some cases affect it. */
-	addLineWidget(line: any, node: HTMLElement, options?: CodeMirror.LineWidgetOptions): Promise<CodeMirror.LineWidget>;
+	addLineWidget(line: number|CodeMirror.LineHandle, node: HTMLElement, options?: CodeMirror.LineWidgetOptions): Promise<CodeMirror.LineWidget>;
 
 	/** Returns a number that can later be passed to isClean to test whether any edits were made (and not undone) in the
     meantime. If closeEvent is true, the current history event will be ‘closed’, meaning it can't be combined with further
@@ -241,7 +241,7 @@ export function _wrapCodeMirrorDoc(_doc: CodeMirror.Doc) : CodeMirrorDocWrapper 
 		modeOption: _doc.modeOption,
 		state: _doc.state,
 
-		addLineWidget: async (line: any, node: HTMLElement, options?: CodeMirror.LineWidgetOptions): Promise<CodeMirror.LineWidget> => {
+		addLineWidget: async (line: number|CodeMirror.LineHandle, node: HTMLElement, options?: CodeMirror.LineWidgetOptions): Promise<CodeMirror.LineWidget> => {
 			return _doc.addLineWidget(line, node, options);
 		},
 
