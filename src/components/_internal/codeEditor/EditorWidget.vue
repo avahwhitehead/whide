@@ -16,7 +16,7 @@ export default Vue.extend({
 			default: "",
 		},
 		type: {
-			type: String as PropType<"error"|"warning"|"info"|"breakpoint">,
+			type: String as PropType<"error"|"warning"|"info">,
 			default: "info",
 		}
 	},
@@ -30,8 +30,6 @@ export default Vue.extend({
 					return "!";
 				case "error":
 					return "x";
-				case "breakpoint":
-					return "\xa0";
 				case "info":
 				default:
 					return "?";
@@ -58,9 +56,6 @@ export default Vue.extend({
 .editor-message.error {
 	background: red;
 }
-.editor-message.breakpoint {
-	background: orangered;
-}
 .editor-message.info {
 	background: orange;
 }
@@ -75,14 +70,10 @@ export default Vue.extend({
 }
 
 .editor-message .widget-icon.warning {
-	/*background-color: orange;*/
 	background: darkorange;
 }
 .editor-message .widget-icon.error {
 	background-color: red;
-}
-.editor-message .widget-icon.breakpoint {
-	background-color: orangered;
 }
 .editor-message .widget-icon.info {
 	background-color: orange;
