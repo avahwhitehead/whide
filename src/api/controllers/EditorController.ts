@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { FileStoreInterface } from "@/fileStore/FileStoreInterface";
-import CodeEditorWrapper from "@/types/codeEditor/CodeEditorWrapper";
+import { CodeEditorWrapper } from "@/types/codeEditor";
 
 /**
  *
