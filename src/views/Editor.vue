@@ -402,7 +402,6 @@ export default Vue.extend({
 .header {
 	text-align: left;
 }
-
 .header .right {
 	display: inline;
 	float: right;
