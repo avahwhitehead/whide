@@ -1,6 +1,6 @@
 <template>
 	<div class="editorHolder">
-		<TabbedPanel :names="files.map(f => f.name)" @change="onTabChange" @close="onTabClose"></TabbedPanel>
+		<TabbedPanel class="editor-tabs" :names="files.map(f => f.name)" @change="onTabChange" @close="onTabClose" />
 		<!-- This div will hold the code editor -->
 		<div ref="codeHolder" class="codeHolder"></div>
 	</div>
@@ -265,9 +265,29 @@ export default Vue.extend({
 .codeHolder .breakpoints {
 	width: .8em;
 }
+
+.CodeMirror {
+	height: 100%;
+	flex: 1;
+}
 </style>
 
 <style scoped>
+.editorHolder {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.codeHolder {
+	text-align: left;
+	height: 100%;
+}
+
+.editor-tabs {
+	height: 2em;
+}
+
 .header .tab {
 	outline: 1px solid black;
 	padding: 2px;
@@ -276,10 +296,5 @@ export default Vue.extend({
 
 .tab.active {
 	border-color: red;
-}
-
-.codeHolder {
-	text-align: left;
-	height: 100%;
 }
 </style>
