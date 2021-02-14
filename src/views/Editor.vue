@@ -410,7 +410,8 @@ export default Vue.extend({
 
 .body {
 	flex-grow: 1;
-	display:flex;
+	display: flex;
+	min-height: 0;
 	height: 100%;
 }
 .body .left, .body .right {
