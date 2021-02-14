@@ -6,7 +6,7 @@
 					<MenuElement :menu="menu" @run="runPluginFunc"
 						v-for="(menu, i) in menus" :key="i"
 					/>
-					<div>
+					<div class="right">
 						<button @click="save" :disabled="!focused_file">Save File</button>
 						<button @click="download" :disabled="!focused_file">Download File</button>
 					</div>
@@ -14,25 +14,23 @@
 			</div>
 		</div>
 
-		<div class="left">
-			<Container class="filler">
+		<div class="body">
+			<Container class="left filler">
 				<FilePicker v-bind:files="files" @change="(file) => openFile(file)"  />
 			</Container>
-		</div>
 
-		<div class="code-editor">
-			<CodeEditorElement v-bind:openFiles="openFiles" @editorChange="onEditorObjectChange" @file-focus="onOpenFileChange" />
-		</div>
+			<div class="middle code-editor">
+				<CodeEditorElement v-bind:openFiles="openFiles" @editorChange="onEditorObjectChange" @file-focus="onOpenFileChange" />
+			</div>
 
-		<div class="right">
-			<Container class="filler">
+			<Container class="right filler">
 				<PluginToggler :plugin-manager="this.pluginManager" />
 			</Container>
 		</div>
 
-		<div class="footer">
+		<Container :collapsible="false" class="footer">
 			<Container :collapsible="false" class="filler">Footer content</Container>
-		</div>
+		</Container>
 
 		<div class="inputModal" v-if="input.showInput">
 			<div class="content">
@@ -385,35 +383,51 @@ export default Vue.extend({
 
 
 <style>
+#app {
+	display: flex;
+	flex-direction: column;
+
+	height: 100%;
+	width: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
 .headerBar {
 	display: block;
 }
-
 .header {
 	text-align: left;
 }
-
-.header, .footer {
-	width: 100%;
-	padding: 2px;
-}
-
-.left, .right {
-	width: 15%
-}
-
-.left {
-	float: left;
-}
-
-.right {
+.header .right {
+	display: inline;
 	float: right;
 }
 
 
+.body {
+	flex-grow: 1;
+	display: flex;
+	min-height: 0;
+	height: 100%;
+}
+.body .left, .body .right {
+	width: 10%;
+}
+.body .middle {
+	flex: 1;
+}
+
+.footer {
+	min-height: 10em;
+	height: fit-content;
+}
+
 .code-editor {
 	outline: 1px solid #AAA;
-	height: 20em;
 	width: 70%;
 	display: inline-block;
 }
@@ -451,20 +465,18 @@ Fillers
 
 .filler {
 	background: #999;
-	height: 20em;
 }
 
 .header .filler, .footer .filler {
 	background: #CCC;
+	height: fit-content;
 }
 
 .header .filler {
 	padding: 4px;
-	height: 100%;
 }
 
 .footer .filler {
 	background: #CCC;
-	height: 3em;
 }
 </style>

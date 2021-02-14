@@ -12,7 +12,7 @@
 					<td class="toggle-cell min-width">
 						<input type="checkbox" :disabled="!plugin.isExternal" :checked="!plugin.disabled" @change="togglePlugin($event, plugin)"/>
 					</td>
-					<td class="name-cell max-width border">{{plugin.name}}</td>
+					<td class="name-cell max-width border" :title="plugin.isExternal ? plugin.filePath : 'System'">{{plugin.name}}</td>
 				</tr>
 			</tbody>
 		</table>
