@@ -6,7 +6,7 @@
 					<MenuElement :menu="menu" @run="runPluginFunc"
 						v-for="(menu, i) in menus" :key="i"
 					/>
-					<div>
+					<div class="right">
 						<button @click="save" :disabled="!focused_file">Save File</button>
 						<button @click="download" :disabled="!focused_file">Download File</button>
 					</div>
@@ -391,6 +391,11 @@ export default Vue.extend({
 
 .header {
 	text-align: left;
+}
+
+.header .right {
+	display: inline;
+	float: right;
 }
 
 .header, .footer {
