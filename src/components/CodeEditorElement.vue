@@ -286,6 +286,7 @@ export default Vue.extend({
 
 .editor-tabs {
 	height: 2em;
+	text-align: left;
 }
 
 .header .tab {
