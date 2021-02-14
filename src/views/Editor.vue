@@ -422,7 +422,8 @@ export default Vue.extend({
 }
 
 .footer {
-	height: 10em;
+	min-height: 10em;
+	height: fit-content;
 }
 
 .code-editor {
