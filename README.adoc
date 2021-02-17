@@ -13,6 +13,7 @@ Alaric Whitehead <aw548@sussex.ac.uk>, Supervisor: Dr Bernhard Reus <bernhard@su
 :github-ssh: https://github.blog/2020-12-15-token-authentication-requirements-for-git-operations/
 :github-ssh-instructions: https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh
 :hwhile: https://github.com/alexj136/HWhile
+:install-script: https://stackoverflow.com/a/31774097/2966288
 :mocha: https://www.npmjs.com/package/mocha
 :n: https://www.npmjs.com/package/n
 :node: https://nodejs.org/en/
@@ -148,3 +149,5 @@ This project is licensed under the MIT License - see link:{license}[LICENSE.md] 
 Using syntax highlighting adapted from link:{vscode-syntax-highlight}[David Pomerenke's VS Code Extension].
 
 * The link:{hwhile}[HWhile] interpreter is used to execute the programs.
+
+* The post-install script to install system plugin dependencies is adapted from link:{install-script}[this StackOverflow answer].
