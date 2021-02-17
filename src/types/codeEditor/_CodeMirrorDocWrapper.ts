@@ -4,9 +4,6 @@ import CodeMirror from "codemirror";
  * Interface describing the wrapper around {@link CodeMirror.Doc} objects.
  */
 export interface CodeMirrorDocWrapper {
-	/** Get the unwrapped doc object */
-	doc: CodeMirror.Doc;
-
 	/** Get the mode option **/
 	modeOption: any;
 
@@ -237,7 +234,6 @@ export interface CodeMirrorDocWrapper {
  */
 export function _wrapCodeMirrorDoc(_doc: CodeMirror.Doc) : CodeMirrorDocWrapper {
 	return {
-		doc: _doc,
 		modeOption: _doc.modeOption,
 		state: _doc.state,
 
@@ -439,7 +435,8 @@ export function _wrapCodeMirrorDoc(_doc: CodeMirror.Doc) : CodeMirrorDocWrapper 
 		},
 
 		unlinkDoc: async (doc: CodeMirrorDocWrapper): Promise<void> => {
-			_doc.unlinkDoc(doc.doc);
+			// @ts-ignore
+			_doc.unlinkDoc(doc);
 		},
 	};
 }

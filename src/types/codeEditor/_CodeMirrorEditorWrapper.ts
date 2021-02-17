@@ -1,11 +1,9 @@
 import CodeMirror from "codemirror";
 
 /**
- * Interface describing the wrapper around {@link CodeMirror.Doc} objects.
+ * Interface describing the wrapper around {@link CodeMirror.Editor} objects.
  */
 export interface CodeMirrorEditorWrapper {
-	editor: CodeMirror.Editor;
-
 	/** Used to find the target position for horizontal cursor motion.start is a { line , ch } object,
         amount an integer(may be negative), and unit one of the string "char", "column", or "word".
         Will return a position that is produced by moving amount times the distance specified by unit.
@@ -488,7 +486,6 @@ export interface CodeMirrorEditorWrapper {
  */
 export function _wrapCodeMirrorEditor(_editor : CodeMirror.Editor) : CodeMirrorEditorWrapper {
 	return {
-		editor: _editor,
 		state: _editor.state,
 
 		async addKeyMap(map: string | CodeMirror.KeyMap, bottom?: boolean): Promise<void> {
