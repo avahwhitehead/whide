@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.2](https://github.com/sonrad10/Whide/compare/v0.9.1...v0.9.2) (2021-02-18)
+
+
+### Features
+
+* added automatic install of system plugin dependencies ([e4cc956](https://github.com/sonrad10/Whide/commit/e4cc956f1d3177755c8bbedcd549bd2ba4bc55b1))
+
+
+### Bug Fixes
+
+* added warnings if plugins don't export any menus or functions ([df4447a](https://github.com/sonrad10/Whide/commit/df4447a18d1d3e28187b132dd82486f238a212e4))
+* stopped system plugins' dependencies being recursively loaded as plugins ([bf478c5](https://github.com/sonrad10/Whide/commit/bf478c54b1a01bbe83fd095ce5db269875aa9c56))
+
 ### 0.9.1 (2021-02-17)
 
 
