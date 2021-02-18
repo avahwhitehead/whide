@@ -1,7 +1,7 @@
 import tmp from "tmp";
 import fs  from "fs";
 import path from "path";
-import { HWhileConnector } from "hwhile-wrapper";
+import { HWhileConnector } from "@whide/hwhile-wrapper";
 
 export const name = "run_code";
 export const args = [];
