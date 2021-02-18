@@ -58,6 +58,11 @@ export async function run_load(pluginManager : PluginManager) : Promise<void> {
 			//Get the module name
 			let moduleName : string = _getModuleName(filePath);
 
+			//Load the functions
+			const funcs: undefined|PluginFunction|PluginFunction[] = pluginModule.default;
+			if (!funcs) console.warn(`No exported functions from plugin "${moduleName}" at "${filePath}"`);
+			if (!pluginModule.menus) console.warn(`No exported menus from plugin "${moduleName}" at "${filePath}"`);
+
 			//Register the plugin
 			let info: PluginInfo = pluginManager.register({
 				name: moduleName,
@@ -68,8 +73,7 @@ export async function run_load(pluginManager : PluginManager) : Promise<void> {
 			});
 
 			//Load the functions
-			const funcs: PluginFunction|PluginFunction[] = pluginModule.default;
-			info.registerFuncs(funcs);
+			info.registerFuncs(funcs || []);
 		}
 	}
 }
