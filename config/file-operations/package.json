@@ -1,5 +1,5 @@
 {
-  "name": "file-operations",
+  "name": "@whide/file-operations",
   "type": "module",
   "version": "1.0.0",
   "description": "File operations plugin for the Whide editor",
