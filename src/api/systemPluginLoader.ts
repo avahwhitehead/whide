@@ -34,8 +34,8 @@ export async function run_load(pluginManager : PluginManager) : Promise<void> {
 		"../../config/",
 		//Look for subdirectories as well
 		true,
-		//Filter to only subdirectories ending in '/' (removes duplicates)
-		/\/$/
+		//Filter to only immediate subdirectories ending in '/' (removes duplicates, and prevents loading plugins' dependencies as plugins)
+		/^\.\/[^/]+\/$/
 	);
 
 	for (let modulePath of requireContext.keys()) {
