@@ -30,5 +30,8 @@ module.exports.run = async function ({args, ioController, editorController}) {
 
 function _displayError(ioController, error) {
 	console.error(error);
-	ioController.showOutput(error, "An error occurred");
+	ioController.showOutput({
+		message: error,
+		title: "An error occurred"
+	});
 }
