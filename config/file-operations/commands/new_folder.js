@@ -14,7 +14,7 @@ module.exports.run = async function ({args, ioController, editorController}) {
 
 	try {
 		//Get the folder path
-		const full_path = args["folder_path"];
+		const full_path = path.join('/', args["file_path"]);
 
 		//Separate file name, and parent path
 		let name = path.basename(full_path);

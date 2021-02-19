@@ -12,7 +12,7 @@ module.exports.run = async function ({args, ioController, editorController}) {
 
 	try {
 		//Get the file path
-		const full_path = args["file_path"];
+		const full_path = path.join('/', args["file_path"]);
 
 		//Get the parent folder
 		let obj = await fileStore.resolvePath(full_path);
