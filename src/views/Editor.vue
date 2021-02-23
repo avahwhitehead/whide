@@ -72,6 +72,7 @@ import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
 import { CustomDict } from "@/types/CustomDict";
 import { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
+import PluginFunctionParameters from "@/api/types/PluginFunctionParameters";
 import { PluginInfo } from "@/api/types/PluginInfo";
 import { PluginManager } from "@/api/managers/PluginManager";
 import { ProgramOptions } from "@/types/CommandLine";
@@ -345,11 +346,12 @@ export default Vue.extend({
 			let editorController: EditorController = new EditorController(this.codeEditor, browserFileStore);
 
 			//Run the function
-			_runFuncAsync(pluginFunction.run, {
+			const funcParameters : PluginFunctionParameters = {
 				args: args,
 				editorController: editorController,
 				ioController: this.ioController,
-			}).catch((e) => {
+			};
+			_runFuncAsync(pluginFunction.run, funcParameters).catch((e) => {
 				//Handle errors produced in the plugin function
 				console.error(e);
 				if (this.ioController) {
