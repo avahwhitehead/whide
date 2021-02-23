@@ -6,7 +6,7 @@ import { HWhileConnector } from "@whide/hwhile-wrapper";
 export const name = "run_code";
 export const args = [];
 
-export async function run({ editorController, ioController }) {
+export async function run({ editorController, ioController, debuggerOutputController }) {
 	const code = await editorController.editor.getValue();
 
 	let name = await ioController.getInput({
@@ -37,10 +37,11 @@ export async function run({ editorController, ioController }) {
 		cwd: folder_path,
 	});
 
+	let instanceController = await debuggerOutputController.addOutputStream();
+
 	let shell = hWhileConnector.run(name, expr, false);
 
-	shell.stdout.on("data", data => console.log(data.toString()));
-	shell.stderr.on("data", data => console.log(`stderr: ${data}`));
+	shell.stdout.on("data", data => instanceController.stream.write(data.toString()));
 	shell.on('error', error => console.log(` error: ${error.message}`));
 	shell.on("close", code => console.log(`child process exited with code ${code}`));
 }

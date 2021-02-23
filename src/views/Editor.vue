@@ -28,14 +28,9 @@
 			</Container>
 		</div>
 
-		<Container class="footer" :left="['play', 'undo', 'bug', 'stop']">
-			<div class="filler">
-				<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
-				<div>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</div>
-				<div>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</div>
-				<div>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum</div>
-			</div>
-		</Container>
+		<div class="footer">
+			<run-panel />
+		</div>
 
 		<div class="inputModal" v-if="input.showInput">
 			<div class="content">
@@ -62,6 +57,7 @@ import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuElement from "@/components/menubar/MenuElement.vue";
 import PluginToggler from "@/components/PluginToggler.vue";
+import RunPanel, { debuggerOutputController } from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 //Other imports
 import EditorController from "@/api/controllers/EditorController";
@@ -152,6 +148,7 @@ export default Vue.extend({
 		CodeEditorElement,
 		MenuElement,
 		PluginToggler,
+		RunPanel,
 	},
 	data() : DataTypesDescriptor {
 		return {
@@ -350,6 +347,7 @@ export default Vue.extend({
 				args: args,
 				editorController: editorController,
 				ioController: this.ioController,
+				debuggerOutputController: debuggerOutputController,
 			};
 			_runFuncAsync(pluginFunction.run, funcParameters).catch((e) => {
 				//Handle errors produced in the plugin function
@@ -424,15 +422,17 @@ export default Vue.extend({
 	min-height: 0;
 	height: 100%;
 }
-.body .left, .body .right {
+.body .left {
 	width: 10%;
+}
+.body .right {
+	width: 15%;
 }
 .body .middle {
 	flex: 1;
 }
 
 .footer {
-	min-height: 10em;
 	height: fit-content;
 }
 
