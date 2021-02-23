@@ -1,35 +1,32 @@
 <template>
 	<div class="ContainerElement">
-		<div class="top buttons" v-if="top && top.length">
-			<button v-if="collapsible" @click="toggle_collapse">{{ collapsed ? "Show" : "Collapse" }}</button>
-			<div v-for="(icon,i) in top" v-bind:key="i">
-				<font-awesome-icon class="button icon" :icon="icon" @click="() => onIconClick('top', icon)"/>
+		<div class="left buttons" v-if="left && left.length">
+			<div v-for="(icon,i) in left" v-bind:key="i">
+				<font-awesome-icon class="button icon" :icon="icon" @click="() => onIconClick('left', icon)"/>
 			</div>
 		</div>
 
 		<div class="middle">
-			<div class="left buttons" v-if="left && left.length">
-				<div v-for="(icon,i) in left" v-bind:key="i">
-					<font-awesome-icon class="button icon" :icon="icon" @click="() => onIconClick('left', icon)"/>
+			<div class="top buttons" v-if="top && top.length">
+				<div v-for="(icon,i) in top" v-bind:key="i">
+					<font-awesome-icon class="button icon" :icon="icon" @click="() => onIconClick('top', icon)"/>
 				</div>
 			</div>
 
-			<div class="content-holder">
-				<div class="content" :class="{ 'collapsed' : collapsed, 'open' : !collapsed }">
-					<slot></slot>
-				</div>
+			<div class="content">
+				<slot></slot>
 			</div>
 
-			<div class="right buttons" v-if="right && right.length">
-				<div v-for="(icon,i) in right" v-bind:key="i">
-					<font-awesome-icon class="button icon" :icon="icon" @click="() => onIconClick('right', icon)"/>
+			<div class="bottom buttons" v-if="bottom && bottom.length">
+				<div v-for="(icon,i) in bottom" v-bind:key="i">
+					<font-awesome-icon class="button icon" :icon="icon" @click="() => onIconClick('bottom', icon)"/>
 				</div>
 			</div>
 		</div>
 
-		<div class="bottom buttons" v-if="bottom && bottom.length">
-			<div v-for="(icon,i) in bottom" v-bind:key="i">
-				<font-awesome-icon class="button icon" :icon="icon" @click="() => onIconClick('bottom', icon)"/>
+		<div class="right buttons" v-if="right && right.length">
+			<div v-for="(icon,i) in right" v-bind:key="i">
+				<font-awesome-icon class="button icon" :icon="icon" @click="() => onIconClick('right', icon)"/>
 			</div>
 		</div>
 	</div>
@@ -44,7 +41,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 library.add(fas);
 
 interface DataTypeInterface {
-	collapsed: boolean;
+
 }
 
 export default Vue.extend({
@@ -53,10 +50,6 @@ export default Vue.extend({
 		FontAwesomeIcon
 	},
 	props: {
-		collapsible: {
-			type: Boolean,
-			default: true
-		},
 		top: {
 			type: Array,
 			default: () => [],
@@ -75,14 +68,9 @@ export default Vue.extend({
 		},
 	},
 	data() : DataTypeInterface {
-		return {
-			collapsed: false
-		}
+		return { };
 	},
 	methods: {
-		toggle_collapse() : void {
-			this.collapsed = !this.collapsed;
-		},
 		onIconClick(panel: string, icon: string) {
 			//TODO: Is this the best event name format?
 			const eventName = `${panel}-${icon}`;
@@ -94,31 +82,10 @@ export default Vue.extend({
 
 
 <style scoped>
-/*noinspection CssUnusedSymbol*/
-.content.collapsed {
-	display: none;
-}
-
 .ContainerElement {
 	overflow: auto;
 	padding: 5px;
-}
-
-.content-holder {
-	width: 100%;
-}
-
-.middle {
 	display: flex;
-}
-
-.top.buttons, .bottom.buttons {
-	padding: .25em 0;
-}
-
-.left.buttons, .right.buttons {
-	width: 1em;
-	padding: 0 .5em;
 }
 
 .content {
@@ -126,6 +93,37 @@ export default Vue.extend({
 	text-align: left;
 	overflow-wrap: anywhere;
 	overflow-y: auto;
+	width: 100%;
+}
+
+.middle {
+	width: 100%;
+}
+
+.top.buttons, .bottom.buttons {
+	padding: .25em 0;
+	flex: 0;
+}
+
+.left.buttons, .right.buttons {
+	width: 1em;
+	padding: 0 .5em;
+}
+
+.top.buttons {
+	border-bottom: 1px solid black;
+}
+
+.bottom.buttons {
+	border-top: 1px solid black;
+}
+
+.left.buttons {
+	border-right: 1px solid black;
+}
+
+.right.buttons {
+	border-left: 1px solid black;
 }
 
 .left.buttons div, .right.buttons div, .top.buttons div, .bottom.buttons div {
