@@ -50,6 +50,7 @@ export default Vue.extend({
 <style scoped>
 p {
 	text-align: left;
+	user-select: none;
 }
 
 .treeNode .children {

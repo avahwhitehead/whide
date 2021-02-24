@@ -78,6 +78,7 @@ export default Vue.extend({
 .name {
 	display: inline;
 	width: 100%;
+	user-select: none;
 }
 
 .dropdown {

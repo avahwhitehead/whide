@@ -2,12 +2,13 @@
 	<div class="tabbedPanel">
 		<div class="tabs">
 			<TabButton
-					:class="{tab: true, active: i===selectedTab}"
-					@click="onTabClick($event, i)"
-					@close="onTabClose($event, i)"
-					v-for="(tab,i) in names" v-bind:key="i">
-				{{ tab }}
-			</TabButton>
+				class="tab"
+				:title="tab"
+				:active="i === selectedTab"
+				@click="onTabClick($event, i)"
+				@close="onTabClose($event, i)"
+				v-for="(tab,i) in names" v-bind:key="i"
+			/>
 		</div>
 	</div>
 </template>
@@ -89,7 +90,5 @@ export default Vue.extend({
 </script>
 
 <style scoped>
-.tab.active {
-	border-color: red;
-}
+
 </style>

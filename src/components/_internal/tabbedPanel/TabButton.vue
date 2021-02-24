@@ -1,6 +1,6 @@
 <template>
-	<div class="tabButton">
-		<button @click="handleClick"><slot/></button>
+	<div class="tabButton" :class="{ 'active': active }" @click="handleClick" @click.middle="handleClose">
+		<p class="title">{{ title }}</p>
 		<font-awesome-icon class="closeIcon" icon="times" @click="handleClose" />
 	</div>
 </template>
@@ -20,6 +20,16 @@ export default Vue.extend({
 	components: {
 		FontAwesomeIcon
 	},
+	props: {
+		title: {
+			type: String,
+			required: true,
+		},
+		active: {
+			type: Boolean,
+			default: false,
+		},
+	},
 	data() : DataTypeInterface {
 		return {}
 	},
@@ -38,18 +48,31 @@ export default Vue.extend({
 <style scoped>
 .tabButton {
 	display: inline-block;
-	border: 1px solid black;
-	margin: 3px 5px;
+	background-color: #999999;
+	margin: 3px;
+}
+
+/*noinspection CssUnusedSymbol*/
+.tabButton.active {
+	background-color: #C0C0C0;
+}
+
+.title {
+	display: inline;
+	margin: 0;
+	padding: 2px;
+	vertical-align: middle;
+	user-select: none;
 }
 
 .closeIcon {
-  color: grey;
-  padding: 2px;
-  vertical-align: top;
+	color: grey;
+	padding: 2px;
+	vertical-align: top;
 }
 
 .closeIcon:hover {
-  cursor: pointer;
-  color: red;
+	cursor: pointer;
+	color: red;
 }
 </style>
