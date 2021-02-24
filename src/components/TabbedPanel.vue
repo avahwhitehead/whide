@@ -17,6 +17,34 @@
 import Vue from "vue";
 import TabButton from "./_internal/tabbedPanel/TabButton.vue";
 
+/**
+ * Get the index of an item added to a list.
+ * @param newList	The list of items after the item was added
+ * @param oldList	The list of items without the added item
+ * @returns	The index of the added item if exactly one item was added and no other changes were made. -1 otherwise.
+ */
+function getAddedElement<T>(newList: T[], oldList: T[]) : number {
+	let addedItemIndex: number = -1;
+	//List pointers
+	let j = 0;
+	for (let i = 0; i < newList.length; i++) {
+		//See if the list indexes don't match
+		if (newList[i] !== oldList[j]) {
+			//This is not the first difference - return that this is invalid
+			if (addedItemIndex > -1) return -1;
+			//Otherwise save the index
+			addedItemIndex = i;
+			//Don't increment the new list's pointer because all the following elements should be offset by -1
+			//(assuming no other changes)
+		} else {
+			//The index is the same - increment both pointers
+			j++;
+		}
+	}
+	//Return the changed index
+	return addedItemIndex;
+}
+
 interface DataTypeInterface {
 	selectedTab: number;
 }
@@ -38,9 +66,17 @@ export default Vue.extend({
 		/**
 		 * Emit a change event if selected tab is different after the tab list is updated
 		 */
-		names: function (newTabs, oldTabs) {
+		names: function (newTabs: string[], oldTabs: string[]) {
 			if (newTabs[this.selectedTab] !== oldTabs[this.selectedTab]) {
 				this.setActiveTab(this.selectedTab, true);
+				return;
+			}
+			//Change the active tab if the change was opening a new file
+			if (newTabs.length === oldTabs.length + 1) {
+				//Get the added element in the list
+				let addedItemIndex: number = getAddedElement(newTabs, oldTabs);
+				//Focus on the added tab
+				if (addedItemIndex > -1) this.setActiveTab(addedItemIndex);
 			}
 		}
 	},
@@ -77,7 +113,7 @@ export default Vue.extend({
 		setActiveTab(index : number, force : boolean = false) : void {
 			//Limit indexes to between the first and last tabs
 			index = Math.max(index, 0);
-			index = Math.min(index, this.names.length);
+			index = Math.min(index, this.names.length - 1);
 
 			//Only if the index has changed
 			if (index !== this.selectedTab || force) {
