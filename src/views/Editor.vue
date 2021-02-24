@@ -15,9 +15,9 @@
 				<FilePicker v-bind:files="files" @change="(file) => openFile(file)"  />
 			</Container>
 
-			<div class="middle code-editor">
+			<Container class="middle code-editor">
 				<CodeEditorElement v-bind:openFiles="openFiles" @editorChange="onEditorObjectChange" @file-focus="onOpenFileChange" />
-			</div>
+			</Container>
 
 			<Container class="right filler">
 				<PluginToggler :plugin-manager="this.pluginManager" />
