@@ -14,7 +14,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import TabButton from "@/components/tabbedPanel/TabButton.vue";
+import TabButton from "./_internal/tabbedPanel/TabButton.vue";
 
 interface DataTypeInterface {
 	selectedTab: number;
