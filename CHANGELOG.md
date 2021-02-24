@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.3](https://github.com/sonrad10/Whide/compare/v0.9.2...v0.9.3) (2021-02-24)
+
+
+### Features
+
+* added fontawesome support ([4182384](https://github.com/sonrad10/Whide/commit/4182384eef4ea378d7d2cc0e12b123e639d59787))
+* added support for running code in the editor through the console ([d84b871](https://github.com/sonrad10/Whide/commit/d84b87169391c3a8f262dcbf86ffd2f2a5bdf699))
+* changed IOControllers to take a single object as args ([ff11c61](https://github.com/sonrad10/Whide/commit/ff11c611eef55cd7097a189e87a2aed68bfdfa0a))
+* moved code run output to the output panel ([feb1c0c](https://github.com/sonrad10/Whide/commit/feb1c0c66379d515ca53f57e999a578e47ac6d9f))
+* moved PluginFunctionParameters declaration into its own file ([6883bac](https://github.com/sonrad10/Whide/commit/6883bacfbba4f953021b5a1d1ba6dd64a70be4aa))
+* removed collapsable feature from containers ([858e156](https://github.com/sonrad10/Whide/commit/858e1569b17456446261cb70ef395bdb80beb889))
+
+
+### Bug Fixes
+
+* changed from close button in tabs to close icon ([b33e704](https://github.com/sonrad10/Whide/commit/b33e704cdfe838df783a9b1585c9d6fc270eda78))
+* changed to using organisation scope ([2c8888f](https://github.com/sonrad10/Whide/commit/2c8888fd7053582a29c897b9350bea865a309059))
+* file paths now work from the project root automatically without requiring leading slash ([c5dd48f](https://github.com/sonrad10/Whide/commit/c5dd48f9248cfad5d14767fc227d9b26dafed8b3))
+* fixed wrong import name ([88047ac](https://github.com/sonrad10/Whide/commit/88047acb0555c2fb34ea73d3dc6e6052f4824ab0))
+* renamed a variable ([62c136b](https://github.com/sonrad10/Whide/commit/62c136b8cdbe2336111efba4c0169e19dc9ec1c1))
+* upgraded @whide/run-code plugin to latest version of @whide/hwhile-wrapper ([58566ea](https://github.com/sonrad10/Whide/commit/58566eaea5a117da4584f3af9f372ac523ead1ef))
+
 ### [0.9.2](https://github.com/sonrad10/Whide/compare/v0.9.1...v0.9.2) (2021-02-18)
 
 
