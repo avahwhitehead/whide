@@ -1,7 +1,7 @@
 <template>
 	<div class="filePicker">
 		<div class="treeHolder">
-			<TreeNode v-bind:file="file" @change="f => onChange(f)"
+			<TreeNode v-bind:file="file" @change="onClick"
 					v-for="(file,i) in sortedFiles" v-bind:key="i">
 			</TreeNode>
 		</div>
@@ -44,7 +44,7 @@ export default Vue.extend({
 		}
 	},
 	methods: {
-		onChange(file : AbstractFileData) {
+		onClick(file : AbstractFileData) {
 			this.active_file = file;
 			this.$emit("change", file);
 		}
