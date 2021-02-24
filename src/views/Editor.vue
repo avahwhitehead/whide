@@ -1,16 +1,12 @@
 <template>
 	<div id="app" class="editor">
-		<div class="header">
-			<div class="headerBar">
-				<div class="filler">
-					<MenuElement :menu="menu" @run="runPluginFunc"
-						v-for="(menu, i) in menus" :key="i"
-					/>
-					<div class="right">
-						<button @click="save" :disabled="!focused_file">Save File</button>
-						<button @click="download" :disabled="!focused_file">Download File</button>
-					</div>
-				</div>
+		<div class="header filler">
+			<div class="menubar-holder">
+				<MenuBar :menus="menus" @run="runPluginFunc"/>
+			</div>
+			<div class="right">
+				<button @click="save" :disabled="!focused_file">Save File</button>
+				<button @click="download" :disabled="!focused_file">Download File</button>
 			</div>
 		</div>
 
@@ -55,7 +51,7 @@ import fileDownloader from "js-file-download";
 import CodeEditorElement, { ExtendedCodeEditorWrapper } from "@/components/CodeEditorElement.vue";
 import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
-import MenuElement from "@/components/menubar/MenuElement.vue";
+import MenuBar from "@/components/MenuBar.vue";
 import PluginToggler from "@/components/PluginToggler.vue";
 import RunPanel, { runPanelController } from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
@@ -146,7 +142,7 @@ export default Vue.extend({
 		FilePicker,
 		Container,
 		CodeEditorElement,
-		MenuElement,
+		MenuBar,
 		PluginToggler,
 		RunPanel,
 	},
@@ -404,14 +400,11 @@ export default Vue.extend({
 	bottom: 0;
 }
 
-.headerBar {
-	display: block;
-}
-.header {
-	text-align: left;
+.menubar-holder {
+	display: inline-block;
+	float: left;
 }
 .header .right {
-	display: inline;
 	float: right;
 }
 
@@ -477,12 +470,12 @@ Fillers
 	background: #999;
 }
 
-.header .filler, .footer .filler {
+.header.filler, .footer .filler {
 	background: #CCC;
 	height: fit-content;
 }
 
-.header .filler {
+.header.filler {
 	padding: 4px;
 }
 

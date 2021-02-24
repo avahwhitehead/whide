@@ -10,7 +10,7 @@
 
 <script lang="ts">
 import Vue, { PropType } from "vue";
-import TreeNode from "@/components/filepicker/TreeNode.vue";
+import TreeNode from "./_internal/filepicker/TreeNode.vue";
 import { AbstractFileData } from "@/fileStore/AbstractFileData";
 
 interface DataTypeInterface {
