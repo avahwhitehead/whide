@@ -1,7 +1,7 @@
 <template>
 	<div class="menuItem" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
 		<div class="name" @click="onClick">{{ item.name }}</div>
-		<div :class="{ 'dropdown': true, 'visible': isVisible, }">
+		<div class="dropdown" :class="{ 'visible': isVisible }">
 			<MenuItemElement @run="passRunUp"
 				v-for="(child,i) in item.children" :item="child" :key="i"
 			/>
