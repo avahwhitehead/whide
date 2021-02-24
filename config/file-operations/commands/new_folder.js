@@ -14,7 +14,7 @@ module.exports.run = async function ({args, ioController, editorController}) {
 
 	try {
 		//Get the folder path
-		const full_path = args["folder_path"];
+		const full_path = path.join('/', args["file_path"]);
 
 		//Separate file name, and parent path
 		let name = path.basename(full_path);
@@ -41,5 +41,8 @@ module.exports.run = async function ({args, ioController, editorController}) {
 
 function _displayError(ioController, error) {
 	console.error(error);
-	ioController.showOutput(error, "An error occurred");
+	ioController.showOutput({
+		message: error,
+		title: "An error occurred"
+	});
 }

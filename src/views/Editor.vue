@@ -28,9 +28,9 @@
 			</Container>
 		</div>
 
-		<Container :collapsible="false" class="footer">
-			<Container :collapsible="false" class="filler">Footer content</Container>
-		</Container>
+		<div class="footer">
+			<run-panel />
+		</div>
 
 		<div class="inputModal" v-if="input.showInput">
 			<div class="content">
@@ -57,16 +57,18 @@ import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuElement from "@/components/menubar/MenuElement.vue";
 import PluginToggler from "@/components/PluginToggler.vue";
+import RunPanel, { runPanelController } from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 //Other imports
 import EditorController from "@/api/controllers/EditorController";
-import IOController from "@/api/types/IOController";
+import IOController, { InputPromptParams, OutputPromptParams } from "@/api/types/IOController";
 import { CodeEditorWrapper } from "@/types/codeEditor";
 import { AbstractFileData, FileData } from "@/fileStore/AbstractFileData";
 import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
 import { CustomDict } from "@/types/CustomDict";
 import { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
+import PluginFunctionParameters from "@/api/types/PluginFunctionParameters";
 import { PluginInfo } from "@/api/types/PluginInfo";
 import { PluginManager } from "@/api/managers/PluginManager";
 import { ProgramOptions } from "@/types/CommandLine";
@@ -146,6 +148,7 @@ export default Vue.extend({
 		CodeEditorElement,
 		MenuElement,
 		PluginToggler,
+		RunPanel,
 	},
 	data() : DataTypesDescriptor {
 		return {
@@ -189,15 +192,15 @@ export default Vue.extend({
 	},
 	mounted() {
 		this.ioController = {
-			showOutput: (message: string, title: string = "") : Promise<void> => {
+			showOutput: (props: OutputPromptParams) : Promise<void> => {
 				return new Promise(resolve => {
 					//Make visible
 					this.input.showInput = true;
 					//Don't the text box
 					this.input.expectingInput = false;
 					//Set the message to show
-					this.input.title = title;
-					this.input.message = message;
+					this.input.title = props.title || "";
+					this.input.message = props.message;
 					//When the user submits
 					this.input.callback = () => {
 						//Hide the prompt
@@ -207,19 +210,19 @@ export default Vue.extend({
 					};
 				});
 			},
-			getInput: (message: string, validator?: ((x:string) => boolean), title: string = "") : Promise<string|undefined> => {
+			getInput: (props: InputPromptParams) : Promise<string|undefined> => {
 				return new Promise(resolve => {
 					//Make visible
 					this.input.showInput = true;
 					//Show the text box
 					this.input.expectingInput = true;
 					//Show the message
-					this.input.title = title;
-					this.input.message = message;
+					this.input.title = props.title || "";
+					this.input.message = props.message;
 					//When the user enters the value
 					this.input.callback = (val : string) => {
 						//Check with the validator, or return true
-						if (!validator || validator(val)) {
+						if (!props.validator || props.validator(val)) {
 							this.input.error = "";
 							//Hide the prompt
 							this.hideInput();
@@ -321,12 +324,12 @@ export default Vue.extend({
 				let validator: (v: string) => (boolean | Promise<boolean>);
 				validator = arg.validator || (() => true);
 				//Prompt the user for the argument input
-				let val = await this.ioController.getInput(
-					arg.description || "",
+				let val = await this.ioController.getInput({
+					title: `INPUT: ${arg.name}`,
+					message: arg.description || "",
 					//Allow empty optional arguments, or validate the input
-					async (s) => (arg.optional && !s || await validator(s)),
-					`INPUT: ${arg.name}`
-				);
+					validator: async (s) => arg.optional && !s || await validator(s),
+				});
 				//End here if the user presses cancel
 				if (val === undefined) return;
 				//Otherwise store the value
@@ -340,15 +343,20 @@ export default Vue.extend({
 			let editorController: EditorController = new EditorController(this.codeEditor, browserFileStore);
 
 			//Run the function
-			_runFuncAsync(pluginFunction.run, {
+			const funcParameters : PluginFunctionParameters = {
 				args: args,
 				editorController: editorController,
 				ioController: this.ioController,
-			}).catch((e) => {
+				runPanelController: runPanelController,
+			};
+			_runFuncAsync(pluginFunction.run, funcParameters).catch((e) => {
 				//Handle errors produced in the plugin function
 				console.error(e);
 				if (this.ioController) {
-					this.ioController.showOutput(e.toString(), `Error in plugin function '${data.plugin.name}.${pluginFunction!.name}'`);
+					this.ioController.showOutput({
+						message: e.toString(),
+						title: `Error in plugin function '${data.plugin.name}.${pluginFunction!.name}'`,
+					});
 				}
 			});
 		},
@@ -414,15 +422,17 @@ export default Vue.extend({
 	min-height: 0;
 	height: 100%;
 }
-.body .left, .body .right {
+.body .left {
 	width: 10%;
+}
+.body .right {
+	width: 15%;
 }
 .body .middle {
 	flex: 1;
 }
 
 .footer {
-	min-height: 10em;
 	height: fit-content;
 }
 

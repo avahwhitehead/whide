@@ -1,5 +1,4 @@
-import EditorController from "@/api/controllers/EditorController";
-import IOController from "@/api/types/IOController";
+import PluginFunctionParameters from "./PluginFunctionParameters";
 
 /**
  * Describe an argument to prompt the user for
@@ -11,24 +10,6 @@ export type Argument = {
 	default?: string,
 	validator?: (v: string) => boolean|Promise<boolean>,
 };
-
-/**
- * Hold the parameters to pass to the function when it's called.
- */
-export type PluginFunctionParameters = {
-	/**
-	 * The argument values as `name: value` pairs
-	 */
-	args: {[key: string]: string},
-	/**
-	 * The code editor object
-	 */
-	editorController: EditorController,
-	/**
-	 * Object allowing user input/output
-	 */
-	ioController: IOController
-}
 
 /**
  * A callable function exported from a plugin

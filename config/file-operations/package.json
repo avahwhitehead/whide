@@ -1,12 +1,12 @@
 {
-  "name": "file-operations",
+  "name": "@whide/file-operations",
   "type": "module",
   "version": "1.0.0",
-  "description": "",
+  "description": "File operations plugin for the Whide editor",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Alaric Whitehead",
+  "license": "MIT"
 }
