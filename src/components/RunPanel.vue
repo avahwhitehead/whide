@@ -2,7 +2,7 @@
 	<Container :left="['play', 'undo', 'bug', 'stop']">
 		<div class="DebuggerPanel">
 			<div class="tabs-holder">
-				<TabbedPanel :names="debuggerOutputController.names" @change="onTabChange" @close="onTabClose"></TabbedPanel>
+				<TabbedPanel :names="runPanelController.names" @change="onTabChange" @close="onTabClose"></TabbedPanel>
 			</div>
 
 			<div class="output-holder">
@@ -19,11 +19,11 @@ import RunPanelController, { RunPanelInstanceController } from "@/api/controller
 import Container from "@/components/Container.vue";
 
 interface DataTypeDescriptor {
-	debuggerOutputController: RunPanelController,
+	runPanelController: RunPanelController,
 	instanceController: RunPanelInstanceController|undefined,
 }
 
-export const debuggerOutputController = new RunPanelController();
+export const runPanelController = new RunPanelController();
 
 export default Vue.extend({
 	name: 'RunPanel',
@@ -34,17 +34,17 @@ export default Vue.extend({
 	props: {},
 	data() : DataTypeDescriptor {
 		return {
-			debuggerOutputController: debuggerOutputController,
+			runPanelController: runPanelController,
 			instanceController: undefined,
 		}
 	},
 	methods: {
 		onTabChange(selected : number) {
-			this.instanceController = this.debuggerOutputController.controllers[selected];
+			this.instanceController = this.runPanelController.controllers[selected];
 		},
 		onTabClose(closed : number) {
-			const controller = this.debuggerOutputController.controllers[closed];
-			this.debuggerOutputController.removeOutputStream(controller);
+			const controller = this.runPanelController.controllers[closed];
+			this.runPanelController.removeOutputStream(controller);
 		},
 	}
 })

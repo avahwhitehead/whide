@@ -57,7 +57,7 @@ import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuElement from "@/components/menubar/MenuElement.vue";
 import PluginToggler from "@/components/PluginToggler.vue";
-import RunPanel, { debuggerOutputController } from "@/components/RunPanel.vue";
+import RunPanel, { runPanelController } from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 //Other imports
 import EditorController from "@/api/controllers/EditorController";
@@ -347,7 +347,7 @@ export default Vue.extend({
 				args: args,
 				editorController: editorController,
 				ioController: this.ioController,
-				debuggerOutputController: debuggerOutputController,
+				runPanelController: runPanelController,
 			};
 			_runFuncAsync(pluginFunction.run, funcParameters).catch((e) => {
 				//Handle errors produced in the plugin function

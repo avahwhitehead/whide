@@ -21,5 +21,5 @@ export default interface PluginFunctionParameters {
 	/**
 	 * Object allowing output to the run panel
 	 */
-	debuggerOutputController : RunPanelController,
+	runPanelController : RunPanelController,
 }
