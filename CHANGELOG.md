@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.5](https://github.com/sonrad10/Whide/compare/v0.9.4...v0.9.5) (2021-02-25)
+
+
+### Bug Fixes
+
+* fixed "save" and "download" buttons being always disabled ([3e38085](https://github.com/sonrad10/Whide/commit/3e38085435a98446c1a40fa4112b6460c65cff4c))
+
 ### [0.9.4](https://github.com/sonrad10/Whide/compare/v0.9.3...v0.9.4) (2021-02-25)
 
 
