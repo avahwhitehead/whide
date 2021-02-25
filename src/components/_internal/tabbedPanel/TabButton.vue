@@ -1,7 +1,7 @@
 <template>
 	<div class="tabButton" :class="{ 'active': active }" @click="handleClick" @click.middle="handleClose">
 		<p class="title">{{ title }}</p>
-		<font-awesome-icon class="closeIcon" icon="times" @click="handleClose" />
+		<font-awesome-icon class="closeIcon" icon="times" @click.stop="handleClose" />
 	</div>
 </template>
 
