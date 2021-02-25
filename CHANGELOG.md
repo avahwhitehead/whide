@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.4](https://github.com/sonrad10/Whide/compare/v0.9.3...v0.9.4) (2021-02-25)
+
+
+### Features
+
+* added support for draggable tabs in RunPanel.vue ([e8c1642](https://github.com/sonrad10/Whide/commit/e8c16427c07d6e0f22c72f0419a14b4114da9642))
+* added support for rearranging tabs by dragging ([80791b1](https://github.com/sonrad10/Whide/commit/80791b1bbbf2474be3bd9529f36bb91cb60ca9c5))
+* changed tabs away from buttons, using background colours to show active tab ([bdf4bf9](https://github.com/sonrad10/Whide/commit/bdf4bf9c21b4d2b7548a1ad0c67d821a499a0730))
+* made code editor focus on file tab when clicking on the file name in the file manager ([dcdf412](https://github.com/sonrad10/Whide/commit/dcdf412963a0f503d9a5a2a9684475ab0bde09f1))
+* made new tabs open automatically ([d5a3392](https://github.com/sonrad10/Whide/commit/d5a33922a2edc25ec09f89467eaa2017e5374254))
+* moved the menu bar into its own element, and Menu(Item)Element to `_internal/` ([420b919](https://github.com/sonrad10/Whide/commit/420b919ce944c499d82c078eff2ca8cb0a2f3493))
+
+
+### Bug Fixes
+
+* Fixed error where opening a single tab wouldn't update the editor every other time ([1079059](https://github.com/sonrad10/Whide/commit/1079059c9d712f4c0cd87229948b152cfb588efa))
+* Minor update to package-lock files ([7b7782f](https://github.com/sonrad10/Whide/commit/7b7782f9bfbf4b2f070c242ef734ebb333374457))
+* moved subfolders of private components into _internal ([2b73fd7](https://github.com/sonrad10/Whide/commit/2b73fd7a71d2305536403b97da3c867cc3f9aed4))
+* renamed FilePicker onChange to onClick ([1cbe8e2](https://github.com/sonrad10/Whide/commit/1cbe8e280ec441b9061537bbc00eaf1aaf48918c))
+* Wrapped CodeEditor in a Container ([562f528](https://github.com/sonrad10/Whide/commit/562f52875071135c6086ea4bb9f2ce45b604f30c))
+
 ### [0.9.3](https://github.com/sonrad10/Whide/compare/v0.9.2...v0.9.3) (2021-02-24)
 
 
