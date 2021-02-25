@@ -265,13 +265,13 @@ export default Vue.extend({
 		/**
 		 * Update the selected file when the parent element changes the focused file
 		 */
-		focused(newFile: FileData) {
+		focused(newFile: FileData|undefined) {
 			this.selectedFile = newFile;
 		},
 		/**
 		 * Update the editor content when the selected file is changed (either direction)
 		 */
-		selectedFile(newFile) {
+		selectedFile(newFile: FileData|undefined) {
 			if (!newFile) this.updateCode("");
 			else this.updateCode(newFile.content);
 		}

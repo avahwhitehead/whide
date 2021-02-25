@@ -265,7 +265,6 @@ export default Vue.extend({
 			}
 		},
 		onOpenFileChange(fileName : string|undefined) : void {
-			console.log('focus', fileName)
 			//Keep track of the currently focused file
 			if (!fileName) this.focused_file = undefined;
 			else this.focused_file = this.openFiles[fileName];

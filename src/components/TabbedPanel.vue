@@ -117,7 +117,12 @@ export default Vue.extend({
 		/**
 		 * Update the selected index when a tab is externally set
 		 */
-		selectedTab(newSelected: string) {
+		selectedTab(newSelected: string|undefined) {
+			//If no tab is provided, explicitly do nothing
+			if (!newSelected) {
+				this.selectedIndex = -1;
+				return;
+			}
 			//Update the selected index when the selected tab is externally set
 			const i = this.tabs.indexOf(newSelected);
 			if (i > -1) this.selectedIndex = i;
