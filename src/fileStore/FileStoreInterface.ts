@@ -1,4 +1,6 @@
-import { AbstractFileData, FileData, FolderData } from "@/fileStore/AbstractFileData";
+import { AbstractFileData} from "@/fileStore/internal/AbstractFileData";
+import { FileData } from "@/fileStore/internal/FileData";
+import { FolderData } from "@/fileStore/internal/FolderData";
 
 /**
  * An interface defining the methods required by a file store object

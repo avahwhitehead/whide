@@ -16,7 +16,6 @@
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import TabbedPanel from "@/components/TabbedPanel.vue";
-import { FileData } from "@/fileStore/AbstractFileData";
 import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
 import BreakpointWidget from "./_internal/codeEditor/BreakpointWidget.vue";
 import { CodeEditorWrapper, wrapEditor } from "@/types/codeEditor";
@@ -27,6 +26,7 @@ import 'codemirror/lib/codemirror.css';
 //While language syntax definition
 import WHILE from "@/assets/whileSyntaxMode.ts";
 import { CustomDict } from "@/types/CustomDict";
+import { FileData } from "@/fileStore/internal/FileData";
 
 interface DataType {
 	selectedFile: FileData|undefined,

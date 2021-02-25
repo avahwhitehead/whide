@@ -1,14 +1,16 @@
 import IdbKvStore from "idb-kv-store";
 import Crypto from 'crypto-js';
-import { AbstractFileData, FileData, FolderData } from "@/fileStore/AbstractFileData";
+import { AbstractFileData} from "@/fileStore/internal/AbstractFileData";
 import { FileStoreInterface } from "@/fileStore/FileStoreInterface";
-import { StoredFile } from "@/fileStore/StoredFile";
+import { StoredFile } from "@/fileStore/browserFileStore/StoredFile";
 import path from "path";
+import { FileData } from "@/fileStore/internal/FileData";
+import { FolderData } from "@/fileStore/internal/FolderData";
 
 /**
  * A file store using the browser's Indexed DB as backend.
  */
-export class BrowserFileStore implements FileStoreInterface {
+export default class BrowserFileStore implements FileStoreInterface {
 	private _DB_NAME = "FileStore";
 	private keyStore : IdbKvStore | undefined;
 	private fileTree : AbstractFileData[] = [];

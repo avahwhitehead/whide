@@ -14,7 +14,8 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { AbstractFileData, FolderData } from "@/fileStore/AbstractFileData";
+import { AbstractFileData} from "@/fileStore/internal/AbstractFileData";
+import { FolderData } from "@/fileStore/internal/FolderData";
 
 interface DataTypeInterface {
 

@@ -11,7 +11,7 @@
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import TreeNode from "./_internal/filepicker/TreeNode.vue";
-import { AbstractFileData } from "@/fileStore/AbstractFileData";
+import { AbstractFileData } from "@/fileStore/internal/AbstractFileData";
 
 interface DataTypeInterface {
 	active_file : AbstractFileData|null;
