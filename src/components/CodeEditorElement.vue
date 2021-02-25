@@ -1,6 +1,12 @@
 <template>
 	<div class="editorHolder">
-		<TabbedPanel class="editor-tabs" :names="fileNames" :selected-tab="selectedFileName" @change="onTabChange" @close="onTabClose" />
+		<TabbedPanel
+			class="editor-tabs"
+			:names="fileNames"
+			:selected-tab="focusedName"
+			@change="onTabChange"
+			@close="onTabClose"
+		/>
 		<!-- This div will hold the code editor -->
 		<div ref="codeHolder" class="codeHolder"></div>
 	</div>
@@ -24,7 +30,6 @@ import { CustomDict } from "@/types/CustomDict";
 
 interface DataType {
 	selectedFile: FileData|undefined,
-	selectedFileName: string|undefined,
 	editor: ExtendedCodeEditorWrapper|undefined,
 }
 
@@ -174,11 +179,14 @@ export default Vue.extend({
 		openFiles: {
 			type: Object as PropType<CustomDict<FileData>>,
 			required: true,
-		}
+		},
+		focused: {
+			type: Object as PropType<FileData>,
+			default: undefined,
+		},
 	},
 	data() : DataType {
 		return {
-			selectedFileName: undefined,
 			selectedFile: undefined,
 			//The code editor object.
 			//Is undefined until the object is created in `mounted`
@@ -211,14 +219,18 @@ export default Vue.extend({
 		});
 
 		//Toggle breakpoints when the gutter is clicked
-		this.editor.on("gutterClick",
-			async (_, line) => this.editor!.toggleBreakpoint(line)
-		);
+		this.editor.on("gutterClick", async (_, line) => {
+			if (!this.editor) throw new Error("Couldn't get editor");
+			this.editor.toggleBreakpoint(line)
+		});
 	},
 	computed: {
 		fileNames() : string[] {
 			return Object.keys(this.openFiles);
-		}
+		},
+		focusedName() : string|undefined {
+			return this.selectedFile ? this.selectedFile.name : undefined;
+		},
 	},
 	methods: {
 		updateCode(code : string) {
@@ -230,17 +242,11 @@ export default Vue.extend({
 		 * @param fileName		The new active tab
 		 */
 		onTabChange(fileName : string|undefined) : void {
-			this.selectedFileName = fileName;
-			if (!fileName) this.selectedFile = undefined;
-			else this.selectedFile = this.openFiles[fileName];
-
-			if (!this.selectedFile) {
-				this.updateCode("");
-				this.$emit("file-focus", null);
-			} else {
-				this.updateCode(this.selectedFile.content);
-				this.$emit("file-focus", fileName);
-			}
+			//Update the selected file
+			this.selectedFile = undefined;
+			if (fileName) this.selectedFile = this.openFiles[fileName];
+			//Alert the external listeners
+			this.$emit("file-focus", this.selectedFile);
 		},
 		/**
 		 * Handle a tab closing
@@ -255,11 +261,25 @@ export default Vue.extend({
 	watch: {
 		editor(new_val) {
 			this.$emit("editorChange", new_val);
+		},
+		/**
+		 * Update the selected file when the parent element changes the focused file
+		 */
+		focused(newFile: FileData) {
+			this.selectedFile = newFile;
+		},
+		/**
+		 * Update the editor content when the selected file is changed (either direction)
+		 */
+		selectedFile(newFile) {
+			if (!newFile) this.updateCode("");
+			else this.updateCode(newFile.content);
 		}
 	}
 });
 </script>
 
+<!--suppress CssUnusedSymbol -->
 <style>
 /*Add gutter space for the breakpoint icons*/
 .codeHolder .breakpoints {
@@ -287,15 +307,5 @@ export default Vue.extend({
 .editor-tabs {
 	height: 2em;
 	text-align: left;
-}
-
-.header .tab {
-	outline: 1px solid black;
-	padding: 2px;
-	margin: auto 5px;
-}
-
-.tab.active {
-	border-color: red;
 }
 </style>

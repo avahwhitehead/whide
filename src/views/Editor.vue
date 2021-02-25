@@ -16,7 +16,12 @@
 			</Container>
 
 			<Container class="middle code-editor">
-				<CodeEditorElement :openFiles="openFiles" @editorChange="onEditorObjectChange" @file-focus="onOpenFileChange"/>
+				<CodeEditorElement
+					:openFiles="openFiles"
+					:focused="focused_file"
+					@editorChange="onEditorObjectChange"
+					@file-focus="onOpenFileChange"
+				/>
 			</Container>
 
 			<Container class="right filler">
@@ -255,11 +260,12 @@ export default Vue.extend({
 					//See: https://vuejs.org/2016/02/06/common-gotchas/#Why-isn%E2%80%99t-the-DOM-updating
 					Vue.set(this.openFiles, f.name, f);
 				});
-			// } else {
-			//	TODO: Click on file to focus tab
+			} else {
+				this.focused_file = file;
 			}
 		},
 		onOpenFileChange(fileName : string|undefined) : void {
+			console.log('focus', fileName)
 			//Keep track of the currently focused file
 			if (!fileName) this.focused_file = undefined;
 			else this.focused_file = this.openFiles[fileName];
