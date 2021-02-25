@@ -113,6 +113,11 @@ export default Vue.extend({
 				//Focus on the added tab
 				if (addedItemIndex > -1) this.selectedIndex = addedItemIndex;
 			}
+
+			//Ensure that there is always a tab selected
+			if (newTabs.length && this.selectedIndex >= newTabs.length) {
+				this.selectedIndex = 0;
+			}
 		},
 		/**
 		 * Update the selected index when a tab is externally set

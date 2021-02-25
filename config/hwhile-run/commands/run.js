@@ -37,7 +37,7 @@ export async function run({ editorController, ioController, runPanelController }
 		cwd: folder_path,
 	});
 
-	let instanceController = await runPanelController.addOutputStream();
+	let instanceController = await runPanelController.addOutputStream(name);
 
 	let shell = hWhileConnector.run(name, expr, false);
 

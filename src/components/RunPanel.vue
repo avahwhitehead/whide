@@ -2,7 +2,12 @@
 	<Container :left="['play', 'undo', 'bug', 'stop']">
 		<div class="DebuggerPanel">
 			<div class="tabs-holder">
-				<TabbedPanel :names="runPanelController.names" @change="onTabChange" @close="onTabClose"></TabbedPanel>
+				<TabbedPanel
+					:names="runPanelController.names"
+					:selected-tab="selectedTab"
+					@change="onTabChange"
+					@close="onTabClose"
+				/>
 			</div>
 
 			<div class="output-holder">
@@ -19,8 +24,9 @@ import RunPanelController, { RunPanelInstanceController } from "@/api/controller
 import Container from "@/components/Container.vue";
 
 interface DataTypeDescriptor {
-	runPanelController: RunPanelController,
-	instanceController: RunPanelInstanceController|undefined,
+	runPanelController: RunPanelController;
+	instanceController: RunPanelInstanceController|undefined;
+	selectedTab?: string;
 }
 
 export const runPanelController = new RunPanelController();
@@ -29,22 +35,26 @@ export default Vue.extend({
 	name: 'RunPanel',
 	components: {
 		Container,
-		TabbedPanel
+		TabbedPanel,
 	},
 	props: {},
 	data() : DataTypeDescriptor {
 		return {
 			runPanelController: runPanelController,
 			instanceController: undefined,
+			selectedTab: undefined,
 		}
 	},
 	methods: {
-		onTabChange(selected : number) {
-			this.instanceController = this.runPanelController.controllers[selected];
+		async onTabChange(selected : string) {
+			this.selectedTab = selected;
+			this.instanceController = await this.runPanelController.getByName(selected);
 		},
-		onTabClose(closed : number) {
-			const controller = this.runPanelController.controllers[closed];
-			this.runPanelController.removeOutputStream(controller);
+		async onTabClose(closed : string) {
+			const instanceController: RunPanelInstanceController|undefined = await this.runPanelController.getByName(closed);
+			if (!instanceController) return;
+			//Remove the instance controller
+			await this.runPanelController.removeOutputStream(instanceController);
 		},
 	}
 })
