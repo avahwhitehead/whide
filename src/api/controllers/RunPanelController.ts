@@ -18,8 +18,8 @@ export default class RunPanelController {
 	 * @param name	The name to use in the tab
 	 */
 	async addOutputStream(name?: string) : Promise<RunPanelInstanceController> {
-		//Use a default name if one wasn't provided
-		name = name || `Run ${this._controllers.length + 1}`;
+		//Get the next available name
+		name = this._nextName(name || 'Run');
 
 		//Make an instance controller for this output area
 		const instanceController = new RunPanelInstanceController(name);
@@ -30,12 +30,36 @@ export default class RunPanelController {
 	}
 
 	/**
-	 *
-	 * @param controller
+	 * Remove an instance controller
+	 * @param controller	The controller instance to remove
 	 */
 	async removeOutputStream(controller: RunPanelInstanceController) {
 		const index = this._controllers.indexOf(controller);
 		if (index !== -1) this._controllers.splice(index, 1);
+	}
+
+	/**
+	 * Get a controller by its name
+	 * @param name	The name of the controller
+	 */
+	async getByName(name: string) : Promise<RunPanelInstanceController | undefined> {
+		return this.controllers.find(c => c.name === name);
+	}
+
+	/**
+	 * Get the next available run controller name starting with a given string
+	 * @param prefix	The starting string
+	 */
+	private _nextName(prefix: string = 'Run') {
+		let nextName: string = prefix;
+		//Set of names starting with this prefix
+		let nameSet: Set<string> = new Set(
+			this.controllers.map(e => e.name).filter(n => n.substr(0, prefix.length) === prefix)
+		);
+		//Start with the number of the length of the set
+		let start: number = nameSet.size + 1;
+		while (nameSet.has(nextName)) nextName = `${prefix} ${start++}`;
+		return nextName;
 	}
 
 	get controllers(): RunPanelInstanceController[] {

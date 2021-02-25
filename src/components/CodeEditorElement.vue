@@ -1,6 +1,12 @@
 <template>
 	<div class="editorHolder">
-		<TabbedPanel class="editor-tabs" :names="files.map(f => f.name)" @change="onTabChange" @close="onTabClose" />
+		<TabbedPanel
+			class="editor-tabs"
+			:names="fileNames"
+			:selected-tab="focusedName"
+			@change="onTabChange"
+			@close="onTabClose"
+		/>
 		<!-- This div will hold the code editor -->
 		<div ref="codeHolder" class="codeHolder"></div>
 	</div>
@@ -8,7 +14,7 @@
 
 
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
 import TabbedPanel from "@/components/TabbedPanel.vue";
 import { FileData } from "@/fileStore/AbstractFileData";
 import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
@@ -20,9 +26,10 @@ import CodeMirror from "codemirror";
 import 'codemirror/lib/codemirror.css';
 //While language syntax definition
 import WHILE from "@/assets/whileSyntaxMode.ts";
+import { CustomDict } from "@/types/CustomDict";
 
 interface DataType {
-	selectedFile: number,
+	selectedFile: FileData|undefined,
 	editor: ExtendedCodeEditorWrapper|undefined,
 }
 
@@ -169,11 +176,18 @@ export default Vue.extend({
 		TabbedPanel,
 	},
 	props: {
-		openFiles: Array as () => FileData[]
+		openFiles: {
+			type: Object as PropType<CustomDict<FileData>>,
+			required: true,
+		},
+		focused: {
+			type: Object as PropType<FileData>,
+			default: undefined,
+		},
 	},
 	data() : DataType {
 		return {
-			selectedFile: 0,
+			selectedFile: undefined,
 			//The code editor object.
 			//Is undefined until the object is created in `mounted`
 			editor: undefined,
@@ -196,27 +210,27 @@ export default Vue.extend({
 			if (!this.editor) throw new Error("Couldn't get editor");
 
 			let code = await this.editor.getValue();
-			let openFiles = this.openFiles as Array<FileData>;
 			//Update the code in the open file, if available
-			if (openFiles.length > 0) {
-				openFiles[this.selectedFile].content = code;
+			if (this.selectedFile) {
+				this.selectedFile.content = code;
 			} else {
 				//TODO: Handle code change with no open files
 			}
 		});
 
 		//Toggle breakpoints when the gutter is clicked
-		this.editor.on("gutterClick",
-			async (_, line) => this.editor!.toggleBreakpoint(line)
-		);
-
-		//Select the first element by default
-		this.onTabChange(this.files.length ? 0 : null);
+		this.editor.on("gutterClick", async (_, line) => {
+			if (!this.editor) throw new Error("Couldn't get editor");
+			this.editor.toggleBreakpoint(line)
+		});
 	},
 	computed: {
-		files() : Array<FileData> {
-			return this.$props.openFiles || [];
-		}
+		fileNames() : string[] {
+			return Object.keys(this.openFiles);
+		},
+		focusedName() : string|undefined {
+			return this.selectedFile ? this.selectedFile.name : undefined;
+		},
 	},
 	methods: {
 		updateCode(code : string) {
@@ -225,41 +239,47 @@ export default Vue.extend({
 		},
 		/**
 		 * Handle the active tab changing
-		 * @param index		The new index of the active tab
+		 * @param fileName		The new active tab
 		 */
-		onTabChange(index : number|null) : void {
-			if (!index) {
-				index = 0;
-			} else {
-				index = Math.max(index, 0);
-				index = Math.min(index, this.openFiles.length);
-			}
-
-			this.selectedFile = index;
-			if (this.openFiles.length > 0) {
-				this.updateCode(this.openFiles[index].content);
-				this.$emit("file-focus", index);
-			} else {
-				this.updateCode("");
-				this.$emit("file-focus", null);
-			}
+		onTabChange(fileName : string|undefined) : void {
+			//Update the selected file
+			this.selectedFile = undefined;
+			if (fileName) this.selectedFile = this.openFiles[fileName];
+			//Alert the external listeners
+			this.$emit("file-focus", this.selectedFile);
 		},
 		/**
 		 * Handle a tab closing
-		 * @param index		The index of the tab to close
+		 * @param fileName		The tab which has closed
 		 */
-		onTabClose(index : number) : void {
-			this.openFiles.splice(index, 1);
+		onTabClose(fileName: string) : void {
+			//Remove the file from the dictionary
+			//See: https://vuejs.org/2016/02/06/common-gotchas/#Why-isn%E2%80%99t-the-DOM-updating
+			Vue.delete(this.openFiles, fileName);
 		},
 	},
 	watch: {
 		editor(new_val) {
 			this.$emit("editorChange", new_val);
+		},
+		/**
+		 * Update the selected file when the parent element changes the focused file
+		 */
+		focused(newFile: FileData|undefined) {
+			this.selectedFile = newFile;
+		},
+		/**
+		 * Update the editor content when the selected file is changed (either direction)
+		 */
+		selectedFile(newFile: FileData|undefined) {
+			if (!newFile) this.updateCode("");
+			else this.updateCode(newFile.content);
 		}
 	}
 });
 </script>
 
+<!--suppress CssUnusedSymbol -->
 <style>
 /*Add gutter space for the breakpoint icons*/
 .codeHolder .breakpoints {
@@ -287,15 +307,5 @@ export default Vue.extend({
 .editor-tabs {
 	height: 2em;
 	text-align: left;
-}
-
-.header .tab {
-	outline: 1px solid black;
-	padding: 2px;
-	margin: auto 5px;
-}
-
-.tab.active {
-	border-color: red;
 }
 </style>

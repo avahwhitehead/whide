@@ -12,11 +12,16 @@
 
 		<div class="body">
 			<Container class="left filler">
-				<FilePicker v-bind:files="files" @change="(file) => openFile(file)"  />
+				<FilePicker v-bind:files="files" @change="(file) => openFile(file)"/>
 			</Container>
 
 			<Container class="middle code-editor">
-				<CodeEditorElement v-bind:openFiles="openFiles" @editorChange="onEditorObjectChange" @file-focus="onOpenFileChange" />
+				<CodeEditorElement
+					:openFiles="openFiles"
+					:focused="focused_file"
+					@editorChange="onEditorObjectChange"
+					@file-focus="onOpenFileChange"
+				/>
 			</Container>
 
 			<Container class="right filler">
@@ -25,7 +30,7 @@
 		</div>
 
 		<div class="footer">
-			<run-panel />
+			<run-panel/>
 		</div>
 
 		<div class="inputModal" v-if="input.showInput">
@@ -114,8 +119,8 @@ const pluginManager = new PluginManager();
  */
 interface DataTypesDescriptor {
 	files : AbstractFileData[];
-	focused_file : FileData|null;
-	openFiles : FileData[];
+	focused_file? : FileData;
+	openFiles : CustomDict<FileData>;
 	codeEditor? : CodeEditorWrapper;
 	pluginManager : PluginManager;
 	ioController? : IOController;
@@ -149,8 +154,8 @@ export default Vue.extend({
 	data() : DataTypesDescriptor {
 		return {
 			files: [],
-			focused_file: null,
-			openFiles: [],
+			focused_file: undefined,
+			openFiles: {},
 			codeEditor: undefined,
 			pluginManager: pluginManager,
 			ioController: undefined,
@@ -248,18 +253,21 @@ export default Vue.extend({
 			if (file.type !== "file") return;
 
 			//Don't open the same file twice
-			if (!this.openFiles.includes(file)) {
+			if (!this.openFiles[file.name]) {
 				//Load the file contents
 				browserFileStore.readFile(file).then((f) => {
 					//Open the file
-					this.openFiles.push(f);
+					//See: https://vuejs.org/2016/02/06/common-gotchas/#Why-isn%E2%80%99t-the-DOM-updating
+					Vue.set(this.openFiles, f.name, f);
 				});
+			} else {
+				this.focused_file = file;
 			}
 		},
-		onOpenFileChange(fileIndex : number) : void {
-			//Keep track of the currently focussed file
-			if (fileIndex < 0 || fileIndex >= this.openFiles.length) this.focused_file = null;
-			else this.focused_file = this.openFiles[fileIndex];
+		onOpenFileChange(fileName : string|undefined) : void {
+			//Keep track of the currently focused file
+			if (!fileName) this.focused_file = undefined;
+			else this.focused_file = this.openFiles[fileName];
 		},
 		onEditorObjectChange(editor : ExtendedCodeEditorWrapper) : void {
 			this.codeEditor = editor;

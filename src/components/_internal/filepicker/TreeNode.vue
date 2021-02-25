@@ -1,10 +1,10 @@
 <template>
 	<div class="treeNode">
 		<div v-if="file">
-			<p @click="onChange(file)">{{ file.name + (!!this.file.children ? '/' : '') }}</p>
+			<p @click="onClick(file)">{{ file.name + (!!this.file.children ? '/' : '') }}</p>
 			<div class="children" v-if="!!this.file.children">
 				<TreeNode v-bind:file="child"
-						class="child" @change="v => onChange(v)"
+						class="child" @change="onClick"
 						v-for="(child,i) in sortedChildren" v-bind:key="i">
 				</TreeNode>
 			</div>
@@ -39,7 +39,7 @@ export default Vue.extend({
 		}
 	},
 	methods: {
-		onChange(v : AbstractFileData) : void {
+		onClick(v : AbstractFileData) : void {
 			this.$emit("change", v);
 		}
 	}
@@ -50,6 +50,7 @@ export default Vue.extend({
 <style scoped>
 p {
 	text-align: left;
+	user-select: none;
 }
 
 .treeNode .children {
