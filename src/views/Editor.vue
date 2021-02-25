@@ -264,10 +264,9 @@ export default Vue.extend({
 				this.focused_file = file;
 			}
 		},
-		onOpenFileChange(fileName : string|undefined) : void {
+		onOpenFileChange(fileData : FileData|undefined) : void {
 			//Keep track of the currently focused file
-			if (!fileName) this.focused_file = undefined;
-			else this.focused_file = this.openFiles[fileName];
+			this.focused_file = fileData || undefined;
 		},
 		onEditorObjectChange(editor : ExtendedCodeEditorWrapper) : void {
 			this.codeEditor = editor;
