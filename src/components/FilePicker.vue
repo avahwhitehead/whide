@@ -1,58 +1,109 @@
 <template>
-	<div class="filePicker">
-		<div class="treeHolder">
-			<TreeNode v-bind:file="file" @change="onClick"
-					v-for="(file,i) in sortedFiles" v-bind:key="i">
-			</TreeNode>
+	<div class="fileTree">
+		<div v-if="file">
+			<div v-if="file.file">
+				<p @click="onClick(file)">{{ file.name }}</p>
+			</div>
+			<div v-if="file.folder">
+				<p>{{ file.name + '/' }}</p>
+				<div v-if="children" class="children">
+					<FilePicker
+						:directory="child.fullPath"
+						:loadLevel="loadLevel - 1"
+						class="child" @change="onClick"
+						v-for="(child,i) in children" v-bind:key="i"
+					/>
+				</div>
+				<div v-else class="children">
+					<button @click="runLoadChildren" class="load-button">Load</button>
+				</div>
+			</div>
+		</div>
+		<div v-else>
+			<span>Loading ...</span>
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
-import Vue, { PropType } from "vue";
-import TreeNode from "./_internal/filepicker/TreeNode.vue";
-import { AbstractFileData } from "@/fileStore/internal/AbstractFileData";
+import Vue from "vue";
+import { CustomFs, getFs } from "@/files/fs";
+import { pathToFile, AbstractInternalFile, InternalFolder } from "@/files/InternalFile";
 
 interface DataTypeInterface {
-	active_file : AbstractFileData|null;
+	file?: AbstractInternalFile;
+	fs?: CustomFs;
+	children?: AbstractInternalFile[];
 }
 
 export default Vue.extend({
 	name: 'FilePicker',
-	components: {
-		TreeNode
-	},
 	props: {
-		files: {
-			type: Array as PropType<Array<AbstractFileData>>,
-			default: () => [],
-		}
+		directory: {
+			type: String,
+		},
+		loadLevel: {
+			type: Number,
+			default: 1,
+		},
 	},
 	data() : DataTypeInterface {
 		return {
-			active_file: null,
+			children: undefined,
+			file: undefined,
+			fs: undefined,
 		}
+	},
+	mounted() {
+		getFs().then(fs => {
+			this.fs = fs;
+			pathToFile(this.directory, fs).then((f : AbstractInternalFile) => this.file = f);
+		});
 	},
 	computed: {
-		sortedFiles() : AbstractFileData[] {
-			let f : AbstractFileData[] = this.files;
-			f.sort((a, b) => {
-				if (a.name === b.name) return 0;
-				return (a.name > b.name) ? 1 : -1;
-			});
-			return f;
-		}
+
 	},
 	methods: {
-		onClick(file : AbstractFileData) {
-			this.active_file = file;
+		onClick(file : AbstractInternalFile) {
 			this.$emit("change", file);
+		},
+		runLoadChildren() : void {
+			if (!this.file || !this.file.folder) return;
+
+			(this.file as InternalFolder).loadChildren().then(c => this.children = c);
+		},
+	},
+	watch: {
+		directory() {
+			pathToFile(this.directory, this.fs).then((f : AbstractInternalFile) => this.file = f);
+		},
+		file(newFile : AbstractInternalFile) {
+			this.children = undefined;
+			if (newFile.folder && (this.loadLevel > 0)) {
+				const folder: InternalFolder = newFile as InternalFolder;
+
+				folder.loadChildren().then(() => {
+					this.children = folder.children;
+				});
+			}
 		}
-	}
+	},
 });
 </script>
 
 
 <style scoped>
+p {
+	text-align: left;
+	user-select: none;
+}
 
+.fileTree .children {
+	padding-left: 1em;
+	border-left: 1px dotted black;
+}
+
+.fileTree .load-button {
+	padding: 0;
+}
 </style>

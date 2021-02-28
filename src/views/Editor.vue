@@ -12,7 +12,7 @@
 
 		<div class="body">
 			<Container class="left filler">
-				<FilePicker v-bind:files="files" @change="(file) => openFile(file)"/>
+				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)"/>
 			</Container>
 
 			<Container class="middle code-editor">
@@ -64,9 +64,8 @@ import InputPrompt from "@/components/InputPrompt.vue";
 import EditorController from "@/api/controllers/EditorController";
 import IOController, { InputPromptParams, OutputPromptParams } from "@/api/types/IOController";
 import { CodeEditorWrapper } from "@/types/codeEditor";
-import { AbstractFileData} from "@/fileStore/internal/AbstractFileData";
-import { FileData } from "@/fileStore/internal/FileData";
-import BrowserFileStore from "@/fileStore/browserFileStore/index.ts";
+import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
+import { CustomFs, getFs } from "@/files/fs";
 import { CustomDict } from "@/types/CustomDict";
 import { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
@@ -109,9 +108,6 @@ async function getCommandLineArgs() : Promise<ProgramOptions> {
 	return { };
 }
 
-//File store object for in-browser storage
-const browserFileStore = new BrowserFileStore();
-
 //Plugin loaders for 1st and 3rd party plugins
 const pluginManager = new PluginManager();
 
@@ -119,12 +115,12 @@ const pluginManager = new PluginManager();
  * Type declaration for the data() values
  */
 interface DataTypesDescriptor {
-	files : AbstractFileData[];
-	focused_file? : FileData;
-	openFiles : CustomDict<FileData>;
+	focused_file? : InternalFile;
+	openFiles : CustomDict<InternalFile>;
 	codeEditor? : CodeEditorWrapper;
 	pluginManager : PluginManager;
 	ioController? : IOController;
+	cwd: string;
 	input : {
 		showInput : boolean;
 		title : string;
@@ -141,6 +137,9 @@ async function _runFuncAsync(func : Function, ...args : any[]) {
 	await func(...args);
 }
 
+//Start from the current directory if in electron, or root if in the browser
+const STARTING_DIRECTORY : string = isElectron() ? process.cwd() : '/';
+
 export default Vue.extend({
 	name: 'Editor',
 	components: {
@@ -154,12 +153,12 @@ export default Vue.extend({
 	},
 	data() : DataTypesDescriptor {
 		return {
-			files: [],
 			focused_file: undefined,
 			openFiles: {},
 			codeEditor: undefined,
 			pluginManager: pluginManager,
 			ioController: undefined,
+			cwd: STARTING_DIRECTORY,
 			input: {
 				showInput: false,
 				title: "",
@@ -242,48 +241,37 @@ export default Vue.extend({
 				});
 			},
 		};
-
-		//Load the directory structure
-		browserFileStore.getDirectoryTree().then((value : AbstractFileData[]) => {
-			this.files = value;
-		});
 	},
 	methods: {
-		openFile(file : FileData) : void {
+		async openFile(abstractFile: AbstractInternalFile) : Promise<void> {
 			//Don't edit folders
-			if (file.type !== "file") return;
-
+			if (abstractFile.folder) return;
+			//Cast to a file
+			let file : InternalFile = abstractFile as InternalFile;
 			//Don't open the same file twice
 			if (!this.openFiles[file.name]) {
-				//Load the file contents
-				browserFileStore.readFile(file).then((f) => {
-					//Open the file
-					//See: https://vuejs.org/2016/02/06/common-gotchas/#Why-isn%E2%80%99t-the-DOM-updating
-					Vue.set(this.openFiles, f.name, f);
-				});
+				//Read the file
+				await file.read();
+				//Open the file in the editor
+				Vue.set(this.openFiles, file.name, file);
 			} else {
 				this.focused_file = file;
 			}
 		},
-		onOpenFileChange(fileData : FileData|undefined) : void {
+		onOpenFileChange(fileData : InternalFile|undefined) : void {
 			//Keep track of the currently focused file
 			this.focused_file = fileData || undefined;
 		},
 		onEditorObjectChange(editor : ExtendedCodeEditorWrapper) : void {
 			this.codeEditor = editor;
 		},
-		save() : void {
-			if (this.focused_file) {
-				browserFileStore.writeFile(this.focused_file)
-					.then(() => console.log("Saved"))
-					.catch((e) => console.error(e));
-			} else {
-				console.log(`No file open to save`);
-			}
+		async save() : Promise<void> {
+			if (this.focused_file) this.focused_file.write();
+			else console.log(`No file open to save`);
 		},
 		download() : void {
 			if (this.focused_file) {
-				fileDownloader(this.focused_file.content, this.focused_file.name);
+				fileDownloader(this.focused_file.content || "", this.focused_file.name);
 			} else {
 				console.log(`No file open to download`);
 			}
@@ -344,7 +332,7 @@ export default Vue.extend({
 			if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
 
 			//Make the editor controller to pass to the plugin
-			let editorController: EditorController = new EditorController(this.codeEditor, browserFileStore);
+			let editorController: EditorController = new EditorController(this.codeEditor);
 
 			//Run the function
 			const funcParameters : PluginFunctionParameters = {
@@ -352,6 +340,7 @@ export default Vue.extend({
 				editorController: editorController,
 				ioController: this.ioController,
 				runPanelController: runPanelController,
+				fs: await getFs(),
 			};
 			_runFuncAsync(pluginFunction.run, funcParameters).catch((e) => {
 				//Handle errors produced in the plugin function
