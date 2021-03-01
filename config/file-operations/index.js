@@ -14,13 +14,17 @@ export const menus = [
 					{ "name": "New Folder", "command": "run_new_folder" }
 				]
 			},
+			//{ "name": "Save", "command": "run_save" },
+			//{ "name": "Download", "command": "run_download" },
+			//{ "name": "Rename", "command": "run_rename" },
+			//{ "name": "Move", "command": "run_move" },
 			{ "name": "Delete", "command": "run_delete" },
 		]
 	}
 ];
 
 export default [
-	open,
+	//open,
 	new_file,
 	new_folder,
 	delete_file,

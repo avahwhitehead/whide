@@ -214,6 +214,7 @@ export default Vue.extend({
 				let val = await this.ioController.getInput({
 					title: `INPUT: ${arg.name}`,
 					message: arg.description || "",
+					type: arg.type || 'string',
 					//Allow empty optional arguments, or validate the input
 					validator: async (s) => arg.optional && !s || await validator(s),
 				});

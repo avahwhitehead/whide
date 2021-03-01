@@ -1,4 +1,5 @@
 import PluginFunctionParameters from "./PluginFunctionParameters";
+import { InputPromptTypes } from "@/api/types/IOController";
 
 /**
  * Describe an argument to prompt the user for
@@ -6,6 +7,7 @@ import PluginFunctionParameters from "./PluginFunctionParameters";
 export type Argument = {
 	name: string,
 	description?: string,
+	type?: InputPromptTypes,
 	optional?: boolean,
 	default?: string,
 	validator?: (v: string) => boolean|Promise<boolean>,
