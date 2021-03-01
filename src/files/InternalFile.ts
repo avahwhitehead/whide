@@ -1,5 +1,4 @@
-import path from "path";
-import { CustomFs, getFs } from "@/files/fs";
+import { CustomFs, CustomFsContainer, getFsContainer } from "@/files/fs";
 import { Stats } from "fs";
 
 /**
@@ -7,9 +6,9 @@ import { Stats } from "fs";
  * @param filePath	Path to the file
  * @param fs		The fs object to use
  */
-async function _stat(filePath: string, fs: any) : Promise<any> {
-	return new Promise<any>((resolve, reject) => {
-		fs.stat(filePath, (err: any, stats: any) => {
+async function _stat(filePath: string, fs: CustomFs) : Promise<Stats> {
+	return new Promise<Stats>((resolve, reject) => {
+		fs.stat(filePath, (err: any, stats: Stats) => {
 			if (err) reject(err);
 			else resolve(stats);
 		})
@@ -18,14 +17,15 @@ async function _stat(filePath: string, fs: any) : Promise<any> {
 
 /**
  * Promisified wrapper around `fs.readdir`, returning to `AbstractInternalFile` objects instead of strings.
- * @param filePath		Path to the file
- * @param fs			The fs object to use
+ * @param dir		Path to the file
+ * @param fsContainer	The filessystem objects to use
  * @param hiddenFiles	Whether to show hidden files
  */
-async function _readdir(filePath: string, fs: CustomFs, hiddenFiles: boolean = false) : Promise<AbstractInternalFile[]> {
+async function _readdir(dir: string, fsContainer: CustomFsContainer, hiddenFiles: boolean = false) : Promise<AbstractInternalFile[]> {
+	const { fs, path } = fsContainer;
 	return new Promise<AbstractInternalFile[]>((resolve, reject) => {
 		//Read the files in the folder as a string
-		fs.readdir(filePath, async (err: any, files: string[]) => {
+		fs.readdir(dir, async (err: any, files: string[]) => {
 			//Error on error
 			if (err) reject(err);
 			else {
@@ -35,7 +35,10 @@ async function _readdir(filePath: string, fs: CustomFs, hiddenFiles: boolean = f
 				}
 				//Convert file names to the internal representation
 				let internalFiles : AbstractInternalFile[] = [];
-				for (let file of files) internalFiles.push(await pathToFile(file));
+				for (let file of files) {
+					const filePath = path.join(dir, file);
+					internalFiles.push(await pathToFile(filePath, fsContainer));
+				}
 				//Return the file list
 				resolve(internalFiles);
 			}
@@ -46,11 +49,11 @@ async function _readdir(filePath: string, fs: CustomFs, hiddenFiles: boolean = f
 /**
  * Promisified wrapper around `fs.readfile`.
  * @param filePath	Path to the file
- * @param fs		The fs object to use
+ * @param container	The filesystem modules to use
  */
-async function _readfile(filePath: string, fs: any) : Promise<string> {
+async function _readfile(filePath: string, container: CustomFsContainer) : Promise<string> {
 	return new Promise<string>((resolve, reject) => {
-		fs.readFile(filePath, (err : any, data : Buffer) => {
+		container.fs.readFile(filePath, (err : any, data : Buffer) => {
 			if (err) reject(err);
 			else resolve(data.toString());
 		})
@@ -60,12 +63,12 @@ async function _readfile(filePath: string, fs: any) : Promise<string> {
 /**
  * Promisified wrapper around `fs.writefile`.
  * @param filePath	Path to the file
- * @param fs		The fs object to use
+ * @param container	The filesystem modules to use
  * @param content	The content to write
  */
-async function _writefile(filePath: string, fs: any, content: string) : Promise<void> {
+async function _writefile(filePath: string, container: CustomFsContainer, content: string) : Promise<void> {
 	return new Promise<void>((resolve, reject) => {
-		fs.writeFile(filePath, content, (err : any) => {
+		container.fs.writeFile(filePath, content, (err : any) => {
 			if (err) reject(err);
 			else resolve();
 		})
@@ -88,9 +91,9 @@ export interface InternalFileProps {
 	 */
 	fullPath: string;
 	/**
-	 * FS object to use when reading/writing etc
+	 * The filesystem modules to use when reading/writing etc
 	 */
-	fs: CustomFs;
+	fsContainer: CustomFsContainer;
 }
 
 /**
@@ -99,20 +102,20 @@ export interface InternalFileProps {
 export abstract class AbstractInternalFile {
 	private _name : string;
 	private _fullPath : string;
-	private _fs: CustomFs;
+	private _fsContainer: CustomFsContainer;
 
 	protected constructor(props : InternalFileProps) {
 		this._name = props.name;
 		this._fullPath = props.fullPath;
-		this._fs = props.fs;
+		this._fsContainer = props.fsContainer;
 	}
 
-	get fs() : CustomFs {
-		return this._fs;
+	get fsContainer() : CustomFsContainer {
+		return this._fsContainer;
 	}
 
-	set fs(value: CustomFs) {
-		this._fs = value;
+	set fsContainer(value: CustomFsContainer) {
+		this._fsContainer = value;
 	}
 
 	/**
@@ -166,7 +169,7 @@ export class InternalFile extends AbstractInternalFile {
 	 * @returns	The content of this file, as a string
 	 */
 	async read() : Promise<string> {
-		this._content = await _readfile(this.fullPath, this.fs);
+		this._content = await _readfile(this.fullPath, this.fsContainer);
 		return this.content;
 	}
 
@@ -174,7 +177,7 @@ export class InternalFile extends AbstractInternalFile {
 	 * Writes the value of `this.content` as a string to this file.
 	 */
 	async write() : Promise<void> {
-		await _writefile(this.fullPath, this.fs, this.content);
+		await _writefile(this.fullPath, this.fsContainer, this.content);
 	}
 
 	/**
@@ -207,7 +210,7 @@ export class InternalFolder extends AbstractInternalFile {
 	 * Read the immediate children of this directory, and save the result.
 	 */
 	async loadChildren() : Promise<AbstractInternalFile[]> {
-		this._children = await _readdir(this.fullPath, this.fs, false);
+		this._children = await _readdir(this.fullPath, this.fsContainer, false);
 		return this.children;
 	}
 
@@ -233,18 +236,18 @@ export class InternalFolder extends AbstractInternalFile {
 /**
  * Create the correct internal object representation of a filesystem object from its path
  * @param filePath	The path to the file
- * @param fs		fs object to use to get the file information
+ * @param container	The filesystem modules to use to get the file information
  */
-export async function pathToFile(filePath: string, fs?: CustomFs) : Promise<AbstractInternalFile> {
-	fs = fs || await getFs();
+export async function pathToFile(filePath: string, container?: CustomFsContainer) : Promise<AbstractInternalFile> {
+	container = container || await getFsContainer();
 	//Absolute path to the file
-	filePath = path.resolve(filePath);
+	filePath = container.path.resolve(filePath);
 	//Read the file information
-	let stats : Stats = await _stat(filePath, fs);
+	let stats : Stats = await _stat(filePath, container.fs);
 	//Common props for both file and folder
 	const props : InternalFileProps = {
-		fs: fs,
-		name: path.basename(filePath),
+		fsContainer: container,
+		name: container.path.basename(filePath),
 		fullPath: filePath,
 	};
 	//Make a file if it is a file, a folder otherwise

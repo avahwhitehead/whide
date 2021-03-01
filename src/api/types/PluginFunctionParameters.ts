@@ -1,7 +1,7 @@
 import EditorController from "@/api/controllers/EditorController";
 import IOController from "@/api/types/IOController";
 import RunPanelController from "@/api/controllers/RunPanelController";
-import { CustomFs } from "@/files/fs";
+import { CustomFs, CustomPath } from "@/files/fs";
 
 /**
  * Hold the parameters to pass to the function when it's called.
@@ -25,7 +25,12 @@ export default interface PluginFunctionParameters {
 	runPanelController : RunPanelController,
 	/**
 	 * The filesystem object to use;
-	 * will be `node/fs` for the local system, or an emulator for in-browser
+	 * will be `node/fs` for the local system, or an emulator when in-browser
 	 */
 	fs: CustomFs,
+	/**
+	 * The path filesystem object to use;
+	 * will be `node/path` for the local system, or an emulator when in-browser
+	 */
+	path: CustomPath,
 }

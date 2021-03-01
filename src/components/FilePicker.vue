@@ -1,11 +1,11 @@
 <template>
+	<!-- TODO: Make folders collapsible -->
+	<!-- TODO: Use folder expand instead of "load" button -->
 	<div class="fileTree">
 		<div v-if="file">
-			<div v-if="file.file">
-				<p @click="onClick(file)">{{ file.name }}</p>
-			</div>
+			<p @click="onClick(file)" v-text="displayName" />
+
 			<div v-if="file.folder">
-				<p>{{ file.name + '/' }}</p>
 				<div v-if="children" class="children">
 					<FilePicker
 						:directory="child.fullPath"
@@ -27,12 +27,12 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { CustomFs, getFs } from "@/files/fs";
+import { CustomFsContainer, getFsContainer } from "@/files/fs";
 import { pathToFile, AbstractInternalFile, InternalFolder } from "@/files/InternalFile";
 
 interface DataTypeInterface {
 	file?: AbstractInternalFile;
-	fs?: CustomFs;
+	fsContainer?: CustomFsContainer;
 	children?: AbstractInternalFile[];
 }
 
@@ -51,17 +51,25 @@ export default Vue.extend({
 		return {
 			children: undefined,
 			file: undefined,
-			fs: undefined,
+			fsContainer: undefined,
+		}
+	},
+	computed: {
+		displayName(): string {
+			//Shouldn't happen
+			if (!this.file) return 'undefined';
+
+			//This is a file - only show the name
+			if (this.file.file) return this.file.name;
+			//This is a folder - add a trailing slash
+			return `${this.file.name}/`;
 		}
 	},
 	mounted() {
-		getFs().then(fs => {
-			this.fs = fs;
-			pathToFile(this.directory, fs).then((f : AbstractInternalFile) => this.file = f);
+		getFsContainer().then(container => {
+			this.fsContainer = container;
+			pathToFile(this.directory, container).then((f : AbstractInternalFile) => this.file = f);
 		});
-	},
-	computed: {
-
 	},
 	methods: {
 		onClick(file : AbstractInternalFile) {
@@ -75,11 +83,12 @@ export default Vue.extend({
 	},
 	watch: {
 		directory() {
-			pathToFile(this.directory, this.fs).then((f : AbstractInternalFile) => this.file = f);
+			this.file = undefined;
+			pathToFile(this.directory, this.fsContainer).then((f : AbstractInternalFile) => this.file = f);
 		},
 		file(newFile : AbstractInternalFile) {
 			this.children = undefined;
-			if (newFile.folder && (this.loadLevel > 0)) {
+			if (newFile && newFile.folder && (this.loadLevel > 0)) {
 				const folder: InternalFolder = newFile as InternalFolder;
 
 				folder.loadChildren().then(() => {
@@ -93,7 +102,11 @@ export default Vue.extend({
 
 
 <style scoped>
-p {
+.fileTree {
+	text-align: left;
+}
+
+.fileTree p {
 	text-align: left;
 	user-select: none;
 }

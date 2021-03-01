@@ -1,14 +1,14 @@
 export interface InputPromptParams {
 	/**
-	 * @param message	The prompt message
+	 * The prompt message
 	 */
 	message: string;
 	/**
-	 * @param validator	Input validator functions. Returns `true` if valid, `false` otherwise
+	 * Title to show in the input
 	 */
 	title?: string;
 	/**
-	 * @param title		Title to show in the input
+	 * Input validator function; should returns `true` if the string is an acceptable input, `false` otherwise
 	 */
 	validator?: ((val: string) => boolean|Promise<boolean>);
 }

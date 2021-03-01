@@ -5,19 +5,21 @@ declare module "filer" {
 
 	export declare const FileSystem: Interface.FileSystem;
 	export declare const Buffer: Buffer;
-	export declare const Path: Path.FilerPath;
-	export declare const path: Path.FilerPath;
+	export declare const Path: Path.FilerPathInterface;
+	export declare const path: Path.FilerPathInterface;
 	export declare const Errors: Errors.ErrorObject;
-	export declare const Shell: ShellNS.Shell;
+	export declare const Shell: ShellNS.ShellInterface;
 	export declare const fs : Interface.FileSystem;
 
 	export type FileSystemInterface = Interface.FileSystem;
+	export type FilerPathInterface = Path.FilerPathInterface;
+	export type ShellInterface = ShellNS.ShellInterface;
 
 	/**
 	 * From src/path.js
 	 */
 	namespace Path {
-		export type FilerPath = (typeof nodePath) & {
+		export type FilerPathInterface = (typeof nodePath) & {
 			/**
 			 * Add new utility method isNull() to path: check for null paths.
 			 */
@@ -95,7 +97,7 @@ declare module "filer" {
 			contents?: RecursiveStats[]
 		};
 
-		export class Shell {
+		export interface ShellInterface {
 			/**
 			 * The bound FileSystem (cannot be changed)
 			 */
@@ -107,7 +109,7 @@ declare module "filer" {
 			 * and env.set() to work with variables.
 			 */
 			readonly env: EnvironmentNS.Environment;
-			cwd: string = '/';
+			cwd: string;
 			promises: { [key: string]: Promise<any> | ((...args: any[]) => Promise<any>) };
 
 			constructor(fs: FileSystemInterface, options?: ShellOptions);

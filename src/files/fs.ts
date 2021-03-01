@@ -1,9 +1,11 @@
 import isElectron from "@/types/isElectron";
-import * as fs from "fs";
-import { FileSystemInterface, fs as filerFs } from "filer";
+import * as nodeFs from "fs";
+import * as nodePath from "path";
+import { FileSystemInterface, fs as filerFs, path as filerPath, FilerPathInterface } from "filer";
 
 //Custom FS type representing only common methods in both systems
-export type CustomFs = FileSystemInterface | typeof fs;
+export type CustomFs = FileSystemInterface | typeof nodeFs;
+export type CustomPath = FilerPathInterface | typeof nodePath;
 
 /**
  * Promisified wrapper around `fs.exists`
@@ -44,7 +46,7 @@ async function _setup_virtual_root(fs : FileSystemInterface, filePath='/whide/')
 /**
  * Import the `node/fs` module.
  */
-async function _local_import(): Promise<typeof fs> {
+async function _local_import(): Promise<typeof nodeFs> {
 	return await import("fs");
 }
 
@@ -62,18 +64,67 @@ async function _browser_import(): Promise<FileSystemInterface> {
 /**
  * Get the fs module to be used to perform file operations.
  * Must be done dynamically as `node/fs` is not accessible when running in the browser.
- * @param useLocal	true to force using `fs`.
+ * IT IS RECOMMENDED TO NOT USE THIS DIRECTLY; INSTEAD USE {@link getFsContainer}
+ * @param useLocal	true to force using `node/fs`.
  * 					false to force using the virtual filesystem (Filer).
 * 					undefined (default) to decide automatically.
  * 					IT IS RECOMMENDED TO LEAVE THIS AS THE DEFAULT.
- * @returns `fs` if the app is running locally, `level-filesystem` otherwise
+ * @returns `node/fs` if the app is running locally, Filer otherwise
  */
-export async function getFs(useLocal? : boolean) : Promise<CustomFs> {
+async function getFs(useLocal? : boolean) : Promise<CustomFs> {
 	//Choose the module automatically if one hasn't been specified,
-	//Use `node/fs` if the app is running with electron, `level-filesystem` otherwise
+	//Use `node/fs` if the app is running with electron, `Filer` otherwise
 	if (useLocal === undefined) useLocal = isElectron();
 
 	//Import and return the requested module
 	if (useLocal) return await _local_import();
 	return await _browser_import();
+}
+
+/**
+ * Get the path module to be used.
+ * Must be done dynamically as the virtual fs module provides its own `path`.
+ * IT IS RECOMMENDED TO NOT USE THIS DIRECTLY; INSTEAD USE {@link getFsContainer}
+ * @param useLocal	true to force using `node/path`.
+ * 					false to force using the virtual filesystem's path.
+* 					undefined (default) to decide automatically.
+ * 					IT IS RECOMMENDED TO LEAVE THIS AS THE DEFAULT.
+ * @returns `node/fs` if the app is running locally, Filer's path otherwise
+ */
+async function getPath(useLocal? : boolean) : Promise<CustomPath> {
+	//Choose the module automatically if one hasn't been specified,
+	//Use `node/fs` if the app is running with electron, `Filer` otherwise
+	if (useLocal === undefined) useLocal = isElectron();
+
+	//Import and return the requested module
+	return useLocal ? nodePath : filerPath;
+}
+
+/**
+ * Container for the filesystem modules to be used
+ */
+export interface CustomFsContainer {
+	fs: CustomFs;
+	path: CustomPath;
+}
+
+/**
+ * Get a container containing the filesystem modules which should be used.
+ * This allows running in both electron and the browser.
+ * @param useLocal	true to force using Node's built-in modules.
+ * 					false to force using the virtual filesystem's versions.
+ * 					undefined (default) to decide automatically.
+ * 					IT IS RECOMMENDED TO LEAVE THIS AS THE DEFAULT.
+ * @returns Container holding Node's filesystem modules if the app is running locally, Filer's versions otherwise
+ */
+export async function getFsContainer(useLocal? : boolean) : Promise<CustomFsContainer> {
+	//Choose the module automatically if one hasn't been specified,
+	//Use `node/fs` if the app is running with electron, `level-filesystem` otherwise
+	if (useLocal === undefined) useLocal = isElectron();
+
+	//Import and return the requested module
+	return {
+		fs: await getFs(useLocal),
+		path: await getPath(useLocal),
+	};
 }

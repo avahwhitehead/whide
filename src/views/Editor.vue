@@ -54,7 +54,7 @@ import EditorController from "@/api/controllers/EditorController";
 import IOController from "@/api/types/IOController";
 import { CodeEditorWrapper } from "@/types/codeEditor";
 import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
-import { getFs } from "@/files/fs";
+import { CustomFsContainer, getFsContainer } from "@/files/fs";
 import { CustomDict } from "@/types/CustomDict";
 import { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
@@ -229,13 +229,16 @@ export default Vue.extend({
 			//Make the editor controller to pass to the plugin
 			let editorController: EditorController = new EditorController(this.codeEditor);
 
+			let fsContainer : CustomFsContainer = await getFsContainer();
+
 			//Run the function
 			const funcParameters : PluginFunctionParameters = {
 				args: args,
 				editorController: editorController,
 				ioController: this.ioController,
 				runPanelController: runPanelController,
-				fs: await getFs(),
+				fs: fsContainer.fs,
+				path: fsContainer.path,
 			};
 			_runFuncAsync(pluginFunction.run, funcParameters).catch((e) => {
 				//Handle errors produced in the plugin function
