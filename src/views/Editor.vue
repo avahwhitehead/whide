@@ -65,7 +65,7 @@ import EditorController from "@/api/controllers/EditorController";
 import IOController, { InputPromptParams, OutputPromptParams } from "@/api/types/IOController";
 import { CodeEditorWrapper } from "@/types/codeEditor";
 import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
-import { CustomFs, getFs } from "@/files/fs";
+import { getFs } from "@/files/fs";
 import { CustomDict } from "@/types/CustomDict";
 import { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
