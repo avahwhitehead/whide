@@ -33,18 +33,7 @@
 			<run-panel/>
 		</div>
 
-		<div class="inputModal" v-if="input.showInput">
-			<div class="content">
-				<inputPrompt
-					:get-input="input.expectingInput"
-					:title="input.title"
-					:message="input.message"
-					:error="input.error"
-					@submit="onInputSubmit"
-					@cancel="onInputCancel"
-				/>
-			</div>
-		</div>
+		<InputPrompt @controller="c => this.ioController = c" />
 	</div>
 </template>
 
@@ -62,7 +51,7 @@ import RunPanel, { runPanelController } from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 //Other imports
 import EditorController from "@/api/controllers/EditorController";
-import IOController, { InputPromptParams, OutputPromptParams } from "@/api/types/IOController";
+import IOController from "@/api/types/IOController";
 import { CodeEditorWrapper } from "@/types/codeEditor";
 import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
 import { getFs } from "@/files/fs";
@@ -121,15 +110,6 @@ interface DataTypesDescriptor {
 	pluginManager : PluginManager;
 	ioController? : IOController;
 	cwd: string;
-	input : {
-		showInput : boolean;
-		title : string;
-		message : string;
-		error : string;
-		expectingInput : boolean;
-		callback : (v: string) => void;
-		cancelCallback : () => void;
-	}
 }
 
 //Run a function asynchronously
@@ -159,15 +139,6 @@ export default Vue.extend({
 			pluginManager: pluginManager,
 			ioController: undefined,
 			cwd: STARTING_DIRECTORY,
-			input: {
-				showInput: false,
-				title: "",
-				message: "",
-				error: "",
-				expectingInput: true,
-				callback: () => {},
-				cancelCallback: () => {},
-			}
 		}
 	},
 	computed: {
@@ -190,57 +161,6 @@ export default Vue.extend({
 				});
 			}
 		});
-	},
-	mounted() {
-		this.ioController = {
-			showOutput: (props: OutputPromptParams) : Promise<void> => {
-				return new Promise(resolve => {
-					//Make visible
-					this.input.showInput = true;
-					//Don't the text box
-					this.input.expectingInput = false;
-					//Set the message to show
-					this.input.title = props.title || "";
-					this.input.message = props.message;
-					//When the user submits
-					this.input.callback = () => {
-						//Hide the prompt
-						this.hideInput();
-						//Done
-						resolve();
-					};
-				});
-			},
-			getInput: (props: InputPromptParams) : Promise<string|undefined> => {
-				return new Promise(resolve => {
-					//Make visible
-					this.input.showInput = true;
-					//Show the text box
-					this.input.expectingInput = true;
-					//Show the message
-					this.input.title = props.title || "";
-					this.input.message = props.message;
-					//When the user enters the value
-					this.input.callback = (val : string) => {
-						//Check with the validator, or return true
-						if (!props.validator || props.validator(val)) {
-							this.input.error = "";
-							//Hide the prompt
-							this.hideInput();
-							//Done
-							resolve(val);
-						} else {
-							this.input.error = "Invalid input";
-						}
-					};
-					//If the user cancels the operation
-					this.input.cancelCallback = () => {
-						this.hideInput();
-						resolve(undefined);
-					};
-				});
-			},
-		};
 	},
 	methods: {
 		async openFile(abstractFile: AbstractInternalFile) : Promise<void> {
@@ -274,31 +194,6 @@ export default Vue.extend({
 				fileDownloader(this.focused_file.content || "", this.focused_file.name);
 			} else {
 				console.log(`No file open to download`);
-			}
-		},
-
-		async hideInput() : Promise<void> {
-			//Make the input invisible
-			this.input.showInput = false;
-			//Default to allowing input
-			this.input.expectingInput = true;
-			//Clear the message
-			this.input.title = "";
-			this.input.message = "";
-			//Clear the callback
-			this.input.callback = () => {};
-			this.input.cancelCallback = () => {};
-		},
-		onInputSubmit(val : string) : void {
-			//Call the input's callback
-			if (this.input.callback) {
-				this.input.callback(val);
-			}
-		},
-		onInputCancel() : void {
-			//Call the input's cancel callback
-			if (this.input.cancelCallback) {
-				this.input.cancelCallback();
 			}
 		},
 
@@ -430,33 +325,6 @@ export default Vue.extend({
 	outline: 1px solid #AAA;
 	width: 70%;
 	display: inline-block;
-}
-
-/*
-Popup stylings based broadly on W3Schools':
-https://www.w3schools.com/howto/howto_css_modals.asp
-*/
-.inputModal {
-	position: fixed;
-	z-index: 5;
-
-	/*Fill the entire screen*/
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-
-	/*Transparent background, with non-transparent fallback*/
-	background-color: rgb(0,0,0);
-	background-color: rgba(0,0,0,0.4);
-}
-.inputModal .content {
-	background-color: #FFFFFF;
-	padding: 20px;
-	border: 1px solid #888;
-	margin: 15% auto;
-	width: 50%;
-	overflow: auto;
 }
 
 /*
