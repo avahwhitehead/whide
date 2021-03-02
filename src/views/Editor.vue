@@ -128,9 +128,9 @@ async function _getStartingDir(opts : ProgramOptions) : Promise<string> {
 	const userDir : string = opts.workingDir;
 
 	const {fs, path} = await getFsContainer();
-	//Check if the provided directory
 	let stats: Stats;
 	try {
+		//Make sure the path exists
 		stats = await new Promise<Stats>((resolve, reject) => {
 			fs.stat(userDir, ((err, s) => {
 				if (err) reject(err);
@@ -140,7 +140,7 @@ async function _getStartingDir(opts : ProgramOptions) : Promise<string> {
 	} catch (e) {
 		//See if the error is "file not found"
 		if (e == 'ENOENT' || e.code === 'ENOENT') {
-			console.log("Target directory doesn't exist; using default");
+			console.error("Target directory doesn't exist; using default");
 			return STARTING_DIRECTORY;
 		} else {
 			throw e;
@@ -149,7 +149,7 @@ async function _getStartingDir(opts : ProgramOptions) : Promise<string> {
 
 	//If the path is a file, use the parent
 	if (!stats.isDirectory()) {
-		console.log("Target directory is a file; using parent");
+		console.error("Target directory is a file; using parent");
 		return path.resolve(userDir, '..');
 	}
 	//Otherwise Use the provided directory
