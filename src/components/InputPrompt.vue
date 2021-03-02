@@ -27,7 +27,7 @@
 				<div>
 					<input type="button"
 							@click="onSubmitClick"
-							:value="expectingInput ? 'Ok' : 'Submit'"
+							:value="expectingInput ? 'Submit' : 'Ok'"
 					/>
 
 					<input type="button"
