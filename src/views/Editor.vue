@@ -63,6 +63,7 @@ import { PluginInfo } from "@/api/types/PluginInfo";
 import { PluginManager } from "@/api/managers/PluginManager";
 import { ProgramOptions } from "@/types/CommandLine";
 import isElectron from "@/types/isElectron";
+import { Stats } from "fs";
 
 //Type of the imported plugin loaders
 type AbstractPluginLoader = {
@@ -118,7 +119,42 @@ async function _runFuncAsync(func : Function, ...args : any[]) {
 }
 
 //Start from the current directory if in electron, or root if in the browser
-const STARTING_DIRECTORY : string = isElectron() ? process.cwd() : '/';
+const STARTING_DIRECTORY: string = isElectron() ? process.cwd() : '/';
+
+async function _getStartingDir(opts : ProgramOptions) : Promise<string> {
+	//No directory specified - use the default
+	if (!opts.workingDir) return STARTING_DIRECTORY;
+
+	const userDir : string = opts.workingDir;
+
+	const {fs, path} = await getFsContainer();
+	//Check if the provided directory
+	let stats: Stats;
+	try {
+		stats = await new Promise<Stats>((resolve, reject) => {
+			fs.stat(userDir, ((err, s) => {
+				if (err) reject(err);
+				else resolve(s);
+			}));
+		});
+	} catch (e) {
+		//See if the error is "file not found"
+		if (e == 'ENOENT' || e.code === 'ENOENT') {
+			console.log("Target directory doesn't exist; using default");
+			return STARTING_DIRECTORY;
+		} else {
+			throw e;
+		}
+	}
+
+	//If the path is a file, use the parent
+	if (!stats.isDirectory()) {
+		console.log("Target directory is a file; using parent");
+		return path.resolve(userDir, '..');
+	}
+	//Otherwise Use the provided directory
+	return userDir;
+}
 
 export default Vue.extend({
 	name: 'Editor',
@@ -147,19 +183,21 @@ export default Vue.extend({
 		},
 	},
 	created() {
-		//Load the system plugins first
-		getSystemPluginLoader().then(async (systemPluginLoader) => {
-			console.log("Loaded system plugins");
-			await systemPluginLoader.run_load(pluginManager);
+		getCommandLineArgs().then(async commandLineArgs => {
+			this.cwd = await _getStartingDir(commandLineArgs);
 
-			//Load the user plugins if the app is in electron, and not in safe mode
-			const commandLineArgs = await getCommandLineArgs();
-			if (isElectron() && !commandLineArgs.safe) {
-				getUserPluginLoader().then(async (clientPluginLoader) => {
-					console.log("Loaded user plugins");
-					await clientPluginLoader.run_load(pluginManager);
-				});
-			}
+			//Load the system plugins first
+			getSystemPluginLoader().then(async (systemPluginLoader) => {
+				console.log("Loaded system plugins");
+				await systemPluginLoader.run_load(pluginManager);
+				//Load the user plugins if the app is in electron, and not in safe mode
+				if (isElectron() && !commandLineArgs.safe) {
+					getUserPluginLoader().then(async (clientPluginLoader) => {
+						console.log("Loaded user plugins");
+						await clientPluginLoader.run_load(pluginManager);
+					});
+				}
+			});
 		});
 	},
 	methods: {
