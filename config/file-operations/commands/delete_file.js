@@ -1,37 +1,33 @@
-const path = require("path");
+const { _displayError } = require("../utils");
 
 module.exports.name = "run_delete";
-module.exports.args = [{
-	name: "file_path",
-	description: "The full path to the file/folder to delete, relative to the project root",
-	validator: filePath => path.isAbsolute(filePath),
-}];
+module.exports.args = [
+	{
+		name: "path",
+		description: "File/Folder to delete",
+		type: 'path',
+	},
+];
 
-module.exports.run = async function ({args, ioController, editorController}) {
-	let fileStore = editorController.fileStore;
-
-	try {
-		//Get the file path
-		const full_path = path.join('/', args["file_path"]);
-
-		//Get the parent folder
-		let obj = await fileStore.resolvePath(full_path);
-		//Check the parent exists
-		if (!obj) {
-			_displayError(ioController, `The file at "${full_path}" doesn't exist`);
+module.exports.run = async function ({args, ioController, fs}) {
+	const filePath = args["path"];
+	//See if the path is a file or a folder
+	fs.stat(filePath, (err, stat) => {
+		if (err) {
+			if (err) _displayError(ioController, err);
 			return;
 		}
-		//Delete the file
-		await fileStore.deleteFile(obj);
-	} catch (e) {
-		_displayError(ioController, e);
-	}
-}
+		//Callback when deleting completes
+		const callback = (e) => {
+			if (e) _displayError(ioController, e);
+			else console.log(`Successfully deleted "${filePath}"`);
+		};
 
-function _displayError(ioController, error) {
-	console.error(error);
-	ioController.showOutput({
-		message: error,
-		title: "An error occurred"
+		//Delete the file or folder at the path
+		if (stat.isDirectory()) {
+			fs.rmdir(filePath, callback);
+		} else {
+			fs.unlink(filePath, callback);
+		}
 	});
 }

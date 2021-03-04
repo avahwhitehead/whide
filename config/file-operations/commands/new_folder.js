@@ -1,48 +1,39 @@
-const path = require("path");
+const { _displayError, _exists } = require("../utils");
 
 module.exports.name = "run_new_folder";
-module.exports.args = [{
-	name: "folder_path",
-	description: "The full path to the folder to add, relative to the project root",
-	validator: function (filePath) {
-		return path.isAbsolute(filePath);
+module.exports.args = [
+	{
+		name: "parent",
+		description: "Folder to create the file in",
+		type: 'folder',
 	},
-}];
+	{
+		name: "name",
+		description: "Name of the new folder",
+		validator: function (name) {
+			return name.match(/^[a-zA-Z0-9_ \-.]+$/);
+		},
+	}
+];
 
-module.exports.run = async function ({args, ioController, editorController}) {
-	let fileStore = editorController.fileStore;
+module.exports.run = async function ({args, ioController, fs, path}) {
+	const parent = args["parent"];
+	const name = args["name"];
+	//Build the full directory path
+	const full_path = path.join(parent, name);
 
 	try {
-		//Get the folder path
-		const full_path = path.join('/', args["file_path"]);
-
-		//Separate file name, and parent path
-		let name = path.basename(full_path);
-		let parent_path = path.resolve(full_path, '..');
-
-		//Get the parent folder
-		let parentObj = await fileStore.resolvePath(parent_path);
-		//Check the parent exists
-		if (!parentObj) {
-			_displayError(ioController, `The folder at "${parent_path}" doesn't exist`);
+		//Check the folder doesn't already exist
+		if (await _exists(full_path, fs)) {
+			_displayError(ioController, `The folder "${full_path}" already exists`);
 			return;
 		}
-		//Check the parent is a folder
-		if (parentObj.type !== "folder") {
-			_displayError(ioController, `The parent at "${parent_path}" is not a folder`);
-			return;
-		}
-		//Create the file
-		await fileStore.createFolder(name, parentObj);
+		//Create the folder
+		fs.mkdir(full_path, err => {
+			if (err) _displayError(ioController, err);
+			else console.log(`Successfully created ${full_path}`);
+		});
 	} catch (e) {
 		_displayError(ioController, e);
 	}
-}
-
-function _displayError(ioController, error) {
-	console.error(error);
-	ioController.showOutput({
-		message: error,
-		title: "An error occurred"
-	});
 }

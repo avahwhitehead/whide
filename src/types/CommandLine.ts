@@ -5,6 +5,7 @@ import Commander, { Command } from "commander";
  */
 export interface ProgramOptions extends Commander.OptionValues {
 	safe?: boolean;
+	workingDir?: string;
 }
 
 /**
@@ -22,7 +23,8 @@ export function makeCommandLineParser() : ExtendedCommand {
 	let program = new Command("whide");
 	//Options
 	program
-		.option("--safe", "Start in safe mode (no user plugins).");
+		.option("--safe", "Start in safe mode (no user plugins).")
+		.option("-d, --working-dir [dir]", "The initial directory to open. Default is the current path (electron) or root (browser).");
 	//Enable the help command (doesn't work when using `electron:serve`)
 	program.addHelpCommand("-h, --help");
 	//Return the command

@@ -1,48 +1,39 @@
-const path = require("path");
+const { _displayError, _exists } = require("../utils");
 
 module.exports.name = "run_new_file";
-module.exports.args = [{
-	name: "file_path",
-	description: "The full path to the file to add, relative to the project root",
-	validator: function (filePath) {
-		return path.isAbsolute(filePath);
+module.exports.args = [
+	{
+		name: "parent",
+		description: "Folder to create the file in",
+		type: 'folder',
 	},
-}];
+	{
+		name: "name",
+		description: "Name of the new file",
+		validator: function (name) {
+			return name.match(/^[a-zA-Z0-9_ \-.]+$/);
+		},
+	}
+];
 
-module.exports.run = async function ({args, ioController, editorController}) {
-	let fileStore = editorController.fileStore;
+module.exports.run = async function ({args, ioController, fs, path}) {
+	const parent = args["parent"];
+	const name = args["name"];
+	//Build the full file path
+	const full_path = path.join(parent, name);
 
 	try {
-		//Get the file path
-		const full_path = path.join('/', args["file_path"]);
-
-		//Separate file name, and parent path
-		let name = path.basename(full_path);
-		let parent_path = path.resolve(full_path, '..');
-
-		//Get the parent folder
-		let parentObj = await fileStore.resolvePath(parent_path);
-		//Check the parent exists
-		if (!parentObj) {
-			_displayError(ioController, `The folder at "${parent_path}" doesn't exist`);
-			return;
-		}
-		//Check the parent is a folder
-		if (parentObj.type !== "folder") {
-			_displayError(ioController, `The parent at "${parent_path}" is not a folder`);
+		//Check the file doesn't already exist
+		if (await _exists(full_path, fs)) {
+			_displayError(ioController, `The file "${name}" already exists in "${parent}"`);
 			return;
 		}
 		//Create the file
-		await fileStore.createFile(name, parentObj);
+		fs.writeFile(full_path, "", err => {
+			if (err) _displayError(ioController, err);
+			else console.log(`Successfully created file "${full_path}"`);
+		});
 	} catch (e) {
 		_displayError(ioController, e);
 	}
-}
-
-function _displayError(ioController, error) {
-	console.error(error);
-	ioController.showOutput({
-		message: error,
-		title: "An error occurred"
-	});
 }

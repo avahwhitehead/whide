@@ -16,7 +16,6 @@
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import TabbedPanel from "@/components/TabbedPanel.vue";
-import { FileData } from "@/fileStore/AbstractFileData";
 import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
 import BreakpointWidget from "./_internal/codeEditor/BreakpointWidget.vue";
 import { CodeEditorWrapper, wrapEditor } from "@/types/codeEditor";
@@ -27,9 +26,10 @@ import 'codemirror/lib/codemirror.css';
 //While language syntax definition
 import WHILE from "@/assets/whileSyntaxMode.ts";
 import { CustomDict } from "@/types/CustomDict";
+import { InternalFile } from "@/files/InternalFile";
 
 interface DataType {
-	selectedFile: FileData|undefined,
+	selectedFile: InternalFile|undefined,
 	editor: ExtendedCodeEditorWrapper|undefined,
 }
 
@@ -177,11 +177,11 @@ export default Vue.extend({
 	},
 	props: {
 		openFiles: {
-			type: Object as PropType<CustomDict<FileData>>,
+			type: Object as PropType<CustomDict<InternalFile>>,
 			required: true,
 		},
 		focused: {
-			type: Object as PropType<FileData>,
+			type: Object as PropType<InternalFile>,
 			default: undefined,
 		},
 	},
@@ -265,15 +265,15 @@ export default Vue.extend({
 		/**
 		 * Update the selected file when the parent element changes the focused file
 		 */
-		focused(newFile: FileData|undefined) {
+		focused(newFile: InternalFile|undefined) {
 			this.selectedFile = newFile;
 		},
 		/**
 		 * Update the editor content when the selected file is changed (either direction)
 		 */
-		selectedFile(newFile: FileData|undefined) {
+		selectedFile(newFile: InternalFile|undefined) {
 			if (!newFile) this.updateCode("");
-			else this.updateCode(newFile.content);
+			else this.updateCode(newFile.content || "");
 		}
 	}
 });

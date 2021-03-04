@@ -1,4 +1,4 @@
-import * as run from "./commands/run.js";
+import * as run from "./run.js";
 
 export const menus = [
 	{

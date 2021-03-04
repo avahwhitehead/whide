@@ -12,7 +12,7 @@
 
 		<div class="body">
 			<Container class="left filler">
-				<FilePicker v-bind:files="files" @change="(file) => openFile(file)"/>
+				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)"/>
 			</Container>
 
 			<Container class="middle code-editor">
@@ -33,18 +33,7 @@
 			<run-panel/>
 		</div>
 
-		<div class="inputModal" v-if="input.showInput">
-			<div class="content">
-				<inputPrompt
-					:get-input="input.expectingInput"
-					:title="input.title"
-					:message="input.message"
-					:error="input.error"
-					@submit="onInputSubmit"
-					@cancel="onInputCancel"
-				/>
-			</div>
-		</div>
+		<InputPrompt :cwd="cwd" @controller="c => this.ioController = c" />
 	</div>
 </template>
 
@@ -62,10 +51,10 @@ import RunPanel, { runPanelController } from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 //Other imports
 import EditorController from "@/api/controllers/EditorController";
-import IOController, { InputPromptParams, OutputPromptParams } from "@/api/types/IOController";
+import IOController from "@/api/types/IOController";
 import { CodeEditorWrapper } from "@/types/codeEditor";
-import { AbstractFileData, FileData } from "@/fileStore/AbstractFileData";
-import { BrowserFileStore } from "@/fileStore/BrowserFileStore.ts";
+import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
+import { CustomFsContainer, getFsContainer } from "@/files/fs";
 import { CustomDict } from "@/types/CustomDict";
 import { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
@@ -74,6 +63,7 @@ import { PluginInfo } from "@/api/types/PluginInfo";
 import { PluginManager } from "@/api/managers/PluginManager";
 import { ProgramOptions } from "@/types/CommandLine";
 import isElectron from "@/types/isElectron";
+import { Stats } from "fs";
 
 //Type of the imported plugin loaders
 type AbstractPluginLoader = {
@@ -108,9 +98,6 @@ async function getCommandLineArgs() : Promise<ProgramOptions> {
 	return { };
 }
 
-//File store object for in-browser storage
-const browserFileStore = new BrowserFileStore();
-
 //Plugin loaders for 1st and 3rd party plugins
 const pluginManager = new PluginManager();
 
@@ -118,26 +105,55 @@ const pluginManager = new PluginManager();
  * Type declaration for the data() values
  */
 interface DataTypesDescriptor {
-	files : AbstractFileData[];
-	focused_file? : FileData;
-	openFiles : CustomDict<FileData>;
+	focused_file? : InternalFile;
+	openFiles : CustomDict<InternalFile>;
 	codeEditor? : CodeEditorWrapper;
 	pluginManager : PluginManager;
 	ioController? : IOController;
-	input : {
-		showInput : boolean;
-		title : string;
-		message : string;
-		error : string;
-		expectingInput : boolean;
-		callback : (v: string) => void;
-		cancelCallback : () => void;
-	}
+	cwd: string;
 }
 
 //Run a function asynchronously
 async function _runFuncAsync(func : Function, ...args : any[]) {
 	await func(...args);
+}
+
+//Start from the current directory if in electron, or root if in the browser
+const STARTING_DIRECTORY: string = isElectron() ? process.cwd() : '/';
+
+async function _getStartingDir(opts : ProgramOptions) : Promise<string> {
+	//No directory specified - use the default
+	if (!opts.workingDir) return STARTING_DIRECTORY;
+
+	const userDir : string = opts.workingDir;
+
+	const {fs, path} = await getFsContainer();
+	let stats: Stats;
+	try {
+		//Make sure the path exists
+		stats = await new Promise<Stats>((resolve, reject) => {
+			fs.stat(userDir, ((err, s) => {
+				if (err) reject(err);
+				else resolve(s);
+			}));
+		});
+	} catch (e) {
+		//See if the error is "file not found"
+		if (e == 'ENOENT' || e.code === 'ENOENT') {
+			console.error("Target directory doesn't exist; using default");
+			return STARTING_DIRECTORY;
+		} else {
+			throw e;
+		}
+	}
+
+	//If the path is a file, use the parent
+	if (!stats.isDirectory()) {
+		console.error("Target directory is a file; using parent");
+		return path.resolve(userDir, '..');
+	}
+	//Otherwise Use the provided directory
+	return userDir;
 }
 
 export default Vue.extend({
@@ -153,21 +169,12 @@ export default Vue.extend({
 	},
 	data() : DataTypesDescriptor {
 		return {
-			files: [],
 			focused_file: undefined,
 			openFiles: {},
 			codeEditor: undefined,
 			pluginManager: pluginManager,
 			ioController: undefined,
-			input: {
-				showInput: false,
-				title: "",
-				message: "",
-				error: "",
-				expectingInput: true,
-				callback: () => {},
-				cancelCallback: () => {},
-			}
+			cwd: STARTING_DIRECTORY,
 		}
 	},
 	computed: {
@@ -176,140 +183,55 @@ export default Vue.extend({
 		},
 	},
 	created() {
-		//Load the system plugins first
-		getSystemPluginLoader().then(async (systemPluginLoader) => {
-			console.log("Loaded system plugins");
-			await systemPluginLoader.run_load(pluginManager);
+		getCommandLineArgs().then(async commandLineArgs => {
+			this.cwd = await _getStartingDir(commandLineArgs);
 
-			//Load the user plugins if the app is in electron, and not in safe mode
-			const commandLineArgs = await getCommandLineArgs();
-			if (isElectron() && !commandLineArgs.safe) {
-				getUserPluginLoader().then(async (clientPluginLoader) => {
-					console.log("Loaded user plugins");
-					await clientPluginLoader.run_load(pluginManager);
-				});
-			}
-		});
-	},
-	mounted() {
-		this.ioController = {
-			showOutput: (props: OutputPromptParams) : Promise<void> => {
-				return new Promise(resolve => {
-					//Make visible
-					this.input.showInput = true;
-					//Don't the text box
-					this.input.expectingInput = false;
-					//Set the message to show
-					this.input.title = props.title || "";
-					this.input.message = props.message;
-					//When the user submits
-					this.input.callback = () => {
-						//Hide the prompt
-						this.hideInput();
-						//Done
-						resolve();
-					};
-				});
-			},
-			getInput: (props: InputPromptParams) : Promise<string|undefined> => {
-				return new Promise(resolve => {
-					//Make visible
-					this.input.showInput = true;
-					//Show the text box
-					this.input.expectingInput = true;
-					//Show the message
-					this.input.title = props.title || "";
-					this.input.message = props.message;
-					//When the user enters the value
-					this.input.callback = (val : string) => {
-						//Check with the validator, or return true
-						if (!props.validator || props.validator(val)) {
-							this.input.error = "";
-							//Hide the prompt
-							this.hideInput();
-							//Done
-							resolve(val);
-						} else {
-							this.input.error = "Invalid input";
-						}
-					};
-					//If the user cancels the operation
-					this.input.cancelCallback = () => {
-						this.hideInput();
-						resolve(undefined);
-					};
-				});
-			},
-		};
-
-		//Load the directory structure
-		browserFileStore.getDirectoryTree().then((value : AbstractFileData[]) => {
-			this.files = value;
+			//Load the system plugins first
+			getSystemPluginLoader().then(async (systemPluginLoader) => {
+				console.log("Loaded system plugins");
+				await systemPluginLoader.run_load(pluginManager);
+				//Load the user plugins if the app is in electron, and not in safe mode
+				if (isElectron() && !commandLineArgs.safe) {
+					getUserPluginLoader().then(async (clientPluginLoader) => {
+						console.log("Loaded user plugins");
+						await clientPluginLoader.run_load(pluginManager);
+					});
+				}
+			});
 		});
 	},
 	methods: {
-		openFile(file : FileData) : void {
+		async openFile(abstractFile: AbstractInternalFile) : Promise<void> {
 			//Don't edit folders
-			if (file.type !== "file") return;
-
+			if (abstractFile.folder) return;
+			//Cast to a file
+			let file : InternalFile = abstractFile as InternalFile;
 			//Don't open the same file twice
 			if (!this.openFiles[file.name]) {
-				//Load the file contents
-				browserFileStore.readFile(file).then((f) => {
-					//Open the file
-					//See: https://vuejs.org/2016/02/06/common-gotchas/#Why-isn%E2%80%99t-the-DOM-updating
-					Vue.set(this.openFiles, f.name, f);
-				});
+				//Read the file
+				await file.read();
+				//Open the file in the editor
+				Vue.set(this.openFiles, file.name, file);
 			} else {
 				this.focused_file = file;
 			}
 		},
-		onOpenFileChange(fileData : FileData|undefined) : void {
+		onOpenFileChange(fileData : InternalFile|undefined) : void {
 			//Keep track of the currently focused file
 			this.focused_file = fileData || undefined;
 		},
 		onEditorObjectChange(editor : ExtendedCodeEditorWrapper) : void {
 			this.codeEditor = editor;
 		},
-		save() : void {
-			if (this.focused_file) {
-				browserFileStore.writeFile(this.focused_file)
-					.then(() => console.log("Saved"))
-					.catch((e) => console.error(e));
-			} else {
-				console.log(`No file open to save`);
-			}
+		async save() : Promise<void> {
+			if (this.focused_file) this.focused_file.write();
+			else console.log(`No file open to save`);
 		},
 		download() : void {
 			if (this.focused_file) {
-				fileDownloader(this.focused_file.content, this.focused_file.name);
+				fileDownloader(this.focused_file.content || "", this.focused_file.name);
 			} else {
 				console.log(`No file open to download`);
-			}
-		},
-
-		async hideInput() : Promise<void> {
-			//Make the input invisible
-			this.input.showInput = false;
-			//Default to allowing input
-			this.input.expectingInput = true;
-			//Clear the message
-			this.input.title = "";
-			this.input.message = "";
-			//Clear the callback
-			this.input.callback = () => {};
-			this.input.cancelCallback = () => {};
-		},
-		onInputSubmit(val : string) : void {
-			//Call the input's callback
-			if (this.input.callback) {
-				this.input.callback(val);
-			}
-		},
-		onInputCancel() : void {
-			//Call the input's cancel callback
-			if (this.input.cancelCallback) {
-				this.input.cancelCallback();
 			}
 		},
 
@@ -330,6 +252,7 @@ export default Vue.extend({
 				let val = await this.ioController.getInput({
 					title: `INPUT: ${arg.name}`,
 					message: arg.description || "",
+					type: arg.type || 'string',
 					//Allow empty optional arguments, or validate the input
 					validator: async (s) => arg.optional && !s || await validator(s),
 				});
@@ -343,7 +266,9 @@ export default Vue.extend({
 			if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
 
 			//Make the editor controller to pass to the plugin
-			let editorController: EditorController = new EditorController(this.codeEditor, browserFileStore);
+			let editorController: EditorController = new EditorController(this.codeEditor);
+
+			let fsContainer : CustomFsContainer = await getFsContainer();
 
 			//Run the function
 			const funcParameters : PluginFunctionParameters = {
@@ -351,6 +276,8 @@ export default Vue.extend({
 				editorController: editorController,
 				ioController: this.ioController,
 				runPanelController: runPanelController,
+				fs: fsContainer.fs,
+				path: fsContainer.path,
 			};
 			_runFuncAsync(pluginFunction.run, funcParameters).catch((e) => {
 				//Handle errors produced in the plugin function
@@ -440,33 +367,6 @@ export default Vue.extend({
 	outline: 1px solid #AAA;
 	width: 70%;
 	display: inline-block;
-}
-
-/*
-Popup stylings based broadly on W3Schools':
-https://www.w3schools.com/howto/howto_css_modals.asp
-*/
-.inputModal {
-	position: fixed;
-	z-index: 5;
-
-	/*Fill the entire screen*/
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-
-	/*Transparent background, with non-transparent fallback*/
-	background-color: rgb(0,0,0);
-	background-color: rgba(0,0,0,0.4);
-}
-.inputModal .content {
-	background-color: #FFFFFF;
-	padding: 20px;
-	border: 1px solid #888;
-	margin: 15% auto;
-	width: 50%;
-	overflow: auto;
 }
 
 /*
