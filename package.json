@@ -23,7 +23,6 @@
     "core-js": "^3.6.5",
     "crypto-js": "^4.0.0",
     "filer": "^1.2.0",
-    "idb-kv-store": "^4.5.0",
     "js-file-download": "^0.4.12",
     "tape": "^5.1.1",
     "vue": "^2.6.11",
@@ -31,8 +30,6 @@
     "xdg-basedir": "^4.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^11.0.0",
-    "@commitlint/config-conventional": "^11.0.0",
     "@types/chai": "^4.2.14",
     "@types/codemirror": "0.0.106",
     "@types/commander": "^2.12.2",
@@ -40,7 +37,6 @@
     "@types/electron-devtools-installer": "^2.2.0",
     "@types/mocha": "^8.2.0",
     "@types/node": "^14.14.19",
-    "@types/xdg-basedir": "^4.0.2",
     "@typescript-eslint/eslint-plugin": "^4.14.2",
     "@typescript-eslint/parser": "^4.11.0",
     "@vue/cli-plugin-babel": "~4.5.0",
