@@ -33,7 +33,7 @@
 			<run-panel/>
 		</div>
 
-		<InputPrompt @controller="c => this.ioController = c" />
+		<InputPrompt :cwd="cwd" @controller="c => this.ioController = c" />
 	</div>
 </template>
 

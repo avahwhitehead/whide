@@ -15,7 +15,7 @@
 					</div>
 					<div v-else-if="isPathInput">
 						<FilePicker
-							:directory="inputDirectory"
+							:directory="cwd"
 							@change="onFileClick"
 						/>
 						<div>
@@ -74,6 +74,12 @@ export default vue.extend({
 	components: {
 		FilePicker
 	},
+	props: {
+		cwd: {
+			type: String,
+			default: '.',
+		}
+	},
 	data() : DataTypeDescriptor {
 		return {
 			inputs: {
@@ -101,9 +107,6 @@ export default vue.extend({
 		},
 		isPathInput() : boolean {
 			return ['path','file','folder'].includes(this.controls.inputType);
-		},
-		inputDirectory() : string {
-			return process.cwd();
 		},
 	},
 	mounted() {
