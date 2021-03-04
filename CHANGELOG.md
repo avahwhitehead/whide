@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.6](https://github.com/sonrad10/Whide/compare/v0.9.4...v0.9.6) (2021-03-04)
+
+
+### Features
+
+* added support for running local files directly ([3738d73](https://github.com/sonrad10/Whide/commit/3738d73d90a21527a85f3f4fa272712d4766f57f))
+* added support for specifying input type in plugin arguments and input controller ([ad381b3](https://github.com/sonrad10/Whide/commit/ad381b317522667ee589abeeb81e4f5a712f3312))
+* allowed setting the working directory from the command line (-d or --working-dir) ([ced3414](https://github.com/sonrad10/Whide/commit/ced3414ac6d5f6b0bc928d63ca444c1fd1fa5edb))
+* changed to using filer's `path` when in the browser ([b8b7de1](https://github.com/sonrad10/Whide/commit/b8b7de187a55be5e16ea54d21a7c13c096cb4c79))
+* Improved encapsulation for InputPanel ([b6264e9](https://github.com/sonrad10/Whide/commit/b6264e964e58789d9e687c42a0892c9b041d7507))
+* organised fileStore objects into folders ([88069b3](https://github.com/sonrad10/Whide/commit/88069b3710ff86520cb0824c2449791cab3f21c2))
+
+
+### Bug Fixes
+
+* fixed "save" and "download" buttons being always disabled ([3e38085](https://github.com/sonrad10/Whide/commit/3e38085435a98446c1a40fa4112b6460c65cff4c))
+* fixed delete option not working ([6deb39a](https://github.com/sonrad10/Whide/commit/6deb39a76a54d0c3d107ff7d3db68533b3dcd44f))
+* fixed input prompt button showing the wrong text ([2504f08](https://github.com/sonrad10/Whide/commit/2504f08f96674a47bafe085748c5561e6d3cf7c0))
+* fixed input prompt file picker showing wrong directory ([b856631](https://github.com/sonrad10/Whide/commit/b856631b4ac0af3c76a1ad6f831734cd087a752b))
+* Fixed unused variable error ([3701728](https://github.com/sonrad10/Whide/commit/370172848e546a3c1f5bb1ce4ecfc79b32a36cee))
+* made some warnings use `console.error` ([a3d94f1](https://github.com/sonrad10/Whide/commit/a3d94f15f3ad99f56f90c88f5587998479c814a1))
+* removed unused dependencies ([64c58ef](https://github.com/sonrad10/Whide/commit/64c58efe344285f1acf0136a93f85de6550c9f67))
+
 ### [0.9.5](https://github.com/sonrad10/Whide/compare/v0.9.4...v0.9.5) (2021-02-25)
 
 
