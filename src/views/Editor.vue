@@ -60,46 +60,7 @@ import { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
 import PluginFunctionParameters from "@/api/types/PluginFunctionParameters";
 import { PluginInfo } from "@/api/types/PluginInfo";
-import { PluginManager } from "@/api/managers/PluginManager";
-import { ProgramOptions } from "@/types/CommandLine";
-import isElectron from "@/types/isElectron";
-import { Stats } from "fs";
-
-//Type of the imported plugin loaders
-type AbstractPluginLoader = {
-	run_load(m: PluginManager) : Promise<void>;
-}
-
-/**
- * Get a plugin loader for system plugins
- */
-async function getSystemPluginLoader() : Promise<AbstractPluginLoader> {
-	return await import("@/api/systemPluginLoader");
-}
-/**
- * Get a plugin loader for user plugins
- */
-async function getUserPluginLoader() : Promise<AbstractPluginLoader> {
-	return await import("@/api/userPluginLoader");
-}
-
-/**
- * Get the command line arguments passed to the app
- */
-async function getCommandLineArgs() : Promise<ProgramOptions> {
-	//Get the arguments from electron
-	if (isElectron()) {
-		//Import electron
-		const electron = await import("electron");
-		//Get the command line argument values
-		return electron.remote.getGlobal("commandLineArgs");
-	}
-	//Default values
-	return { };
-}
-
-//Plugin loaders for 1st and 3rd party plugins
-const pluginManager = new PluginManager();
+import { pluginManager, vars } from "@/utils/globals";
 
 /**
  * Type declaration for the data() values
@@ -108,7 +69,6 @@ interface DataTypesDescriptor {
 	focused_file? : InternalFile;
 	openFiles : CustomDict<InternalFile>;
 	codeEditor? : CodeEditorWrapper;
-	pluginManager : PluginManager;
 	ioController? : IOController;
 	cwd: string;
 }
@@ -116,44 +76,6 @@ interface DataTypesDescriptor {
 //Run a function asynchronously
 async function _runFuncAsync(func : Function, ...args : any[]) {
 	await func(...args);
-}
-
-//Start from the current directory if in electron, or root if in the browser
-const STARTING_DIRECTORY: string = isElectron() ? process.cwd() : '/';
-
-async function _getStartingDir(opts : ProgramOptions) : Promise<string> {
-	//No directory specified - use the default
-	if (!opts.workingDir) return STARTING_DIRECTORY;
-
-	const userDir : string = opts.workingDir;
-
-	const {fs, path} = await getFsContainer();
-	let stats: Stats;
-	try {
-		//Make sure the path exists
-		stats = await new Promise<Stats>((resolve, reject) => {
-			fs.stat(userDir, ((err, s) => {
-				if (err) reject(err);
-				else resolve(s);
-			}));
-		});
-	} catch (e) {
-		//See if the error is "file not found"
-		if (e == 'ENOENT' || e.code === 'ENOENT') {
-			console.error("Target directory doesn't exist; using default");
-			return STARTING_DIRECTORY;
-		} else {
-			throw e;
-		}
-	}
-
-	//If the path is a file, use the parent
-	if (!stats.isDirectory()) {
-		console.error("Target directory is a file; using parent");
-		return path.resolve(userDir, '..');
-	}
-	//Otherwise Use the provided directory
-	return userDir;
 }
 
 export default Vue.extend({
@@ -172,33 +94,14 @@ export default Vue.extend({
 			focused_file: undefined,
 			openFiles: {},
 			codeEditor: undefined,
-			pluginManager: pluginManager,
 			ioController: undefined,
-			cwd: STARTING_DIRECTORY,
+			cwd: vars.cwd,
 		}
 	},
 	computed: {
 		menus() : Menu[] {
 			return pluginManager.menuManager.menus;
 		},
-	},
-	created() {
-		getCommandLineArgs().then(async commandLineArgs => {
-			this.cwd = await _getStartingDir(commandLineArgs);
-
-			//Load the system plugins first
-			getSystemPluginLoader().then(async (systemPluginLoader) => {
-				console.log("Loaded system plugins");
-				await systemPluginLoader.run_load(pluginManager);
-				//Load the user plugins if the app is in electron, and not in safe mode
-				if (isElectron() && !commandLineArgs.safe) {
-					getUserPluginLoader().then(async (clientPluginLoader) => {
-						console.log("Loaded user plugins");
-						await clientPluginLoader.run_load(pluginManager);
-					});
-				}
-			});
-		});
 	},
 	methods: {
 		async openFile(abstractFile: AbstractInternalFile) : Promise<void> {

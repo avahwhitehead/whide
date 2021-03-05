@@ -9,8 +9,10 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 //Parse command line arguments
 const program : ExtendedCommand = makeCommandLineParser();
 program.parse();
-//Store the values in a global variable
-(global as any).commandLineArgs = program.opts();
+//Store the values in the global variable
+const commandLineArgs = program.opts();
+(global as any).cwd = commandLineArgs.workingDir || process.cwd();
+(global as any).safe = !!commandLineArgs.safe;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
