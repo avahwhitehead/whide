@@ -1,5 +1,6 @@
 import { Menu } from "@/api/parsers/MenuParser";
 import { PluginFunction } from "@/api/types/PluginFunction";
+import { TreeConverter } from "@/api/managers/TreeConverterManager";
 
 /**
  * The parameters used to initialise the PluginInfo object
@@ -25,6 +26,10 @@ export interface PluginInfoProps {
 	 * The menu items defined by the plugin
 	 */
 	menus?: Menu[];
+	/**
+	 * The custom tree converters defined by the plugin
+	 */
+	converters?: TreeConverter[];
 }
 
 /**
@@ -36,6 +41,7 @@ export class PluginInfo {
 	private _isExternal: boolean;
 	private _filePath: string;
 	private readonly _menus: Menu[];
+	private readonly _converters: TreeConverter[];
 
 	private readonly funcs : Map<string, PluginFunction>;
 
@@ -54,6 +60,8 @@ export class PluginInfo {
 		this._disabled = !!props.disabled;
 		//The menus created by the plugin (default: [])
 		this._menus = props.menus || [];
+		//The custom tree converters created by the plugin (default: [])
+		this._converters = props.converters || [];
 		//Functions defined by the plugin
 		this.funcs = new Map();
 	}
@@ -92,6 +100,10 @@ export class PluginInfo {
 
 	get menus(): Menu[] {
 		return this._menus;
+	}
+
+	get converters(): TreeConverter[] {
+		return this._converters;
 	}
 
 	/**

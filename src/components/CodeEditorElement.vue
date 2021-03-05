@@ -24,7 +24,7 @@ import CodeMirror from "codemirror";
 //CodeMirror styling
 import 'codemirror/lib/codemirror.css';
 //While language syntax definition
-import WHILE from "@/assets/whileSyntaxMode.ts";
+import WHILE from "@/assets/whileSyntaxMode";
 import { CustomDict } from "@/types/CustomDict";
 import { InternalFile } from "@/files/InternalFile";
 
