@@ -21,28 +21,23 @@
 
 <script lang="ts">
 import vue from "vue";
-import { PluginManager } from "@/api/managers/PluginManager";
+import { pluginManager } from "@/utils/globals";
 import { PluginInfo } from "@/api/types/PluginInfo";
 
 export default vue.extend({
 	name: 'PluginToggler',
-	props: {
-		pluginManager: {
-			type: PluginManager,
-		}
-	},
 	computed: {
 		plugins() : PluginInfo[] {
-			if (!this.$props.pluginManager) return [];
-			return this.$props.pluginManager.getPlugins();
+			if (!pluginManager) return [];
+			return pluginManager.getPlugins();
 		}
 	},
 	methods: {
 		togglePlugin(event : Event, plugin: PluginInfo) : void {
 			if (!plugin) return;
 			try {
-				if (plugin.disabled) this.pluginManager.enablePlugin(plugin);
-				else this.pluginManager.disablePlugin(plugin);
+				if (plugin.disabled) pluginManager.enablePlugin(plugin);
+				else pluginManager.disablePlugin(plugin);
 			} catch (e) {
 				console.error(e);
 			}

@@ -1,6 +1,7 @@
 import { PluginInfo, PluginInfoProps } from "@/api/types/PluginInfo";
 import { MenuManager } from "@/api/managers/MenuManager";
 import setupMenus from "@/api/parsers/MenuParser";
+import { TreeConverterManager } from "@/api/managers/TreeConverterManager";
 
 /**
  * A manager to control which plugins are currently loaded
@@ -8,6 +9,7 @@ import setupMenus from "@/api/parsers/MenuParser";
 export class PluginManager {
 	private readonly plugins: PluginInfo[];
 	private readonly _menuManager: MenuManager;
+	private readonly _treeConverterManager: TreeConverterManager;
 
 	/**
 	 *
@@ -15,6 +17,7 @@ export class PluginManager {
 	constructor() {
 		this.plugins = [];
 		this._menuManager = new MenuManager();
+		this._treeConverterManager = new TreeConverterManager();
 	}
 
 	/**
@@ -27,6 +30,7 @@ export class PluginManager {
 			name: props.name,
 			path: props.path,
 			menus: props.menus || [],
+			converters: props.converters || [],
 			external: (props.external === undefined) ? true : props.external,
 			disabled: (props.disabled === undefined) ? false : props.disabled,
 		});
@@ -76,6 +80,12 @@ export class PluginManager {
 		return this._menuManager;
 	}
 
+	/**
+	 * Get the Tree Converter manager
+	 */
+	get treeConverterManager(): TreeConverterManager {
+		return this._treeConverterManager;
+	}
 
 	/**
 	 * Enable the plugin
@@ -83,8 +93,10 @@ export class PluginManager {
 	public enablePlugin(pluginInfo: PluginInfo) {
 		//Register the menus
 		pluginInfo.menus.forEach(m => this._menuManager.register(m));
+		//Register the tree converters
+		pluginInfo.converters.forEach(c => this._treeConverterManager.register(c));
 
-		//mark the plugin as disabled
+		//Mark as enabled
 		pluginInfo.disabled = false;
 	}
 
@@ -99,8 +111,10 @@ export class PluginManager {
 
 		//Unregister the menus
 		pluginInfo.menus.forEach(m => this._menuManager.unregister(m));
+		//Unregister the tree converters
+		pluginInfo.converters.forEach(c => this._treeConverterManager.unregister(c));
 
-		//mark the plugin as disabled
+		//Mark as disabled
 		pluginInfo.disabled = true;
 	}
 }

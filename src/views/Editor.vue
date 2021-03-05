@@ -5,6 +5,7 @@
 				<MenuBar :menus="menus" @run="runPluginFunc"/>
 			</div>
 			<div class="right">
+				<button @click="openTreeViewer">Tree Viewer</button>
 				<button @click="save" :disabled="!focused_file">Save File</button>
 				<button @click="download" :disabled="!focused_file">Download File</button>
 			</div>
@@ -25,7 +26,7 @@
 			</Container>
 
 			<Container class="right filler">
-				<PluginToggler :plugin-manager="this.pluginManager" />
+				<PluginToggler />
 			</Container>
 		</div>
 
@@ -104,6 +105,9 @@ export default Vue.extend({
 		},
 	},
 	methods: {
+		openTreeViewer() {
+			window.open('/trees', '_blank', "height=400");
+		},
 		async openFile(abstractFile: AbstractInternalFile) : Promise<void> {
 			//Don't edit folders
 			if (abstractFile.folder) return;

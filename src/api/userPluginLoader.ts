@@ -60,14 +60,18 @@ export async function run_load(pluginManager : PluginManager) : Promise<void> {
 
 			//Load the functions
 			const funcs: undefined|PluginFunction|PluginFunction[] = pluginModule.default;
-			if (!funcs) console.warn(`No exported functions from plugin "${moduleName}" at "${filePath}"`);
-			if (!pluginModule.menus) console.warn(`No exported menus from plugin "${moduleName}" at "${filePath}"`);
+			//Warn if the plugin doesn't do anything
+			if (!pluginModule.converters) {
+				if (!funcs) console.warn(`No exported functions from plugin "${moduleName}" at "${filePath}"`);
+				if (!pluginModule.menus) console.warn(`No exported menus from plugin "${moduleName}" at "${filePath}"`);
+			}
 
 			//Register the plugin
 			let info: PluginInfo = pluginManager.register({
 				name: moduleName,
 				path: filePath,
 				menus: pluginModule.menus || [],
+				converters: pluginModule.converters || [],
 				external: true,
 				disabled: false,
 			});
