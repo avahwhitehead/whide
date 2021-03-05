@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.7](https://github.com/sonrad10/Whide/compare/v0.9.6...v0.9.7) (2021-03-05)
+
+
+### Features
+
+* added a custom tree viewer which opens in a new window ([9593d0f](https://github.com/sonrad10/Whide/commit/9593d0fd9d2e4a722824d4b3748625dbaee09f9a))
+* added vue-router back ([4aa3baa](https://github.com/sonrad10/Whide/commit/4aa3baa4466d2176554de666c080badd55f80e38))
+* refactored so that plugins are only loaded once ([cb4a5bb](https://github.com/sonrad10/Whide/commit/cb4a5bb3e516a51d9eb6ee0681e33855f9dd7bb5))
+
+
+### Bug Fixes
+
+* updated typescript to latest version ([c5075ce](https://github.com/sonrad10/Whide/commit/c5075ced0395ba003c9a3e0e15bd6cf9f0b100b5))
+
 ### [0.9.6](https://github.com/sonrad10/Whide/compare/v0.9.4...v0.9.6) (2021-03-04)
 
 
