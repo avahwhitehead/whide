@@ -1,5 +1,5 @@
 <template>
-	<div id="app" class="editor">
+	<div class="editor">
 		<div class="header filler">
 			<div class="menubar-holder">
 				<MenuBar :menus="menus" @run="runPluginFunc"/>
@@ -295,43 +295,19 @@ export default Vue.extend({
 </script>
 
 <style>
-#app {
-	font-family: Avenir, Helvetica, Arial, sans-serif;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	text-align: center;
-	color: #2c3e50;
-}
-
-/*noinspection CssUnusedSymbol*/
-#nav {
-	padding: 30px;
-}
-
-#nav a {
-	font-weight: bold;
-	color: #2c3e50;
-}
-
-/*noinspection CssUnusedSymbol*/
-#nav a.router-link-exact-active {
-	color: #42b983;
+.code-editor {
+	outline: 1px solid #AAA;
+	width: 70%;
+	display: inline-block;
 }
 </style>
 
-
-<style>
-#app {
+<style scoped>
+.editor {
 	display: flex;
 	flex-direction: column;
-
-	height: 100%;
 	width: 100%;
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
+	height: 100%;
 }
 
 .menubar-holder {
@@ -361,12 +337,6 @@ export default Vue.extend({
 
 .footer {
 	height: fit-content;
-}
-
-.code-editor {
-	outline: 1px solid #AAA;
-	width: 70%;
-	display: inline-block;
 }
 
 /*
