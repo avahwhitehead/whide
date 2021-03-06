@@ -1,11 +1,10 @@
 import path from "path";
 import xdgBasedir from "xdg-basedir";
-import { PluginInfo } from "@/api/types/PluginInfo";
+import { PluginInfo } from "@/api/PluginInfo";
 import { PluginManager } from "@/api/managers/PluginManager";
-import { PluginModule } from "@/api/types/PluginModule";
 import electron from "electron";
 import fs, { Stats } from "fs";
-import { PluginFunction } from "@/api/types/PluginFunction";
+import { PluginModule, PluginFunction } from "@whide/whide-types";
 
 //3rd party plugins root
 const USER_CONFIG_ROOT = path.resolve((xdgBasedir.config || '.'), "whide", "plugins");

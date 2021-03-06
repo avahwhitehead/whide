@@ -18,7 +18,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { ExtendedBinaryTree } from "@/api/types/ExtendedBinaryTree";
+import { ExtendedBinaryTree } from "@whide/whide-types";
 
 interface DataTypeInterface {
 

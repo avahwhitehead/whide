@@ -1,9 +1,10 @@
 import { Transform } from "stream";
+import { RunPanelController as RunPanelControllerInterface } from "@whide/whide-types";
 
 /**
  * Controller for the "run" panel.
  */
-export default class RunPanelController {
+export default class RunPanelController implements RunPanelControllerInterface{
 	private readonly _controllers : RunPanelInstanceController[];
 
 	/**

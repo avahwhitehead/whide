@@ -1,12 +1,7 @@
-import { CodeMirrorDocWrapper, _wrapCodeMirrorDoc } from "@/types/codeEditor/_CodeMirrorDocWrapper";
-import { _wrapCodeMirrorEditor, CodeMirrorEditorWrapper } from "@/types/codeEditor/_CodeMirrorEditorWrapper";
+import { _wrapCodeMirrorDoc } from "@/types/codeEditor/_CodeMirrorDocWrapper";
+import { _wrapCodeMirrorEditor } from "@/types/codeEditor/_CodeMirrorEditorWrapper";
 import CodeMirror from "codemirror";
-
-/**
- * The type of the CodeMirror editor wrapper.
- * This is because {@link CodeMirror.Editor} extends {@link CodeMirror.Doc}.
- */
-export type CodeEditorWrapper = CodeMirrorDocWrapper & CodeMirrorEditorWrapper;
+import { CodeEditorWrapper } from "@whide/whide-types/";
 
 /**
  * Build an asynchronous wrapper around a code editor object so that it can be used in plugins.

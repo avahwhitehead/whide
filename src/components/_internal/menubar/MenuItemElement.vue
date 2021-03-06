@@ -10,9 +10,9 @@
 </template>
 
 <script lang="ts">
-import { Menu, MenuItem } from "@/api/parsers/MenuParser";
+import { InternalMenu, InternalMenuItem } from "@/api/types/InternalMenus";
 import Vue from "vue";
-import { PluginInfo } from "@/api/types/PluginInfo";
+import { PluginInfo } from "@/api/PluginInfo";
 
 interface DataTypeInterface {
 	dropdownVisible: boolean;
@@ -22,7 +22,7 @@ export default Vue.extend({
 	name: 'MenuItemElement',
 	props: {
 		item: {
-			type: Object as () => MenuItem|Menu,
+			type: Object as () => InternalMenuItem|InternalMenu,
 		}
 	},
 	data() : DataTypeInterface {
@@ -34,7 +34,7 @@ export default Vue.extend({
 		isVisible() : boolean {
 			if (!this.dropdownVisible) return false;
 			//Invisible if there are no children
-			const children: (Menu | MenuItem)[] = (this.item as Menu).children || [];
+			const children: (InternalMenu | InternalMenuItem)[] = (this.item as InternalMenu).children || [];
 			return children.length > 0;
 		},
 	},
@@ -50,7 +50,7 @@ export default Vue.extend({
 		},
 		async onClick() : Promise<void> {
 			//Shorthand access to the menu item
-			let item : MenuItem = this.$props.item;
+			let item : InternalMenuItem = this.$props.item;
 
 			//Don't do anything if the item doesn't have a command to run
 			if (item.command) {

@@ -22,7 +22,7 @@
 <script lang="ts">
 import vue from "vue";
 import { pluginManager } from "@/utils/globals";
-import { PluginInfo } from "@/api/types/PluginInfo";
+import { PluginInfo } from "@/api/PluginInfo";
 
 export default vue.extend({
 	name: 'PluginToggler',

@@ -1,10 +1,4 @@
-import { ExtendedBinaryTree } from "@/api/types/ExtendedBinaryTree";
-import { BinaryTree } from "@whide/hwhile-wrapper";
-
-export type TreeConverter = {
-	name: string,
-	convert: (tree: BinaryTree) => ExtendedBinaryTree;
-};
+import { TreeConverter } from "@whide/whide-types";
 
 /**
  * Manage the tree converters

@@ -1,8 +1,7 @@
-import { PluginInfo } from "@/api/types/PluginInfo";
+import { PluginInfo } from "@/api/PluginInfo";
 import { PluginManager } from "@/api/managers/PluginManager";
-import { PluginModule } from "@/api/types/PluginModule";
 import path from "path";
-import { PluginFunction } from "@/api/types/PluginFunction";
+import { PluginModule, PluginFunction } from "@whide/whide-types";
 
 /**
  * Get a module's name from its path

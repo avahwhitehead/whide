@@ -1,6 +1,5 @@
-import { PluginInfo, PluginInfoProps } from "@/api/types/PluginInfo";
+import { PluginInfo, PluginInfoProps } from "@/api/PluginInfo";
 import { MenuManager } from "@/api/managers/MenuManager";
-import setupMenus from "@/api/parsers/MenuParser";
 import { TreeConverterManager } from "@/api/managers/TreeConverterManager";
 
 /**
@@ -34,9 +33,6 @@ export class PluginManager {
 			external: (props.external === undefined) ? true : props.external,
 			disabled: (props.disabled === undefined) ? false : props.disabled,
 		});
-
-		//Setup the menus
-		setupMenus(pluginInfo.menus, pluginInfo);
 
 		//Store the plugin object
 		this.plugins.push(pluginInfo);

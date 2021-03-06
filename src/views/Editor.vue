@@ -43,7 +43,7 @@
 import Vue from "vue";
 import fileDownloader from "js-file-download";
 //Components
-import CodeEditorElement, { ExtendedCodeEditorWrapper } from "@/components/CodeEditorElement.vue";
+import CodeEditorElement from "@/components/CodeEditorElement.vue";
 import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
@@ -52,15 +52,17 @@ import RunPanel, { runPanelController } from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 //Other imports
 import EditorController from "@/api/controllers/EditorController";
-import IOController from "@/api/types/IOController";
-import { CodeEditorWrapper } from "@/types/codeEditor";
+import {
+	ExtendedCodeEditorWrapper,
+	IOController,
+	PluginFunction,
+	PluginFunctionParameters
+} from "@whide/whide-types";
 import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
 import { CustomFsContainer, getFsContainer } from "@/files/fs";
 import { CustomDict } from "@/types/CustomDict";
-import { Menu } from "@/api/parsers/MenuParser";
-import { PluginFunction } from "@/api/types/PluginFunction";
-import PluginFunctionParameters from "@/api/types/PluginFunctionParameters";
-import { PluginInfo } from "@/api/types/PluginInfo";
+import { InternalMenu } from "@/api/types/InternalMenus";
+import { PluginInfo } from "@/api/PluginInfo";
 import { pluginManager, vars } from "@/utils/globals";
 
 /**
@@ -69,7 +71,7 @@ import { pluginManager, vars } from "@/utils/globals";
 interface DataTypesDescriptor {
 	focused_file? : InternalFile;
 	openFiles : CustomDict<InternalFile>;
-	codeEditor? : CodeEditorWrapper;
+	codeEditor? : ExtendedCodeEditorWrapper;
 	ioController? : IOController;
 	cwd: string;
 }
@@ -100,7 +102,7 @@ export default Vue.extend({
 		}
 	},
 	computed: {
-		menus() : Menu[] {
+		menus() : InternalMenu[] {
 			return pluginManager.menuManager.menus;
 		},
 	},
