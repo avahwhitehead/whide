@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.8](https://github.com/sonrad10/Whide/compare/v0.9.7...v0.9.8) (2021-03-06)
+
+
+### Features
+
+* changed base program to use @whide/whide-types for types common with plugins ([7350593](https://github.com/sonrad10/Whide/commit/73505939bdbfe736d80779a17d717976d3c6e2fb))
+
 ### [0.9.7](https://github.com/sonrad10/Whide/compare/v0.9.6...v0.9.7) (2021-03-05)
 
 
