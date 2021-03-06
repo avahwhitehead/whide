@@ -22,9 +22,9 @@
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import VariableTreeViewer from "@/components/VariableTreeViewer.vue";
-import { TreeConverter, TreeConverterManager } from "@/api/managers/TreeConverterManager";
+import { TreeConverterManager } from "@/api/managers/TreeConverterManager";
 import { BinaryTree } from "@whide/hwhile-wrapper";
-import { ExtendedBinaryTree } from "@/api/types/ExtendedBinaryTree";
+import { ExtendedBinaryTree, TreeConverter } from "@whide/whide-types/";
 import { pluginManager } from "@/utils/globals";
 
 interface DataTypeDescriptor {

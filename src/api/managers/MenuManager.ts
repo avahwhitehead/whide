@@ -1,10 +1,10 @@
-import { Menu, MenuItem } from "@/api/parsers/MenuParser";
+import { InternalMenu, InternalMenuItem } from "@/api/types/InternalMenus";
 
 /**
  * Combine menus from different sources into a single group
  */
 export class MenuManager {
-	readonly _menus : Menu[];
+	readonly _menus : InternalMenu[];
 
 	constructor() {
 		this._menus = [];
@@ -21,7 +21,7 @@ export class MenuManager {
 	 * Add a new menu to the collection
 	 * @param menu	The menu to register
 	 */
-	register(menu: Menu) : void {
+	register(menu: InternalMenu) : void {
 		this._registerMenu(this._menus, menu);
 	}
 
@@ -29,7 +29,7 @@ export class MenuManager {
 	 * Remove a menu from the collection
 	 * @param menu	The menu to remove
 	 */
-	unregister(menu: Menu): void {
+	unregister(menu: InternalMenu): void {
 		this._unregisterMenu(this._menus, menu);
 	}
 
@@ -39,8 +39,8 @@ export class MenuManager {
 	 * @returns	true if the object is a `Menu`, false if it is a `MenuItem`
 	 * @private
 	 */
-	private static _isMenu(itm : Menu|MenuItem) : boolean {
-		return (itm as Menu).children !== undefined;
+	private static _isMenu(itm : InternalMenu|InternalMenuItem) : boolean {
+		return (itm as InternalMenu).children !== undefined;
 	}
 
 	/**
@@ -49,13 +49,13 @@ export class MenuManager {
 	 * @param new_item			The menu to add
 	 * @private
 	 */
-	private _registerMenu(existing_menus : (Menu|MenuItem)[], new_item : Menu) {
+	private _registerMenu(existing_menus : (InternalMenu|InternalMenuItem)[], new_item : InternalMenu) {
 		//See if a menu with the same name exists to combine with
-		let found_menu: Menu | null = null;
+		let found_menu: InternalMenu | null = null;
 		for (let itm of existing_menus) {
 			//Name matches and is a submenu
 			if (MenuManager._isMenu(itm) && itm.name === new_item.name) {
-				found_menu = <Menu>itm;
+				found_menu = <InternalMenu>itm;
 				break;
 			}
 		}
@@ -72,10 +72,10 @@ export class MenuManager {
 		for (let m of new_item.children) {
 			//Register a submenu
 			if (MenuManager._isMenu(m))
-				this._registerMenu(found_menu.children, <Menu>m);
+				this._registerMenu(found_menu.children, <InternalMenu>m);
 			//Register a menu item
 			else
-				this._registerMenuItem(found_menu.children, <MenuItem>m);
+				this._registerMenuItem(found_menu.children, <InternalMenuItem>m);
 		}
 	}
 
@@ -85,7 +85,7 @@ export class MenuManager {
 	 * @param new_item			The menu item to add
 	 * @private
 	 */
-	private _registerMenuItem(existing_menus : (Menu|MenuItem)[], new_item : MenuItem) {
+	private _registerMenuItem(existing_menus : (InternalMenu|InternalMenuItem)[], new_item : InternalMenuItem) {
 		let found : boolean = false;
 		for (let itm of existing_menus) {
 			//Name matches and is not a submenu
@@ -107,7 +107,7 @@ export class MenuManager {
 	 * @param item				The menu item to remove
 	 * @private
 	 */
-	private _unregisterMenu(existing_menus : (Menu|MenuItem)[], item : Menu|MenuItem) : (Menu|MenuItem)[] {
+	private _unregisterMenu(existing_menus : (InternalMenu|InternalMenuItem)[], item : InternalMenu|InternalMenuItem) : (InternalMenu|InternalMenuItem)[] {
 		let isMenu = MenuManager._isMenu(item);
 
 		let i : number = 0;
@@ -122,9 +122,9 @@ export class MenuManager {
 				let existingIsMenu = MenuManager._isMenu(existingMenu);
 				if (isMenu && existingIsMenu) {
 					//Cast to the same type
-					let menu: Menu = <Menu>existingMenu;
+					let menu: InternalMenu = <InternalMenu>existingMenu;
 					//Remove all the child elements
-					for (let child of (<Menu>item).children) {
+					for (let child of (<InternalMenu>item).children) {
 						this._unregisterMenu(menu.children, child);
 					}
 					//Remove this menu if it has no more children
@@ -134,7 +134,7 @@ export class MenuManager {
 					}
 				} else if (!isMenu && !existingIsMenu) {
 					//Check the command matches as well
-					if ((<MenuItem>existingMenu).command === (<MenuItem>item).command) {
+					if ((<InternalMenuItem>existingMenu).command === (<InternalMenuItem>item).command) {
 						//Remove the item
 						existing_menus.splice(i, 1);
 						removed = true;

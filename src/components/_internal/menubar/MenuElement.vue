@@ -11,9 +11,9 @@
 
 <script lang="ts">
 import MenuItemElement from "@/components/_internal/menubar/MenuItemElement.vue";
-import { Menu } from "@/api/parsers/MenuParser";
+import { InternalMenu } from "@/api/types/InternalMenus";
 import Vue from "vue";
-import { PluginInfo } from "@/api/types/PluginInfo";
+import { PluginInfo } from "@/api/PluginInfo";
 
 interface DataTypeInterface {
 	dropdownVisible: boolean;
@@ -26,7 +26,7 @@ export default Vue.extend({
 	},
 	props: {
 		menu: {
-			type: Object as () => Menu,
+			type: Object as () => InternalMenu,
 		}
 	},
 	data() : DataTypeInterface {

@@ -1,20 +1,23 @@
 import { EventEmitter } from "events";
-import { CodeEditorWrapper } from "@/types/codeEditor";
+import {
+	EditorController as EditorControllerInterface,
+	ExtendedCodeEditorWrapper,
+} from "@whide/whide-types";
 
 /**
  *
  */
-export default class EditorController extends EventEmitter {
+export default class EditorController extends EventEmitter implements EditorControllerInterface {
 	/**
 	 * The code editor object
 	 */
-	public readonly editor : CodeEditorWrapper;
+	public readonly editor : ExtendedCodeEditorWrapper;
 
 	/**
 	 *
 	 * @param editor	The code editor
 	 */
-	constructor(editor: CodeEditorWrapper) {
+	constructor(editor: ExtendedCodeEditorWrapper) {
 		super();
 		this.editor = editor;
 	}

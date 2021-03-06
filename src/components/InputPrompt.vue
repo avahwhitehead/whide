@@ -47,7 +47,7 @@
 
 <script lang="ts">
 import vue from "vue";
-import IOController, { InputPromptParams, InputPromptTypes, OutputPromptParams } from "@/api/types/IOController";
+import { IOController, InputPromptParams, InputPromptTypes, OutputPromptParams } from "@whide/whide-types";
 import FilePicker from "@/components/FilePicker.vue";
 import { AbstractInternalFile } from "@/files/InternalFile";
 

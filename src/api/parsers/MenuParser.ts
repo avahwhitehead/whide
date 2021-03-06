@@ -1,15 +1,6 @@
-import { PluginInfo } from "@/api/types/PluginInfo";
-
-export type Menu = {
-	name: string,
-	children: (Menu|MenuItem)[],
-}
-
-export type MenuItem = {
-	name: string,
-	command: string,
-	plugin: PluginInfo,
-};
+import { PluginInfo } from "@/api/PluginInfo";
+import { Menu, MenuItem } from "@whide/whide-types";
+import { InternalMenu, InternalMenuItem } from "@/api/types/InternalMenus";
 
 /**
  * Check whether menus
@@ -75,11 +66,11 @@ function _menuForEach(menus: (Menu | MenuItem)[],
 }
 
 /**
- * Parse a JSON string into a list of Menus.
+ * Convert from a list of module `Menu`s to a list of `InternalMenu`s
  * @param menus
  * @param pluginInfo	PluginInfo object.
  */
-export default function setupMenus(menus: Menu[], pluginInfo : PluginInfo) : Menu[] {
+export default function setupMenus(menus: Menu[], pluginInfo : PluginInfo) : InternalMenu[] {
 	//Check the menus are valid
 	let error = _getError(menus);
 	if (error) throw new Error(`Invalid menus: "${error}"`);
@@ -87,10 +78,10 @@ export default function setupMenus(menus: Menu[], pluginInfo : PluginInfo) : Men
 	//Link to the pluginInfo from eachMenuItem
 	_menuForEach(menus, () => {},
 		(m: MenuItem) => {
-			m.plugin = pluginInfo;
+			(m as InternalMenuItem).plugin = pluginInfo;
 		}
 	);
 
 	//Return the object
-	return menus;
+	return menus as InternalMenu[];
 }
