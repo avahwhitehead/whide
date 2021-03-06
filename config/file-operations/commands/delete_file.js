@@ -1,4 +1,6 @@
 const { _displayError } = require("../utils");
+//eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { PluginFunctionParameters } = require("@whide/whide-types");
 
 module.exports.name = "run_delete";
 module.exports.args = [
@@ -9,7 +11,12 @@ module.exports.args = [
 	},
 ];
 
-module.exports.run = async function ({args, ioController, fs}) {
+/**
+ * @param props {PluginFunctionParameters}
+ * @returns {Promise<void>}
+ */
+module.exports.run = async function(props) {
+	const { args, ioController, fs } = props;
 	const filePath = args["path"];
 	//See if the path is a file or a folder
 	fs.stat(filePath, (err, stat) => {

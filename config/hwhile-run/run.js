@@ -1,4 +1,6 @@
 const { HWhileConnector } = require("@whide/hwhile-wrapper");
+//eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { PluginFunctionParameters } = require("@whide/whide-types");
 
 module.exports.name = "run_code";
 module.exports.args = [
@@ -9,7 +11,12 @@ module.exports.args = [
 	},
 ];
 
-module.exports.run = async function({ args, ioController, runPanelController, path }) {
+/**
+ * @param props {PluginFunctionParameters}
+ * @returns {Promise<void>}
+ */
+module.exports.run = async function(props) {
+	const { args, ioController, runPanelController, path } = props;
 	const filePath = args["path"];
 
 	let expr = await ioController.getInput({

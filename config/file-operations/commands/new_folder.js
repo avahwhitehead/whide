@@ -1,4 +1,6 @@
 const { _displayError, _exists } = require("../utils");
+//eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { PluginFunctionParameters } = require("@whide/whide-types");
 
 module.exports.name = "run_new_folder";
 module.exports.args = [
@@ -16,7 +18,12 @@ module.exports.args = [
 	}
 ];
 
-module.exports.run = async function ({args, ioController, fs, path}) {
+/**
+ * @param props {PluginFunctionParameters}
+ * @returns {Promise<void>}
+ */
+module.exports.run = async function (props) {
+	const {args, ioController, fs, path} = props;
 	const parent = args["parent"];
 	const name = args["name"];
 	//Build the full directory path
