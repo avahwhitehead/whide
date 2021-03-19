@@ -25,6 +25,20 @@ interface DataTypesDescriptor {
 	parsed_tree : BinaryTree;
 }
 
+/**
+ * Choose the starting input tree value, between the URL parameter and a default.
+ * @param t				The `t` parameter provided in the URL
+ * @param defaultTree	The default to use if the URL does not contain a valid parameter
+ */
+function chooseInputTree(t: string|(string|null)[], defaultTree: string) : string {
+	//Not provided, or is the empty string
+	if (!t) return defaultTree;
+	//Is provided
+	if (typeof t === "string") return t;
+	//Is provided multiple times - use the first instance, falling back on the default
+	return t.find(e => !!e) || defaultTree;
+}
+
 export default Vue.extend({
 	name: 'TreeWindow',
 	components: {
@@ -32,7 +46,7 @@ export default Vue.extend({
 	},
 	data() : DataTypesDescriptor {
 		return {
-			tree_input: "<nil.<nil.nil>>",
+			tree_input: chooseInputTree(this.$route.query.t, "<nil.<nil.nil>>"),
 			cwd: '.',
 			parsed_tree: {
 				left: null,
@@ -40,8 +54,8 @@ export default Vue.extend({
 			},
 		}
 	},
-	computed: {
-
+	mounted() {
+		this.showTree();
 	},
 	methods: {
 		showTree() : void {

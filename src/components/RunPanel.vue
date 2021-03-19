@@ -12,7 +12,7 @@
 				</div>
 
 				<div class="output-holder">
-					<code class="output" v-if="instanceController">{{ instanceController.output }}</code>
+					<OutputElement v-if="instanceController" :value="instanceController.output" />
 				</div>
 			</div>
 
@@ -31,6 +31,7 @@ import { DebuggerControllerInterface } from "@whide/whide-types";
 import Container from "@/components/Container.vue";
 import VariableTable from "@/components/_internal/runPanel/VariableTable.vue";
 import { BinaryTree } from "@whide/hwhile-wrapper";
+import OutputElement from "@/components/_internal/runPanel/OutputElement.vue";
 
 interface DataTypeDescriptor {
 	runPanelController: RunPanelController;
@@ -43,6 +44,7 @@ export const runPanelController = new RunPanelController();
 export default Vue.extend({
 	name: 'RunPanel',
 	components: {
+		OutputElement,
 		Container,
 		TabbedPanel,
 		VariableTable,
@@ -105,11 +107,6 @@ export default Vue.extend({
 	overflow-wrap: anywhere;
 	overflow-y: auto;
 	flex: 1;
-}
-
-.output {
-	white-space: pre-wrap;
-	max-width: 100%;
 }
 
 .run-content, .variable-viewer {
