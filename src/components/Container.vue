@@ -72,9 +72,7 @@ export default Vue.extend({
 	},
 	methods: {
 		onIconClick(panel: string, icon: string) {
-			//TODO: Is this the best event name format?
-			const eventName = `${panel}-${icon}`;
-			this.$emit(eventName);
+			this.$emit('iconClick', icon);
 		}
 	}
 });

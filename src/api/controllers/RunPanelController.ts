@@ -1,5 +1,8 @@
 import { Transform } from "stream";
 import { RunPanelController as RunPanelControllerInterface } from "@whide/whide-types";
+import { CustomDict } from "@/types/CustomDict";
+import { BinaryTree } from "@whide/hwhile-wrapper";
+import { DebuggerControllerInterface } from "@whide/whide-types";
 
 /**
  * Controller for the "run" panel.
@@ -79,6 +82,8 @@ export class RunPanelInstanceController {
 	private _name: string;
 	private _output: string;
 	private readonly _stream: Transform;
+	private _variables : CustomDict<BinaryTree>;
+	private _debuggerCallbackHandler?: DebuggerControllerInterface;
 
 	/**
 	 *
@@ -88,6 +93,7 @@ export class RunPanelInstanceController {
 		this._name = name;
 		this._output = '';
 		this._stream = new Transform();
+		this._variables = {};
 
 		//Keep the written data as-is (output in same form as input)
 		this._stream._transform = function (chunk, encoding, callback) {
@@ -113,15 +119,15 @@ export class RunPanelInstanceController {
 		//Convert to a string
 		const str = chunk.toString();
 		//Append to the end of the output
-		this._output = this._output + str;
+		this._output += str;
 	}
 
 	/**
 	 * Handle the stream closing
 	 * @private
 	 */
-	private _onClose() {
-		//TODO: Handle stream close
+	private _onClose = () => {
+		this._output += "\n[Output stream closed]";
 	}
 
 	get stream(): Transform {
@@ -138,5 +144,21 @@ export class RunPanelInstanceController {
 
 	set name(value: string) {
 		this._name = value;
+	}
+
+	get variables() : CustomDict<BinaryTree> {
+		return this._variables;
+	}
+
+	set variables(variables : CustomDict<BinaryTree>) {
+		this._variables = variables;
+	}
+
+	get debuggerCallbackHandler(): DebuggerControllerInterface|undefined {
+		return this._debuggerCallbackHandler;
+	}
+
+	set debuggerCallbackHandler(value: DebuggerControllerInterface|undefined) {
+		this._debuggerCallbackHandler = value;
 	}
 }

@@ -82,11 +82,6 @@ function wrapExtendedCodeEditor(_editor : CodeEditorWrapper) : ExtendedCodeEdito
 		editorWrapper: _editor,
 		..._editor,
 
-		_breakpoints: breakpoints,
-		_errors: errors,
-		_infos: infos,
-		_warnings: warnings,
-
 		addError:
 			async (line: number|CodeMirror.LineHandle): Promise<CodeMirror.LineWidget> => makeWidget(_editor, line, 'error', errors),
 		addInfo:
@@ -126,6 +121,19 @@ function wrapExtendedCodeEditor(_editor : CodeEditorWrapper) : ExtendedCodeEdito
 			}
 			//Add/remove the marker to/from the gutter
 			await _editor.setGutterMarker(line, "breakpoints", marker);
+		},
+		async getBreakpoints(): Promise<number[]> {
+			let r : number[] = [];
+			for (let handle of breakpoints) {
+				//Convert the line handle to a number
+				const n : number|null = await _editor.getLineNumber(handle);
+				//If the line handle is valid, convert it to 1-index and add it to the result list
+				if (n !== null) r.push(n + 1);
+			}
+			return r;
+		},
+		async getBreakpointLines(): Promise<CodeMirror.LineHandle[]> {
+			return breakpoints;
 		},
 	};
 }
