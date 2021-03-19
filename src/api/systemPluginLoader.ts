@@ -43,6 +43,7 @@ export async function run_load(pluginManager : PluginManager) : Promise<void> {
 		try {
 			pluginModule = requireContext(modulePath);
 		} catch (e) {
+			console.error(e);
 			throw new Error(`Couldn't load system plugin "${modulePath}"`);
 		}
 
