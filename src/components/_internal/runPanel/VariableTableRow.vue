@@ -1,7 +1,7 @@
 <template>
 	<tr class="VariableTableRow">
 		<td class="name-cell" v-text="name" />
-		<td class="val-cell" :title="treeString" v-text="computedVal" />
+		<td class="val-cell" :title="treeString" v-text="computedVal" @click="onClick" />
 		<td class="select-cell">
 			<label>
 				<select v-model="selectModel">
@@ -66,7 +66,10 @@ export default Vue.extend({
 			else tree = value;
 			this.computedVal = extendedTreeAsString(tree);
 			this.treeString = extendedTreeAsString(value);
-		}
+		},
+		onClick() {
+			window.open('/trees?t=' + this.treeString, '_blank', "height=400");
+		},
 	},
 	watch: {
 		treeConverter(converter: TreeConverter) {
