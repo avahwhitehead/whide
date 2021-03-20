@@ -1,15 +1,15 @@
 {
   "name": "@whide/hwhile-run",
-  "type": "module",
   "version": "1.0.0",
   "description": "Run/debug plugin for the Whide editor, using the HWhile interpreter",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Alaric Whitehead",
   "license": "MIT",
   "dependencies": {
-    "@whide/hwhile-wrapper": "^1.4.0"
+    "@whide/hwhile-wrapper": "^1.5.3"
   }
 }

@@ -1,15 +1,17 @@
-import * as run from "./run.js";
+const run = require("./run.js");
+const debug = require("./debug.js");
 
-export const menus = [
+module.exports.menus = [
 	{
 		"name": "Run",
 		"children": [
 			{ "name": "Run", "command": "run_code" },
-			{ "name": "Debug", "command": "run_code" }
+			{ "name": "Debug", "command": "debug_code" }
 		]
 	}
 ];
 
-export default [
-	run
+module.exports.default = [
+	run,
+	debug,
 ];

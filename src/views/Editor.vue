@@ -6,7 +6,6 @@
 			</div>
 			<div class="right">
 				<button @click="openTreeViewer">Tree Viewer</button>
-				<button @click="save" :disabled="!focused_file">Save File</button>
 				<button @click="download" :disabled="!focused_file">Download File</button>
 			</div>
 		</div>
@@ -18,8 +17,8 @@
 
 			<Container class="middle code-editor">
 				<CodeEditorElement
-					:openFiles="openFiles"
 					:focused="focused_file"
+					@controller="onEditorControllerChange"
 					@editorChange="onEditorObjectChange"
 					@file-focus="onOpenFileChange"
 				/>
@@ -51,8 +50,8 @@ import PluginToggler from "@/components/PluginToggler.vue";
 import RunPanel, { runPanelController } from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 //Other imports
-import EditorController from "@/api/controllers/EditorController";
 import {
+	EditorController,
 	ExtendedCodeEditorWrapper,
 	IOController,
 	PluginFunction,
@@ -70,8 +69,8 @@ import { pluginManager, vars } from "@/utils/globals";
  */
 interface DataTypesDescriptor {
 	focused_file? : InternalFile;
-	openFiles : CustomDict<InternalFile>;
 	codeEditor? : ExtendedCodeEditorWrapper;
+	editorController?: EditorController;
 	ioController? : IOController;
 	cwd: string;
 }
@@ -95,8 +94,8 @@ export default Vue.extend({
 	data() : DataTypesDescriptor {
 		return {
 			focused_file: undefined,
-			openFiles: {},
 			codeEditor: undefined,
+			editorController: undefined,
 			ioController: undefined,
 			cwd: vars.cwd,
 		}
@@ -111,30 +110,18 @@ export default Vue.extend({
 			window.open('/trees', '_blank', "height=400");
 		},
 		async openFile(abstractFile: AbstractInternalFile) : Promise<void> {
-			//Don't edit folders
-			if (abstractFile.folder) return;
-			//Cast to a file
-			let file : InternalFile = abstractFile as InternalFile;
-			//Don't open the same file twice
-			if (!this.openFiles[file.name]) {
-				//Read the file
-				await file.read();
-				//Open the file in the editor
-				Vue.set(this.openFiles, file.name, file);
-			} else {
-				this.focused_file = file;
-			}
+			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
+			this.editorController.open(abstractFile.fullPath);
 		},
 		onOpenFileChange(fileData : InternalFile|undefined) : void {
 			//Keep track of the currently focused file
 			this.focused_file = fileData || undefined;
 		},
+		onEditorControllerChange(editorController : EditorController) : void {
+			this.editorController = editorController;
+		},
 		onEditorObjectChange(editor : ExtendedCodeEditorWrapper) : void {
 			this.codeEditor = editor;
-		},
-		async save() : Promise<void> {
-			if (this.focused_file) this.focused_file.write();
-			else console.log(`No file open to save`);
 		},
 		download() : void {
 			if (this.focused_file) {
@@ -171,18 +158,16 @@ export default Vue.extend({
 				args[arg.name] = val;
 			}
 
-			//Make sure the code editor exists (this should never run)
+			//Make sure the code editor and controller are defined (these should never happen)
 			if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
-
-			//Make the editor controller to pass to the plugin
-			let editorController: EditorController = new EditorController(this.codeEditor);
+			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
 
 			let fsContainer : CustomFsContainer = await getFsContainer();
 
 			//Run the function
 			const funcParameters : PluginFunctionParameters = {
 				args: args,
-				editorController: editorController,
+				editorController: this.editorController,
 				ioController: this.ioController,
 				runPanelController: runPanelController,
 				fs: fsContainer.fs,

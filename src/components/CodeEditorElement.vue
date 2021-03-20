@@ -18,8 +18,14 @@ import Vue, { PropType } from "vue";
 import TabbedPanel from "@/components/TabbedPanel.vue";
 import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
 import BreakpointWidget from "./_internal/codeEditor/BreakpointWidget.vue";
-import { CodeEditorWrapper, ExtendedCodeEditorWrapper, LineWidgetType } from "@whide/whide-types/";
+import {
+	CodeEditorWrapper,
+	EditorController as EditorControllerInterface,
+	ExtendedCodeEditorWrapper,
+	LineWidgetType
+} from "@whide/whide-types/";
 import { wrapEditor } from "@/types/codeEditor";
+import { EventEmitter } from "events";
 //The code editor
 import CodeMirror from "codemirror";
 //CodeMirror styling
@@ -27,11 +33,13 @@ import 'codemirror/lib/codemirror.css';
 //While language syntax definition
 import WHILE from "@/assets/whileSyntaxMode";
 import { CustomDict } from "@/types/CustomDict";
-import { InternalFile } from "@/files/InternalFile";
+import { AbstractInternalFile, InternalFile, pathToFile } from "@/files/InternalFile";
 
 interface DataType {
-	selectedFile: InternalFile|undefined,
-	editor: ExtendedCodeEditorWrapper|undefined,
+	selectedFile: InternalFile|undefined;
+	editor: ExtendedCodeEditorWrapper|undefined;
+	editorController: EditorControllerInterface|undefined;
+	openFiles: InternalFile[];
 }
 
 async function addWidget(editor: CodeEditorWrapper, line: number|CodeMirror.LineHandle, element: HTMLElement) : Promise<CodeMirror.LineWidget> {
@@ -74,11 +82,6 @@ function wrapExtendedCodeEditor(_editor : CodeEditorWrapper) : ExtendedCodeEdito
 		editorWrapper: _editor,
 		..._editor,
 
-		_breakpoints: breakpoints,
-		_errors: errors,
-		_infos: infos,
-		_warnings: warnings,
-
 		addError:
 			async (line: number|CodeMirror.LineHandle): Promise<CodeMirror.LineWidget> => makeWidget(_editor, line, 'error', errors),
 		addInfo:
@@ -119,7 +122,49 @@ function wrapExtendedCodeEditor(_editor : CodeEditorWrapper) : ExtendedCodeEdito
 			//Add/remove the marker to/from the gutter
 			await _editor.setGutterMarker(line, "breakpoints", marker);
 		},
+		async getBreakpoints(): Promise<number[]> {
+			let r : number[] = [];
+			for (let handle of breakpoints) {
+				//Convert the line handle to a number
+				const n : number|null = await _editor.getLineNumber(handle);
+				//If the line handle is valid, convert it to 1-index and add it to the result list
+				if (n !== null) r.push(n + 1);
+			}
+			return r;
+		},
+		async getBreakpointLines(): Promise<CodeMirror.LineHandle[]> {
+			return breakpoints;
+		},
 	};
+}
+
+/**
+ * Partially implemented EditorController object to allow controlling the editor from within plugins
+ */
+abstract class EditorController extends EventEmitter implements EditorControllerInterface {
+	private readonly _editor : ExtendedCodeEditorWrapper;
+	protected _focusedFile? : InternalFile;
+	protected _openFiles : InternalFile[];
+
+	protected constructor(editor: ExtendedCodeEditorWrapper, openFiles: InternalFile[]) {
+		super();
+		this._editor = editor;
+		this._openFiles = openFiles;
+	}
+
+	get editor() : ExtendedCodeEditorWrapper {
+		return this._editor
+	}
+
+	get focusedFile() : string|undefined {
+		return this._focusedFile?.fullPath
+	}
+
+	abstract get openFiles() : string[];
+
+	abstract open(filePath: string) : Promise<void>;
+	abstract close(filePath: string) : Promise<void>;
+	abstract saveFiles() : Promise<void>;
 }
 
 export default Vue.extend({
@@ -128,10 +173,6 @@ export default Vue.extend({
 		TabbedPanel,
 	},
 	props: {
-		openFiles: {
-			type: Object as PropType<CustomDict<InternalFile>>,
-			required: true,
-		},
 		focused: {
 			type: Object as PropType<InternalFile>,
 			default: undefined,
@@ -143,6 +184,8 @@ export default Vue.extend({
 			//The code editor object.
 			//Is undefined until the object is created in `mounted`
 			editor: undefined,
+			editorController: undefined,
+			openFiles: [],
 		}
 	},
 	mounted() {
@@ -175,10 +218,56 @@ export default Vue.extend({
 			if (!this.editor) throw new Error("Couldn't get editor");
 			this.editor.toggleBreakpoint(line)
 		});
+
+		//Create the editor controller object
+		this.editorController = new (class extends EditorController {
+			constructor(editor: ExtendedCodeEditorWrapper, openFiles: InternalFile[]) {
+				super(editor, openFiles);
+			}
+			get openFiles() : string[] {
+				return Object.values(this._openFiles).map(f => f.fullPath);
+			}
+			async close(filePath: string): Promise<void> {
+				this.emit('tab-close', filePath);
+			}
+			async open(filePath: string): Promise<void> {
+				//Get the internal representation from the path
+				const abstractFile : AbstractInternalFile = await pathToFile(filePath);
+				//Don't edit folders
+				if (abstractFile.folder) return;
+				//Cast to a file
+				let file : InternalFile = abstractFile as InternalFile;
+				//Don't open the same file twice
+				if (!this._isOpen(file.fullPath)) {
+					//Read the file
+					await file.read();
+					//Open the file in the editor
+					this._openFiles.push(file);
+				}
+				//Focus on this file
+				this._focusedFile = file;
+				this.emit('tab-focus', filePath);
+			}
+			async saveFiles(): Promise<void> {
+				for (const file of this._openFiles) await file.write();
+			}
+			private _isOpen(filePath: string) : boolean{
+				return !!this._openFiles.find(f => f.fullPath === filePath);
+			}
+		})(this.editor, this.openFiles);
+
+		this.editorController.on('tab-close', (filePath: string) => {
+			const file = this._indexFromFilePath(filePath);
+			this.onTabClose(this.fileNames[file]);
+		});
+		this.editorController.on('tab-focus', (filePath: string) => {
+			const file = this._indexFromFilePath(filePath);
+			this.onTabChange(this.fileNames[file]);
+		});
 	},
 	computed: {
 		fileNames() : string[] {
-			return Object.keys(this.openFiles);
+			return this.openFiles.map(file => file.name);
 		},
 		focusedName() : string|undefined {
 			return this.selectedFile ? this.selectedFile.name : undefined;
@@ -196,7 +285,7 @@ export default Vue.extend({
 		onTabChange(fileName : string|undefined) : void {
 			//Update the selected file
 			this.selectedFile = undefined;
-			if (fileName) this.selectedFile = this.openFiles[fileName];
+			if (fileName) this.selectedFile = this.openFiles[this._indexFromFileName(fileName)];
 			//Alert the external listeners
 			this.$emit("file-focus", this.selectedFile);
 		},
@@ -205,9 +294,17 @@ export default Vue.extend({
 		 * @param fileName		The tab which has closed
 		 */
 		onTabClose(fileName: string) : void {
-			//Remove the file from the dictionary
-			//See: https://vuejs.org/2016/02/06/common-gotchas/#Why-isn%E2%80%99t-the-DOM-updating
-			Vue.delete(this.openFiles, fileName);
+			this.openFiles.splice(this._indexFromFileName(fileName), 1);
+		},
+
+		_indexFromFileName(fileName: string) : number {
+			return this.fileNames.indexOf(fileName);
+		},
+		_indexFromFilePath(filePath: string) : number {
+			for (let i = 0 ; i < this.openFiles.length; i++) {
+				if (this.openFiles[i].fullPath === filePath) return i;
+			}
+			return -1;
 		},
 	},
 	watch: {
@@ -226,7 +323,19 @@ export default Vue.extend({
 		selectedFile(newFile: InternalFile|undefined) {
 			if (!newFile) this.updateCode("");
 			else this.updateCode(newFile.content || "");
-		}
+		},
+		/**
+		 * Emit an event when the editor controller object changes
+		 */
+		editorController(newController) {
+			this.$emit("controller", newController);
+		},
+		/**
+		 * Emit an event when the open files list changes
+		 */
+		openFiles(newOpenFiles: CustomDict<InternalFile>) {
+			this.$emit('filesChange', newOpenFiles);
+		},
 	}
 });
 </script>
