@@ -25,7 +25,7 @@ function getTreeSegments(str: string) : Segment[] {
 	let res : Segment[] = [];
 	//Iterate over each segment of the string which matches the tree regex
 	let matchArray : RegExpExecArray|null;
-	while ((matchArray = /(?:[<>.]|nil)+/.exec(str)) !== null) {
+	while ((matchArray = /(?:<[<nil.>]+>|nil)+/.exec(str)) !== null) {
 		//Add any text before the start of the tree as a non-tree segment
 		const before = str.substring(0, matchArray.index);
 		if (before) res.push({content: before, isTree: false});
@@ -61,7 +61,15 @@ export default Vue.extend({
 			if (!segment.isTree) return;
 			//Open the tree in a tree viewer
 			window.open('/trees?t=' + segment.content, '_blank', "height=400");
-		}
+		},
+	},
+	updated() {
+		this.$nextTick(() => {
+			//Scroll to the last child element
+			if (this.$el.lastElementChild) {
+				this.$el.lastElementChild.scrollIntoView();
+			}
+		});
 	},
 })
 </script>

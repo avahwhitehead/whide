@@ -87,15 +87,18 @@ export default Vue.extend({
 }
 
 .content {
+	display: flex;
+	flex-direction: column;
 	flex: 1;
 	text-align: left;
-	overflow-wrap: anywhere;
-	overflow-y: auto;
-	width: 100%;
+	overflow: inherit;
 }
 
 .middle {
-	width: 100%;
+	display: flex;
+	flex: 1;
+	flex-direction: row;
+	overflow: inherit;
 }
 
 .top.buttons, .bottom.buttons {
@@ -118,10 +121,12 @@ export default Vue.extend({
 
 .left.buttons {
 	border-right: 1px solid black;
+	float: left;
 }
 
 .right.buttons {
 	border-left: 1px solid black;
+	float: right;
 }
 
 .left.buttons div, .right.buttons div, .top.buttons div, .bottom.buttons div {

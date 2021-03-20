@@ -15,7 +15,7 @@
 				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)"/>
 			</Container>
 
-			<Container class="middle code-editor">
+			<Container class="middle code-editor no-scroll">
 				<CodeEditorElement
 					:focused="focused_file"
 					@controller="onEditorControllerChange"
@@ -29,9 +29,9 @@
 			</Container>
 		</div>
 
-		<div class="footer">
-			<run-panel/>
-		</div>
+		<Container class="footer">
+			<run-panel />
+		</Container>
 
 		<InputPrompt :cwd="cwd" @controller="c => this.ioController = c" />
 	</div>
@@ -212,25 +212,33 @@ export default Vue.extend({
 	float: right;
 }
 
+.no-scroll {
+	overflow: hidden;
+}
 
 .body {
-	flex-grow: 1;
+	flex: 1;
 	display: flex;
 	min-height: 0;
 	height: 100%;
 }
 .body .left {
+	min-width: 10em;
 	width: 10%;
 }
 .body .right {
+	min-width: 10em;
 	width: 15%;
 }
 .body .middle {
 	flex: 1;
+	display: flex;
+	flex-direction: column;
 }
 
 .footer {
 	height: fit-content;
+	max-height: 30%;
 }
 
 /*

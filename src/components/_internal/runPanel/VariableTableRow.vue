@@ -101,8 +101,10 @@ export default Vue.extend({
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	text-decoration: underline;
 	max-width: 15em;
+}
+.VariableTableRow .val-cell:hover {
+	text-decoration: underline;
 }
 .VariableTableRow .select-cell {
 

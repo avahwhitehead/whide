@@ -7,8 +7,10 @@
 			@change="onTabChange"
 			@close="onTabClose"
 		/>
-		<!-- This div will hold the code editor -->
-		<div ref="codeHolder" class="codeHolder"></div>
+		<div class="codeHolder-container">
+			<!-- This div will hold the code editor -->
+			<div ref="codeHolder" class="codeHolder"></div>
+		</div>
 	</div>
 </template>
 
@@ -197,6 +199,7 @@ export default Vue.extend({
 			value: "",
 			mode: WHILE,
 		});
+		codeMirror.setSize("100%", "100%");
 		//Wrap the editor in an asynchronous wrapper
 		this.editor = wrapExtendedCodeEditor(wrapEditor(codeMirror));
 
@@ -294,7 +297,11 @@ export default Vue.extend({
 		 * @param fileName		The tab which has closed
 		 */
 		onTabClose(fileName: string) : void {
-			this.openFiles.splice(this._indexFromFileName(fileName), 1);
+			const index : number = this._indexFromFileName(fileName);
+			//Save the file
+			this.openFiles[index].write();
+			//Close the tab
+			this.openFiles.splice(index, 1);
 		},
 
 		_indexFromFileName(fileName: string) : number {
@@ -355,14 +362,21 @@ export default Vue.extend({
 
 <style scoped>
 .editorHolder {
-	height: 100%;
 	display: flex;
+	flex: 1;
 	flex-direction: column;
+	overflow: hidden;
+}
+
+.codeHolder-container {
+	overflow-y: auto;
+	display: flex;
+	flex: 1;
 }
 
 .codeHolder {
 	text-align: left;
-	height: 100%;
+	flex: 1;
 }
 
 .editor-tabs {
