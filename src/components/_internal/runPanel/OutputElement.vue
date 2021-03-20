@@ -61,7 +61,15 @@ export default Vue.extend({
 			if (!segment.isTree) return;
 			//Open the tree in a tree viewer
 			window.open('/trees?t=' + segment.content, '_blank', "height=400");
-		}
+		},
+	},
+	updated() {
+		this.$nextTick(() => {
+			//Scroll to the last child element
+			if (this.$el.lastElementChild) {
+				this.$el.lastElementChild.scrollIntoView();
+			}
+		});
 	},
 })
 </script>
