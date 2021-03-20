@@ -16,7 +16,7 @@
 				</div>
 			</div>
 
-			<div class="variable-viewer">
+			<div class="variable-viewer" v-if="variables.length">
 				<VariableTable :variables="variables" />
 			</div>
 		</div>
