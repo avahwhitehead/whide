@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.9](https://github.com/sonrad10/Whide/compare/v0.9.8...v0.9.9) (2021-03-20)
+
+
+### Features
+
+* added support for debugging programs ([f166021](https://github.com/sonrad10/Whide/commit/f1660215f2e3349386ba96c6792f4e892815f3ca))
+* added support for opening any tree string in the output console in a tree viewer ([6435a3c](https://github.com/sonrad10/Whide/commit/6435a3c62f9e88972fdaf7c88b0f3526c0942ed9))
+* allowed control over opening/closing tabs in plugins ([aa51b1e](https://github.com/sonrad10/Whide/commit/aa51b1e9bfb00444c00c0edf7d8ab3c564abd697))
+
+
+### Bug Fixes
+
+* added support for clicking on any tree in the variable table to open it in a tree viewer ([4353c30](https://github.com/sonrad10/Whide/commit/4353c3082c57df0090c830237690d7dcdfa5ba04))
+* the variable table is hidden if it doesn't have any data to show ([e8507af](https://github.com/sonrad10/Whide/commit/e8507afb35acee88eb2a973d359bca59dfc32e6a))
+* updated config directory path to match with the package name ([0743af1](https://github.com/sonrad10/Whide/commit/0743af15c3d7d98e459a9d01da244e52519350d8))
+
 ### [0.9.8](https://github.com/sonrad10/Whide/compare/v0.9.7...v0.9.8) (2021-03-06)
 
 
