@@ -90,8 +90,7 @@ export default Vue.extend({
 	display: flex;
 	flex: 1;
 	text-align: left;
-	overflow-wrap: anywhere;
-	overflow-y: auto;
+	overflow: inherit;
 	width: 100%;
 }
 
@@ -100,6 +99,7 @@ export default Vue.extend({
 	display: flex;
 	flex: 1;
 	flex-direction: column;
+	overflow: inherit;
 }
 
 .top.buttons, .bottom.buttons {

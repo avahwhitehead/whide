@@ -7,8 +7,10 @@
 			@change="onTabChange"
 			@close="onTabClose"
 		/>
-		<!-- This div will hold the code editor -->
-		<div ref="codeHolder" class="codeHolder"></div>
+		<div class="codeHolder-container">
+			<!-- This div will hold the code editor -->
+			<div ref="codeHolder" class="codeHolder"></div>
+		</div>
 	</div>
 </template>
 
@@ -359,6 +361,13 @@ export default Vue.extend({
 	display: flex;
 	flex: 1;
 	flex-direction: column;
+	overflow: hidden;
+}
+
+.codeHolder-container {
+	overflow-y: auto;
+	display: flex;
+	flex: 1;
 }
 
 .codeHolder {

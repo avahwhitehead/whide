@@ -15,7 +15,7 @@
 				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)"/>
 			</Container>
 
-			<Container class="middle code-editor">
+			<Container class="middle code-editor no-scroll">
 				<CodeEditorElement
 					:focused="focused_file"
 					@controller="onEditorControllerChange"
@@ -212,6 +212,9 @@ export default Vue.extend({
 	float: right;
 }
 
+.no-scroll {
+	overflow: hidden;
+}
 
 .body {
 	flex: 1;
@@ -220,9 +223,11 @@ export default Vue.extend({
 	height: 100%;
 }
 .body .left {
+	min-width: 10em;
 	width: 10%;
 }
 .body .right {
+	min-width: 10em;
 	width: 15%;
 }
 .body .middle {
