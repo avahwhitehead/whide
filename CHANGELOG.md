@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.10](https://github.com/sonrad10/Whide/compare/v0.9.9...v0.9.10) (2021-03-20)
+
+
+### Features
+
+* made files save before closing the tab ([0b09a95](https://github.com/sonrad10/Whide/commit/0b09a959c3d1ae259f15125e65791effad876b79))
+* made output panel automatically scroll to the end of the output when updated ([6530d6c](https://github.com/sonrad10/Whide/commit/6530d6cfce20c5c23b9806a0515b5b34206607df))
+* made the code editor fill 100% of its height ([da165dd](https://github.com/sonrad10/Whide/commit/da165ddc152c488d6aa303091faf4c0adc0bc60d))
+
+
+### Bug Fixes
+
+* made output panel tabs stay fixed while everything else scrolls ([5c0e2f5](https://github.com/sonrad10/Whide/commit/5c0e2f54c4f6c92b721d2c3c01dcfbebd03898b8))
+* made variable table row underline behave like the output panel ([53bb04f](https://github.com/sonrad10/Whide/commit/53bb04f011cca87afdcac49c8910c735702becaf))
+* scrolling the editor no longer hides the open tabs ([413deaf](https://github.com/sonrad10/Whide/commit/413deafad9a3f46faf41e7c5c2f11d712d671450))
+* stopped output panel recognising '...' etc as a tree (now has to be `nil` or be surrounded by `<>`) ([53779f4](https://github.com/sonrad10/Whide/commit/53779f4ff6a57352c200036c7a67e8d51183343b))
+
 ### [0.9.9](https://github.com/sonrad10/Whide/compare/v0.9.8...v0.9.9) (2021-03-20)
 
 
