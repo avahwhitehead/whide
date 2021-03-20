@@ -197,6 +197,7 @@ export default Vue.extend({
 			value: "",
 			mode: WHILE,
 		});
+		codeMirror.setSize("100%", "100%");
 		//Wrap the editor in an asynchronous wrapper
 		this.editor = wrapExtendedCodeEditor(wrapEditor(codeMirror));
 
@@ -355,14 +356,14 @@ export default Vue.extend({
 
 <style scoped>
 .editorHolder {
-	height: 100%;
 	display: flex;
+	flex: 1;
 	flex-direction: column;
 }
 
 .codeHolder {
 	text-align: left;
-	height: 100%;
+	flex: 1;
 }
 
 .editor-tabs {

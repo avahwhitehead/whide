@@ -87,6 +87,7 @@ export default Vue.extend({
 }
 
 .content {
+	display: flex;
 	flex: 1;
 	text-align: left;
 	overflow-wrap: anywhere;
@@ -96,6 +97,9 @@ export default Vue.extend({
 
 .middle {
 	width: 100%;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
 }
 
 .top.buttons, .bottom.buttons {

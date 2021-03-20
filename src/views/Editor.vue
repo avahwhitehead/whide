@@ -214,7 +214,7 @@ export default Vue.extend({
 
 
 .body {
-	flex-grow: 1;
+	flex: 1;
 	display: flex;
 	min-height: 0;
 	height: 100%;
@@ -227,6 +227,8 @@ export default Vue.extend({
 }
 .body .middle {
 	flex: 1;
+	display: flex;
+	flex-direction: column;
 }
 
 .footer {
