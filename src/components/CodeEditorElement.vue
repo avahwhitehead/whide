@@ -297,7 +297,11 @@ export default Vue.extend({
 		 * @param fileName		The tab which has closed
 		 */
 		onTabClose(fileName: string) : void {
-			this.openFiles.splice(this._indexFromFileName(fileName), 1);
+			const index : number = this._indexFromFileName(fileName);
+			//Save the file
+			this.openFiles[index].write();
+			//Close the tab
+			this.openFiles.splice(index, 1);
 		},
 
 		_indexFromFileName(fileName: string) : number {
