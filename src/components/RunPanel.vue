@@ -1,24 +1,27 @@
 <template>
-	<Container :left="['play', 'step-forward', 'stop']" @iconClick="onIconClick">
+	<Container
+		:left="['play', 'step-forward', 'stop']"
+		@iconClick="onIconClick"
+	>
 		<div class="DebuggerPanel">
-			<div class="run-content">
-				<div class="tabs-holder">
-					<TabbedPanel
-						:names="runPanelController.names"
-						:selected-tab="selectedTab"
-						@change="onTabChange"
-						@close="onTabClose"
-					/>
-				</div>
+		<div class="tabs-holder">
+			<TabbedPanel
+				:names="runPanelController.names"
+				:selected-tab="selectedTab"
+				@change="onTabChange"
+				@close="onTabClose"
+			/>
+		</div>
 
-				<div class="output-holder">
-					<OutputElement v-if="instanceController" :value="instanceController.output" />
-				</div>
+		<div class="run-panel-body">
+			<div class="output-holder">
+				<OutputElement v-if="instanceController" :value="instanceController.output" />
 			</div>
 
 			<div class="variable-viewer" v-if="variables.length">
 				<VariableTable :variables="variables" />
 			</div>
+		</div>
 		</div>
 	</Container>
 </template>
@@ -97,20 +100,29 @@ export default Vue.extend({
 
 
 <style scoped>
-.run-content {
+.DebuggerPanel {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: hidden;
+}
+
+.run-panel-body {
 	display: flex;
 	flex-direction: row;
+	flex: 1;
+	overflow-y: auto;
+}
+
+.tabs-holder {
+
 }
 
 .output-holder {
 	text-align: left;
 	overflow-wrap: anywhere;
-	overflow-y: auto;
 	flex: 1;
-}
-
-.run-content, .variable-viewer {
-	display: inline-block;
+	margin-left: 10px;
 }
 
 .variable-viewer {
@@ -118,5 +130,9 @@ export default Vue.extend({
 	min-width: 30em;
 	width: 20%;
 	max-width: 50%;
+}
+
+.output-holder, .variable-viewer {
+	overflow-y: auto;
 }
 </style>

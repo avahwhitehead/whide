@@ -29,9 +29,9 @@
 			</Container>
 		</div>
 
-		<div class="footer">
-			<run-panel/>
-		</div>
+		<Container class="footer">
+			<run-panel />
+		</Container>
 
 		<InputPrompt :cwd="cwd" @controller="c => this.ioController = c" />
 	</div>
@@ -238,6 +238,7 @@ export default Vue.extend({
 
 .footer {
 	height: fit-content;
+	max-height: 30%;
 }
 
 /*
