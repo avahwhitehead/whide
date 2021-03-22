@@ -15,8 +15,12 @@ const routes : RouteConfig[] = [
 ];
 
 //Create the router
-export default new VueRouter({
+const router : VueRouter = new VueRouter({
 	routes,
 	//Use '/path' instead of '/#/path'
 	mode: "history",
 });
+//Load the first page (important when running in electron)
+router.push('/');
+//Export the router
+export default router;
