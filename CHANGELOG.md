@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/sonrad10/Whide/compare/v1.0.0...v1.1.0) (2021-03-23)
+
+
+### Features
+
+* changed to using memfs instead of filer ([e57a4da](https://github.com/sonrad10/Whide/commit/e57a4daf8d49987f57aa49444863ae3a4da2dd69))
+* made memfs data persist across refreshes/restarts ([ba5a046](https://github.com/sonrad10/Whide/commit/ba5a0463d74da4db9b588d71563a2174ea834482))
+* renamed to just "whide" ([c6e6cd8](https://github.com/sonrad10/Whide/commit/c6e6cd845a321869570abcbd454cfcec83716c87))
+* updated plugins to use the new fs format ([d6d52a5](https://github.com/sonrad10/Whide/commit/d6d52a59d208afde0761dcfa59eec6a76a9afc87))
+
+
+### Bug Fixes
+
+* fixed blank screen when running compiled version in electron ([0eb097d](https://github.com/sonrad10/Whide/commit/0eb097dcec61831452845e3aea20cd42573f2712))
+
 ## [1.0.0](https://github.com/sonrad10/Whide/compare/v0.9.10...v1.0.0) (2021-03-20)
 
 ### [0.9.10](https://github.com/sonrad10/Whide/compare/v0.9.9...v0.9.10) (2021-03-20)
