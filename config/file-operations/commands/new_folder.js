@@ -1,4 +1,5 @@
 const { _displayError, _exists } = require("../utils");
+const path = require('path');
 
 module.exports.name = "run_new_folder";
 module.exports.args = [
@@ -16,7 +17,7 @@ module.exports.args = [
 	}
 ];
 
-module.exports.run = async function ({args, ioController, fs, path}) {
+module.exports.run = async function ({args, ioController, fs}) {
 	const parent = args["parent"];
 	const name = args["name"];
 	//Build the full directory path

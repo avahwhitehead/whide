@@ -58,7 +58,7 @@ import {
 	PluginFunctionParameters
 } from "@whide/whide-types";
 import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
-import { CustomFsContainer, getFsContainer } from "@/files/fs";
+import { fs } from "@/files/fs";
 import { CustomDict } from "@/types/CustomDict";
 import { InternalMenu } from "@/api/types/InternalMenus";
 import { PluginInfo } from "@/api/PluginInfo";
@@ -162,16 +162,13 @@ export default Vue.extend({
 			if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
 
-			let fsContainer : CustomFsContainer = await getFsContainer();
-
 			//Run the function
 			const funcParameters : PluginFunctionParameters = {
 				args: args,
 				editorController: this.editorController,
 				ioController: this.ioController,
 				runPanelController: runPanelController,
-				fs: fsContainer.fs,
-				path: fsContainer.path,
+				fs: fs,
 			};
 			_runFuncAsync(pluginFunction.run, funcParameters).catch((e) => {
 				//Handle errors produced in the plugin function

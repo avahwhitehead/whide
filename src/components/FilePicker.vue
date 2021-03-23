@@ -27,12 +27,10 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { CustomFsContainer, getFsContainer } from "@/files/fs";
 import { pathToFile, AbstractInternalFile, InternalFolder } from "@/files/InternalFile";
 
 interface DataTypeInterface {
 	file?: AbstractInternalFile;
-	fsContainer?: CustomFsContainer;
 	children?: AbstractInternalFile[];
 }
 
@@ -51,7 +49,6 @@ export default Vue.extend({
 		return {
 			children: undefined,
 			file: undefined,
-			fsContainer: undefined,
 		}
 	},
 	computed: {
@@ -66,10 +63,7 @@ export default Vue.extend({
 		}
 	},
 	mounted() {
-		getFsContainer().then(container => {
-			this.fsContainer = container;
-			pathToFile(this.directory, container).then((f : AbstractInternalFile) => this.file = f);
-		});
+		pathToFile(this.directory).then((f : AbstractInternalFile) => this.file = f);
 	},
 	methods: {
 		onClick(file : AbstractInternalFile) {
@@ -84,7 +78,7 @@ export default Vue.extend({
 	watch: {
 		directory() {
 			this.file = undefined;
-			pathToFile(this.directory, this.fsContainer).then((f : AbstractInternalFile) => this.file = f);
+			pathToFile(this.directory).then((f : AbstractInternalFile) => this.file = f);
 		},
 		file(newFile : AbstractInternalFile) {
 			this.children = undefined;

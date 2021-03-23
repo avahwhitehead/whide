@@ -7,7 +7,7 @@ import fs, { Stats } from "fs";
 import { PluginModule, PluginFunction } from "@whide/whide-types";
 
 //3rd party plugins root
-const USER_CONFIG_ROOT = path.resolve((xdgBasedir.config || '.'), "@whide", "whide", "plugins");
+const USER_CONFIG_ROOT = path.resolve((xdgBasedir.config || '.'), "whide", "plugins");
 
 /**
  * Get a module's name from its path

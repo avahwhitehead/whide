@@ -1,130 +1,127 @@
-import isElectron from "@/types/isElectron";
-import * as nodeFs from "fs";
-import * as nodePath from "path";
-import { FileSystemInterface, fs as filerFs, path as filerPath, FilerPathInterface } from "filer";
+import nodeFs from "fs";
+import { createFsFromVolume, IFs, Volume } from 'memfs';
+import { IPromisesAPI } from "memfs/lib/promises";
+import { Union } from "unionfs/lib/union";
+import { IFS } from "unionfs/lib/fs";
+import localforage from "localforage";
 
-//Custom FS type representing only common methods in both systems
-export type CustomFs = FileSystemInterface | typeof nodeFs;
-export type CustomPath = FilerPathInterface | typeof nodePath;
+//Storage library used for persisting the memfs data
+localforage.config({
+	driver: localforage.INDEXEDDB,
+	name: 'whide-fs',
+	version: 1.0,
+	storeName: 'filestore',
+	description: 'Virtual file store for the Whide editor'
+});
 
 /**
- * Promisified wrapper around `fs.exists`
- * @param fs		The filesystem object to use
- * @param filePath	The filepath to check
+ * Read the exported memfs data from persistent storage
  */
-async function _exists(fs : FileSystemInterface, filePath='/') : Promise<boolean> {
-	return new Promise<boolean>((resolve, reject) => {
-		fs.stat(filePath, (err: any) => {
-			//No error - file exists
-			if (!err) resolve(true);
-			//File not found
-			else if (err.code === 'ENOENT') resolve(false);
-			//Some other error
-			else reject(err);
-		});
+async function _readFsJson() : Promise<any> {
+	//Read the object as a string
+	const stored = await localforage.getItem('files');
+	return stored;
+}
+
+/**
+ * Write exported memfs data to persistent storage
+ * @param json	The memfs exported JSON object
+ */
+async function _writeFsJson(json: any) : Promise<void> {
+	//Convert the json to a string, and write it to the storage
+	await localforage.setItem('files', json);
+}
+
+/**
+ * Determine whether a fs method will affect the filesystem in a way which should be stored
+ * @param funcName	The name of the method being called
+ */
+function _shouldRunSave(funcName: string) {
+	for (let start of ['append', 'copy', 'fsync', 'ftruncate', 'mk', 'rename', 'rm', 'truncate', 'write']) {
+		if (funcName.substr(0, start.length) === start) return true;
+	}
+	return false;
+}
+
+/**
+ * The same as {@link _wrapFs} but for the memfs.promises object.
+ * @param promises	The promises object to wrap
+ * @param saveCb	Callback to run when the method changes data
+ */
+function _wrapPromises(promises: IPromisesAPI, saveCb: (prop: string) => void) : IPromisesAPI {
+	return new Proxy(promises, {
+		get(target: IPromisesAPI, p: string | symbol, receiver: any): any {
+			//Get the actual property value
+			const actualVal = Reflect.get(target, p, receiver);
+			//Run the save function if the property is a function that modifies the file system
+			if (typeof p === "string" && _shouldRunSave(p)) saveCb(p);
+			//Return the property
+			return actualVal;
+		}
 	});
 }
 
 /**
- * Create a virtual filesystem root if one does not exists.
- * Basically just a fancy `mkdir` call.
- * @param fs		The filesystem object to use
- * @param filePath	the filepath to create. Missing parent folders are created recursively.
+ * Watch a filesystem object, and call a callback if a method is called which modifies filesystem data.
+ * This allows using memfs in the browser without requiring manual data export
+ * @param fs		Filesystem object to wrap
+ * @param saveCb	Callback to run when the method changes data
  */
-async function _setup_virtual_root(fs : FileSystemInterface, filePath='/whide/') : Promise<void> {
-	//Do nothing if the path exists
-	if (await _exists(fs, filePath)) return;
-	//Otherwise recursively create the path
-	return new Promise<void>((resolve, reject) => {
-		fs.mkdir(filePath, { recursive: true }, (err : any) => {
-			if (err) reject(err);
-			else resolve();
-		});
+function _wrapFs(fs: IFs, saveCb: (prop: string) => void) : IFs {
+	//Make a wrapper around the `promises` property
+	const promiseWrapper = _wrapPromises(fs.promises, saveCb);
+	//Return the outer wrapper
+	return new Proxy(fs, {
+		get(target: IFs, p: string | symbol, receiver: any): any {
+			//Get the actual property value
+			const actualVal = Reflect.get(target, p, receiver);
+			if (typeof p !== "string") return actualVal;
+			//Return the promises wrapper if it requested
+			if (p === 'promises') return promiseWrapper;
+			//Run the save function if the property is a function that modifies the file system
+			if (_shouldRunSave(p)) saveCb(p);
+			//Return the property
+			return actualVal;
+		}
 	});
 }
 
-/**
- * Import the `node/fs` module.
- */
-async function _local_import(): Promise<typeof nodeFs> {
-	return await import("fs");
+//Manage the filesystems
+export const ufs : Union = new Union();
+
+//Use the physical filesystem only if available
+//Otherwise maintain a virtual filesystem in memory
+if (nodeFs && Object.keys(nodeFs).length) {
+	ufs.use(nodeFs);
+} else {
+	//Make the virtual filesystem
+	const vol = new Volume;
+	const memfs : IFs = createFsFromVolume(vol);
+
+	//Load from the stored filesystem JSON object
+	_readFsJson().then(json => vol.fromJSON(json || {}));
+
+	//Make a proxy around memfs to watch for FS changes, and automatically export/store the changed version
+	let saveInProgress = false;
+	let fsWrapper = _wrapFs(memfs, () => {
+		//Don't start another save if one is in progress
+		if (saveInProgress) return;
+		//Mark a save as in progress
+		saveInProgress = true;
+		//Wait 1 second before writing the changes (give time for the changes to occur)
+		setTimeout(async () => {
+			//Save to JSON
+			let json = vol.toJSON();
+			await _writeFsJson(json);
+			//Allow another save
+			saveInProgress = false;
+		}, 1000);
+	});
+
+	//Use the proxy object as the filesystem module
+	ufs.use(fsWrapper as any);
 }
 
-/**
- * Import the virtual filesystem module, and perform any setup required.
- * This is done with singleton variables so there will be at most one database instance in the program.
- */
-async function _browser_import(): Promise<FileSystemInterface> {
-	//Create the file system if it doesn't already exist
-	await _setup_virtual_root(filerFs);
-	//Return the filesystem
-	return filerFs;
-}
-
-/**
- * Get the fs module to be used to perform file operations.
- * Must be done dynamically as `node/fs` is not accessible when running in the browser.
- * IT IS RECOMMENDED TO NOT USE THIS DIRECTLY; INSTEAD USE {@link getFsContainer}
- * @param useLocal	true to force using `node/fs`.
- * 					false to force using the virtual filesystem (Filer).
-* 					undefined (default) to decide automatically.
- * 					IT IS RECOMMENDED TO LEAVE THIS AS THE DEFAULT.
- * @returns `node/fs` if the app is running locally, Filer otherwise
- */
-async function getFs(useLocal? : boolean) : Promise<CustomFs> {
-	//Choose the module automatically if one hasn't been specified,
-	//Use `node/fs` if the app is running with electron, `Filer` otherwise
-	if (useLocal === undefined) useLocal = isElectron();
-
-	//Import and return the requested module
-	if (useLocal) return await _local_import();
-	return await _browser_import();
-}
-
-/**
- * Get the path module to be used.
- * Must be done dynamically as the virtual fs module provides its own `path`.
- * IT IS RECOMMENDED TO NOT USE THIS DIRECTLY; INSTEAD USE {@link getFsContainer}
- * @param useLocal	true to force using `node/path`.
- * 					false to force using the virtual filesystem's path.
-* 					undefined (default) to decide automatically.
- * 					IT IS RECOMMENDED TO LEAVE THIS AS THE DEFAULT.
- * @returns `node/fs` if the app is running locally, Filer's path otherwise
- */
-async function getPath(useLocal? : boolean) : Promise<CustomPath> {
-	//Choose the module automatically if one hasn't been specified,
-	//Use `node/fs` if the app is running with electron, `Filer` otherwise
-	if (useLocal === undefined) useLocal = isElectron();
-
-	//Import and return the requested module
-	return useLocal ? nodePath : filerPath;
-}
-
-/**
- * Container for the filesystem modules to be used
- */
-export interface CustomFsContainer {
-	fs: CustomFs;
-	path: CustomPath;
-}
-
-/**
- * Get a container containing the filesystem modules which should be used.
- * This allows running in both electron and the browser.
- * @param useLocal	true to force using Node's built-in modules.
- * 					false to force using the virtual filesystem's versions.
- * 					undefined (default) to decide automatically.
- * 					IT IS RECOMMENDED TO LEAVE THIS AS THE DEFAULT.
- * @returns Container holding Node's filesystem modules if the app is running locally, Filer's versions otherwise
- */
-export async function getFsContainer(useLocal? : boolean) : Promise<CustomFsContainer> {
-	//Choose the module automatically if one hasn't been specified,
-	//Use `node/fs` if the app is running with electron, `level-filesystem` otherwise
-	if (useLocal === undefined) useLocal = isElectron();
-
-	//Import and return the requested module
-	return {
-		fs: await getFs(useLocal),
-		path: await getPath(useLocal),
-	};
-}
+//Export the chosen filesystem module for use by the rest of the app
+//@ts-ignore
+export const fs : IFS = ufs;
