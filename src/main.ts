@@ -3,7 +3,8 @@ import Vue from 'vue';
 import router from "@/router";
 import App from "@/views/App.vue";
 //Other
-import { getFsContainer } from "@/files/fs";
+import { fs } from "@/files/fs";
+import path from "path";
 import { Stats } from "fs";
 import { isElectron, vars } from "@/utils/globals";
 import load_plugins from "@/utils/load_plugins";
@@ -17,8 +18,6 @@ async function _getStartingDir() : Promise<string> {
 	//No directory specified - use the default
 	if (!vars.cwd) return FALLBACK_DIR;
 
-	//Get the fs module to use
-	const { fs, path } = await getFsContainer();
 	//Convert the directory to absolute path
 	const userDir = path.resolve(vars.cwd);
 
@@ -26,7 +25,7 @@ async function _getStartingDir() : Promise<string> {
 	try {
 		//Make sure the path exists
 		stats = await new Promise<Stats>((resolve, reject) => {
-			fs.stat(userDir, ((err, s) => {
+			fs.stat(userDir, ((err:any, s:Stats) => {
 				if (err) reject(err);
 				else resolve(s);
 			}));
