@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.1](https://github.com/sonrad10/Whide/compare/v1.1.0...v1.1.1) (2021-03-23)
+
+
+### Features
+
+* added multi platform build configurations for electron-builder ([d8fc5b9](https://github.com/sonrad10/Whide/commit/d8fc5b91b3dd130920fa44d14befff438eaffaf3))
+
 ## [1.1.0](https://github.com/sonrad10/Whide/compare/v1.0.0...v1.1.0) (2021-03-23)
 
 
