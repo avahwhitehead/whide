@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.2](https://github.com/sonrad10/Whide/compare/v1.1.1...v1.1.2) (2021-03-24)
+
+
+### Bug Fixes
+
+* fixed routing not working when running in electron ([225dc5d](https://github.com/sonrad10/Whide/commit/225dc5d162c2a6f05c3a4d7eed308baf351905e6))
+
 ### [1.1.1](https://github.com/sonrad10/Whide/compare/v1.1.0...v1.1.1) (2021-03-23)
 
 
