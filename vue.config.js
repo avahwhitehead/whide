@@ -1,3 +1,5 @@
+const path = require("path");
+
 module.exports = {
 	pluginOptions: {
 		configureWebpack: {
@@ -7,27 +9,29 @@ module.exports = {
 			nodeIntegration: true,
 			enableRemoteModule: true,
 			contextIsolation: true,
-			build: {
-				//TODO: App icon
+			builderOptions: {
 				appId: "com.electron.whide",
 				productName: "Whide IDE",
 				copyright: "Copyright © 2020",
 				//Mac
 				mac: {
-					target: ['dmg', 'zip']
+					target: ['tar.gz', 'zip'],
+					icon: path.resolve(__dirname, 'icon', 'icon.icns'),
 				},
 				//Windows
 				win: {
-					target: ['msi', 'nsis']
+					target: ['portable', 'nsis'],
+					icon: path.resolve(__dirname, 'icon', 'icon.ico'),
 				},
 				//Linux
 				linux: {
 					target: ['AppImage', 'snap', 'deb', 'tar.gz'],
+					icon: path.resolve(__dirname, 'icon', 'dist', '512.png'),
+					executableName: 'whide',
+					category: "Development",
 					desktop: {
 						Name: "Whide IDE",
-						Exec: "whide",
 						Type: "Application",
-						Categories: "Programming"
 					}
 				},
 			}

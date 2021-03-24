@@ -107,20 +107,37 @@ Testing is done using the link:{mocha}[mocha] testing framework, and the link:{c
 [#subsect:deployment]
 == Deployment
 
-To compile Whide into an executable file, run:
+To compile Whide into an executable file, run the following command:
 
 [source]
 ----
-npm run electron:build
+npm run electron:build -- -lmw
 ----
 
+NOTE: `lmw` stands for **L**inux, **M**ac, and **W**indows; you may remove any of these depending on your desired result.
+
 This will place the generated executables in the `+dist_electron/+` folder.
+
+== Building the program icon
+
+The program icons can be generated automatically from an SVG file using the script in the link:icon/[] folder:
+
+[source]
+----
+#Navigate into the icons folder
+cd icon/
+#Build the sized icon files
+./makeicons.sh
+#Replace the program favicon with the new version
+cp icon.ico ../public/favicon.ico
+----
+
+NOTE: The `+makeicons+` script requires link:https://inkscape.org/[inkscape], link:https://imagemagick.org[imagemagick], and link:https://manpages.ubuntu.com/manpages/hirsute/en/man1/png2icns.1.html[png2icns] to be installed.
 
 [#subsect:program-information]
 == Program Information
 
-See the link:{wiki}[wiki] for more detailed information on how the editor works under
-the hood.
+See the link:{wiki}[wiki] for more detailed information on how the editor works under  the hood.
 
 [#subsect:plugins]
 == Installing Plugins
