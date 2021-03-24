@@ -132,7 +132,7 @@ cd icon/
 cp icon.ico ../public/favicon.ico
 ----
 
-NOTE: The `+makeicons+` script requires link:https://inkscape.org/[inkscape] and link:https://imagemagick.org[imagemagick] to be installed.
+NOTE: The `+makeicons+` script requires link:https://inkscape.org/[inkscape], link:https://imagemagick.org[imagemagick], and link:https://manpages.ubuntu.com/manpages/hirsute/en/man1/png2icns.1.html[png2icns] to be installed.
 
 [#subsect:program-information]
 == Program Information
