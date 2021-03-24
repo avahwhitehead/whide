@@ -4,6 +4,7 @@ import { RouteConfig } from "vue-router/types/router";
 //Views
 import EditorWindow from "@/views/Editor.vue";
 import TreeWindow from "@/views/TreeWindow.vue";
+import { isElectron } from "@/utils/globals";
 
 //Use the router
 Vue.use(VueRouter);
@@ -16,11 +17,9 @@ const routes : RouteConfig[] = [
 
 //Create the router
 const router : VueRouter = new VueRouter({
+	//Use '/path' in the browser. Use hash ('/#/path') in electron
+	mode: isElectron ? 'hash' : 'history',
 	routes,
-	//Use '/path' instead of '/#/path'
-	mode: "history",
 });
-//Load the first page (important when running in electron)
-router.push('/');
 //Export the router
 export default router;

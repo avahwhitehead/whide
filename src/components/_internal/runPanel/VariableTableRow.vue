@@ -68,7 +68,8 @@ export default Vue.extend({
 			this.treeString = extendedTreeAsString(value);
 		},
 		onClick() {
-			window.open('/trees?t=' + this.treeString, '_blank', "height=400");
+			let routeData = this.$router.resolve({ path: '/trees', query: { t:this.treeString } });
+			window.open(routeData.href, '_blank', "height=400");
 		},
 	},
 	watch: {
