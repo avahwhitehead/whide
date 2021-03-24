@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.1.3](https://github.com/sonrad10/Whide/compare/v1.1.2...v1.1.3) (2021-03-24)
+
+
+### Features
+
+* added mac icon ([ef1cd0c](https://github.com/sonrad10/Whide/commit/ef1cd0c8d92c45b805d6beacfb48fb2fe0feb33f))
+* made a program icon; now set as favicon and program icon ([1d2e974](https://github.com/sonrad10/Whide/commit/1d2e9744b5e58511fef81217e06762c452bc7367))
+
+
+### Bug Fixes
+
+* added author information to package.json ([cc3c91d](https://github.com/sonrad10/Whide/commit/cc3c91d095b9915cf1ea808cdd4493abb9831270))
+
 ### [1.1.2](https://github.com/sonrad10/Whide/compare/v1.1.1...v1.1.2) (2021-03-24)
 
 
