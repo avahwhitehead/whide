@@ -5,6 +5,7 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 import { ExtendedCommand, makeCommandLineParser } from "@/types/CommandLine";
 const isDevelopment = process.env.NODE_ENV !== 'production';
+import path from "path";
 
 //Parse command line arguments
 const program : ExtendedCommand = makeCommandLineParser();
@@ -30,6 +31,7 @@ async function createWindow() {
 	const win = new BrowserWindow({
 		width: 1200,
 		height: 900,
+		icon: path.resolve(__dirname, '..', 'icon', 'dist', '512.png'),
 		webPreferences: {
 			nodeIntegration: true,
 			webSecurity: false,

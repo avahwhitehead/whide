@@ -8,13 +8,12 @@ module.exports = {
 			enableRemoteModule: true,
 			contextIsolation: true,
 			build: {
-				//TODO: App icon
 				appId: "com.electron.whide",
 				productName: "Whide IDE",
 				copyright: "Copyright © 2020",
 				//Mac
 				mac: {
-					target: ['dmg', 'zip']
+					target: ['tar.gz', 'zip']
 				},
 				//Windows
 				win: {
