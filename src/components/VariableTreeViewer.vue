@@ -1,5 +1,16 @@
 <template>
-	<svg ref="mysvg" :height="height" />
+	<svg
+		:height="height"
+		:viewBox="`0 0 ${width} ${height}`"
+		@mousedown="startDrag"
+		@mouseup="stopDrag"
+		@mousemove="handleDrag"
+	>
+		<g
+			ref="mysvg"
+			:transform="`translate(${drag.offset.x},${drag.offset.y})`"
+		/>
+	</svg>
 </template>
 
 <script lang="ts">
@@ -40,6 +51,21 @@ interface DataTypeInterface {
 	},
 	width: number;
 	height: number;
+	//Information for dragging the svg canvas
+	drag: {
+		//Whether the canvas is being dragged
+		dragging: boolean;
+		//Current X/Y offset
+		offset: {
+			x: number;
+			y: number;
+		};
+		//The X/Y offset when the dragging started
+		start: {
+			x: number;
+			y: number;
+		};
+	};
 }
 
 export default Vue.extend({
@@ -60,6 +86,11 @@ export default Vue.extend({
 			},
 			width: 660,
 			height: 500,
+			drag: {
+				dragging: false,
+				offset: { x: 0, y: 0 },
+				start: { x: 0, y: 0 },
+			}
 		};
 	},
 	computed: {
@@ -71,6 +102,24 @@ export default Vue.extend({
 		},
 	},
 	methods: {
+		startDrag(event: MouseEvent) {
+			this.drag.dragging = true;
+			this.drag.start = {
+				x: event.offsetX - this.drag.offset.x,
+				y: event.offsetY - this.drag.offset.y,
+			};
+		},
+		stopDrag() {
+			this.drag.dragging = false;
+		},
+		handleDrag(event: MouseEvent) {
+			if (!this.drag.dragging) return;
+			this.drag.offset = {
+				x: event.offsetX - this.drag.start.x,
+				y: event.offsetY - this.drag.start.y,
+			}
+		},
+
 		/**
 		 * Draw the tree as an SVG diagram.
 		 * Based on this example: https://bl.ocks.org/d3noob/72f43406bbe9e104e957f44713b8413c
@@ -91,8 +140,6 @@ export default Vue.extend({
 
 			//SVG root group element
 			let root = svg.append("g");
-			//Apply the padding
-			root.attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
 			//For each node in the tree...
 			root.selectAll(".node").data(nodes.descendants()).enter()
