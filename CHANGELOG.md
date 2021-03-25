@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/sonrad10/Whide/compare/v1.1.3...v1.2.0) (2021-03-25)
+
+
+### Features
+
+* changed to drawing proper trees using d3 ([a613e07](https://github.com/sonrad10/Whide/commit/a613e07143aaa38a442ac966d41d80b161037894))
+* moved circle and text tree elements into the nodegroup file for simplicity ([5fb3130](https://github.com/sonrad10/Whide/commit/5fb31308b59fc4570d7f5b814f43345b0a869086))
+* trees can be dragged ([ae9bab7](https://github.com/sonrad10/Whide/commit/ae9bab7457fa4d67b797cfbab698cf8e2feaa05e))
+* trees can be zoomed ([86e4332](https://github.com/sonrad10/Whide/commit/86e43322be3b4e304372cd8e04a588e6ec29ac2d))
+
+
+### Bug Fixes
+
+* trees only have circles on leaf nodes ([a2d50a7](https://github.com/sonrad10/Whide/commit/a2d50a74caa72ef807e8b7844a7031b6bbccfa20))
+
 ### [1.1.3](https://github.com/sonrad10/Whide/compare/v1.1.2...v1.1.3) (2021-03-24)
 
 
