@@ -14,6 +14,11 @@ export interface TreeType {
 	children?: TreeType[];
 }
 
+/**
+ * Convert a binary tree into d3's more general tree format
+ * @param tree	The binary tree in the external format
+ * @returns The {@code tree} represented in d3's tree format
+ */
 function _convertTree(tree: ExtendedBinaryTree|string) : TreeType {
 	if (tree === null) return { name: 'nil' };
 	if (typeof tree === "string") return { name: tree };
@@ -58,9 +63,6 @@ export default Vue.extend({
 		};
 	},
 	computed: {
-		convertedTree() : TreeType {
-			return _convertTree(this.tree);
-		},
 		diagramWidth() : number {
 			return this.width - this.margin.left - this.margin.right;
 		},
@@ -75,33 +77,27 @@ export default Vue.extend({
 		 * @param treeData
 		 */
 		drawTree(treeData: ExtendedBinaryTree) {
-			let t = _convertTree(treeData);
-
-			// set the dimensions and margins of the diagram
+			//Tell d3 to work with a tree, and stay in the diagram limits
 			let treemap = d3.tree().size([this.diagramWidth, this.diagramHeight]);
-			// assigns the data to a hierarchy using parent-child relationships
-			let nodes: HierarchyPointNode<unknown> = treemap(d3.hierarchy(t));
 
-			//Get the SVG element
+			//Convert the tree from the external representation into the form accepted by d3
+			let converted : TreeType = _convertTree(treeData);
+			//Use the parent-child hierarchy to build the tree
+			let nodes: HierarchyPointNode<unknown> = treemap(d3.hierarchy(converted));
+
+			//Get the SVG element, and remove any existing child nodes
 			const svg = d3.select(this.$refs["mysvg"] as Element);
-			//Remove any existing content
 			svg.selectChildren().remove();
 
-			//Make the root group element
-			let g = svg.append("g");
+			//SVG root group element
+			let root = svg.append("g");
 			//Apply the padding
-			g.attr("transform", `translate(${this.margin.left},${this.margin.top})`);
+			root.attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
-			//Add each node
-			g.selectAll(".node")
-				.data(nodes.descendants())
-				.enter().append((d: any) => {
-					return new NodeGroup({
-						propsData: {
-							d
-						}
-					}).$mount().$el;
-				});
+			//For each node in the tree...
+			root.selectAll(".node").data(nodes.descendants()).enter()
+				//Add a NodeGroup element
+				.append((d: any) => new NodeGroup({propsData: {d}}).$mount().$el);
 		}
 	},
 	mounted() {

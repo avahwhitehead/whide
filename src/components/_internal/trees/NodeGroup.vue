@@ -11,6 +11,7 @@
 
 		<circle
 			:r="10"
+			v-if="!d.children"
 			class="node-circle"
 			@click="handleClick"
 		/>
