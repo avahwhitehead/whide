@@ -1,15 +1,14 @@
 <template>
 	<svg
 		:height="height"
-		:viewBox="`0 0 ${width} ${height}`"
+		:viewBox="viewbox"
+		preserveAspectRatio="xMinYMin meet"
 		@mousedown="startDrag"
 		@mouseup="stopDrag"
 		@mousemove="handleDrag"
+		@wheel="handleZoom"
 	>
-		<g
-			ref="mysvg"
-			:transform="`translate(${drag.offset.x},${drag.offset.y})`"
-		/>
+		<g ref="mysvg"/>
 	</svg>
 </template>
 
@@ -66,6 +65,7 @@ interface DataTypeInterface {
 			y: number;
 		};
 	};
+	scale: number;
 }
 
 export default Vue.extend({
@@ -90,7 +90,8 @@ export default Vue.extend({
 				dragging: false,
 				offset: { x: 0, y: 0 },
 				start: { x: 0, y: 0 },
-			}
+			},
+			scale: 1
 		};
 	},
 	computed: {
@@ -100,10 +101,20 @@ export default Vue.extend({
 		diagramHeight() : number {
 			return this.height - this.margin.top - this.margin.bottom;
 		},
+		viewbox() : string {
+			const X = this.drag.offset.x;
+			const Y = this.drag.offset.y;
+			const width = this.width;
+			const height = this.height;
+			const scale = this.scale;
+
+			return `${-X / scale} ${-Y / scale} ${width / scale} ${height / scale}`;
+		},
 	},
 	methods: {
 		startDrag(event: MouseEvent) {
 			this.drag.dragging = true;
+			//Save the cursor position at the start of the drag
 			this.drag.start = {
 				x: event.offsetX - this.drag.offset.x,
 				y: event.offsetY - this.drag.offset.y,
@@ -114,10 +125,18 @@ export default Vue.extend({
 		},
 		handleDrag(event: MouseEvent) {
 			if (!this.drag.dragging) return;
+			//Update the offset to be the difference in position since the `startDrag` was called
 			this.drag.offset = {
 				x: event.offsetX - this.drag.start.x,
 				y: event.offsetY - this.drag.start.y,
 			}
+		},
+		handleZoom(event: WheelEvent) {
+			//Scale by to adjust the jump size
+			this.scale += (-.05 * event.deltaY);
+			//Limit zooming in/out
+			this.scale = Math.max(this.scale, 0.3);
+			this.scale = Math.min(this.scale, 5);
 		},
 
 		/**
