@@ -6,11 +6,8 @@
 import Vue from "vue";
 import { ExtendedBinaryTree } from "@whide/whide-types";
 import * as d3 from "d3";
-import { HierarchyNode } from "d3";
-import CircleElement from "@/components/_internal/trees/CircleElement.vue";
+import { HierarchyPointNode } from "d3";
 import NodeGroup from "@/components/_internal/trees/NodeGroup.vue";
-import TextElement from "@/components/_internal/trees/TextElement.vue";
-import NodeLink from "@/components/_internal/trees/NodeLink.vue";
 
 export interface TreeType {
 	name: any;
@@ -72,47 +69,32 @@ export default Vue.extend({
 		},
 	},
 	methods: {
-		_interpretTree(tree: ExtendedBinaryTree) : HierarchyNode<any> {
-			let t = _convertTree(tree);
-
-			// set the dimensions and margins of the diagram
-			let treemap = d3.tree().size([this.diagramWidth, this.diagramHeight]);
-			// assigns the data to a hierarchy using parent-child relationships
-			let nodes : HierarchyNode<any> = d3.hierarchy(t);
-			// maps the node data to the tree layout
-			return treemap(nodes);
-		},
-
 		/**
 		 * Draw the tree as an SVG diagram.
 		 * Based on this example: https://bl.ocks.org/d3noob/72f43406bbe9e104e957f44713b8413c
 		 * @param treeData
 		 */
 		drawTree(treeData: ExtendedBinaryTree) {
-			let nodes = this._interpretTree(treeData);
+			let t = _convertTree(treeData);
+
+			// set the dimensions and margins of the diagram
+			let treemap = d3.tree().size([this.diagramWidth, this.diagramHeight]);
+			// assigns the data to a hierarchy using parent-child relationships
+			let nodes: HierarchyPointNode<unknown> = treemap(d3.hierarchy(t));
 
 			//Get the SVG element
 			const svg = d3.select(this.$refs["mysvg"] as Element);
-			//Remove the old diagram
+			//Remove any existing content
 			svg.selectChildren().remove();
 
 			//Make the root group element
 			let g = svg.append("g");
+			//Apply the padding
 			g.attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
-			//Draw the links between the nodes
-			const links = g.selectAll(".link");
-			links.data(nodes.descendants().slice(1))
-				.enter().append((d: any) => {
-					return new NodeLink({
-						propsData: {
-							d
-						}
-					}).$mount().$el;
-				});
-
 			//Add each node
-			let nodeGroups = g.selectAll(".node").data(nodes.descendants())
+			g.selectAll(".node")
+				.data(nodes.descendants())
 				.enter().append((d: any) => {
 					return new NodeGroup({
 						propsData: {
@@ -120,24 +102,6 @@ export default Vue.extend({
 						}
 					}).$mount().$el;
 				});
-
-			//Add a circle to each node
-			nodeGroups.append(() => {
-				return new CircleElement({
-					propsData: {
-						radius: 10,
-					}
-				}).$mount().$el;
-			});
-
-			//Add the text to each node
-			nodeGroups.append((d: any) => {
-				return new TextElement({
-					propsData: {
-						d,
-					}
-				}).$mount().$el;
-			});
 		}
 	},
 	mounted() {

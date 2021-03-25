@@ -15,12 +15,13 @@ export default Vue.extend({
 	},
 	computed: {
 		path() : string {
-			let d = this.d;
-			let path = `M${d.x},${d.y}`;
-			path += `C${d.x},${(d.y + d.parent.y) / 2}`;
-			path += ` ${d.parent.x},${(d.y + d.parent.y) / 2}`;
-			path += ` ${d.parent.x},${d.parent.y}`;
-			return path;
+			//Shorthand definitions
+			const pX = this.d.parent.x - this.d.x;
+			const pY = this.d.parent.y - this.d.y;
+
+			//Cubic curve from the current node to its parent
+			//The current node is centred at (0,0)
+			return `M0,0C0,${pY/2} ${pX},${pY/2} ${pX},${pY}`;
 		}
 	}
 });
