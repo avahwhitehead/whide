@@ -1,7 +1,5 @@
 <template>
-	<div class="container">
-		<svg id="mysvg" :width="width" :height="height" />
-	</div>
+	<svg ref="mysvg" :height="height" />
 </template>
 
 <script lang="ts">
@@ -9,6 +7,10 @@ import Vue from "vue";
 import { ExtendedBinaryTree } from "@whide/whide-types";
 import * as d3 from "d3";
 import { HierarchyNode } from "d3";
+import CircleElement from "@/components/_internal/trees/CircleElement.vue";
+import NodeGroup from "@/components/_internal/trees/NodeGroup.vue";
+import TextElement from "@/components/_internal/trees/TextElement.vue";
+import NodeLink from "@/components/_internal/trees/NodeLink.vue";
 
 export interface TreeType {
 	name: any;
@@ -40,9 +42,6 @@ interface DataTypeInterface {
 
 export default Vue.extend({
 	name: 'VariableTreeViewer',
-	components: {
-
-	},
 	props: {
 		tree: [
 			Object as () => ExtendedBinaryTree,
@@ -73,96 +72,88 @@ export default Vue.extend({
 		},
 	},
 	methods: {
+		_interpretTree(tree: ExtendedBinaryTree) : HierarchyNode<any> {
+			let t = _convertTree(tree);
+
+			// set the dimensions and margins of the diagram
+			let treemap = d3.tree().size([this.diagramWidth, this.diagramHeight]);
+			// assigns the data to a hierarchy using parent-child relationships
+			let nodes : HierarchyNode<any> = d3.hierarchy(t);
+			// maps the node data to the tree layout
+			return treemap(nodes);
+		},
+
 		/**
 		 * Draw the tree as an SVG diagram.
 		 * Based on this example: https://bl.ocks.org/d3noob/72f43406bbe9e104e957f44713b8413c
 		 * @param treeData
 		 */
-		drawTree(treeData: TreeType) {
-			// set the dimensions and margins of the diagram
-			let width = this.diagramWidth;
-			let height = this.diagramHeight;
+		drawTree(treeData: ExtendedBinaryTree) {
+			let nodes = this._interpretTree(treeData);
 
-			// declares a tree layout and assigns the size
-			let treemap = d3.tree().size([width, height]);
-
-			//  assigns the data to a hierarchy using parent-child relationships
-			let nodes : HierarchyNode<any> = d3.hierarchy(treeData);
-			// maps the node data to the tree layout
-			nodes = treemap(nodes);
-
-			// append the svg object to the body of the page
-			const svg = d3.select("#mysvg");
+			//Get the SVG element
+			const svg = d3.select(this.$refs["mysvg"] as Element);
+			//Remove the old diagram
 			svg.selectChildren().remove();
 
-			//Root group element
+			//Make the root group element
 			let g = svg.append("g");
 			g.attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
-			//The links between the nodes
+			//Draw the links between the nodes
 			const links = g.selectAll(".link");
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			let link = links.data(nodes.descendants().slice(1)).enter()
-				.append("path")
-					.attr("class", "link")
-					.attr("d", function(d: any) {
-						let path = `M${d.x},${d.y}`;
-						path += `C${d.x},${(d.y + d.parent.y) / 2}`;
-						path += ` ${d.parent.x},${(d.y + d.parent.y) / 2}`;
-						path += ` ${d.parent.x},${d.parent.y}`;
-						return path;
-					});
+			links.data(nodes.descendants().slice(1))
+				.enter().append((d: any) => {
+					return new NodeLink({
+						propsData: {
+							d
+						}
+					}).$mount().$el;
+				});
 
-			// adds each node as a group
-			let node = g.selectAll(".node")
-				.data(nodes.descendants())
-				.enter().append("g")
-				.attr("class", (d: any) => `node ${d.children ? 'node--internal' : 'node--leaf'}`)
-				.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+			//Add each node
+			let nodeGroups = g.selectAll(".node").data(nodes.descendants())
+				.enter().append((d: any) => {
+					return new NodeGroup({
+						propsData: {
+							d
+						}
+					}).$mount().$el;
+				});
 
-			// adds the circle to the node
-			node.append("circle")
-				.attr("r", 10)
-				.attr('onclick', 'console.log("clicked")');
+			//Add a circle to each node
+			nodeGroups.append(() => {
+				return new CircleElement({
+					propsData: {
+						radius: 10,
+					}
+				}).$mount().$el;
+			});
 
-			// adds the text to the node
-			node.append("text")
-				.attr("dy", ".35em")
-				.attr("y", (d: any) => d.children ? -20 : 20)
-				.style("text-anchor", "middle")
-				.text((d: any) => d.data.name);
+			//Add the text to each node
+			nodeGroups.append((d: any) => {
+				return new TextElement({
+					propsData: {
+						d,
+					}
+				}).$mount().$el;
+			});
 		}
 	},
 	mounted() {
-		this.drawTree(this.convertedTree);
+		this.drawTree(this.tree);
 	},
 	watch: {
-		tree() {
-			this.drawTree(this.convertedTree);
+		tree(newTree: ExtendedBinaryTree) {
+			this.drawTree(newTree);
 		}
 	}
 });
 </script>
 
 
-<style>
-.node circle {
-	fill: #fff;
-	stroke: steelblue;
-	stroke-width: 3px;
-}
-
-.node text {
-	font: 12px sans-serif;
-}
-
-.node--internal text {
-	text-shadow: 0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff;
-}
-
-.link {
-	fill: none;
-	stroke: #ccc;
-	stroke-width: 2px;
+<style scoped>
+svg {
+	width: 100%;
 }
 </style>
