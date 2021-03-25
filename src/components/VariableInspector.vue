@@ -70,7 +70,6 @@ export default Vue.extend({
 	display: inline-block;
 	width: calc(50% - 2px);
 	border: 1px solid black;
-	background-color: lightgrey;
 	min-height: 8em;
 }
 
