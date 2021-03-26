@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/sonrad10/Whide/compare/v1.2.0...v1.3.0) (2021-03-26)
+
+
+### Features
+
+* allowed changing FilePicker root folder ([52711d5](https://github.com/sonrad10/Whide/commit/52711d53722e69c8f0943fd1dd91202a1842445f))
+* folders can be expanded and collapsed in the file picker ([3bc4cb0](https://github.com/sonrad10/Whide/commit/3bc4cb05328a7bb7223b510ffd406c4a30377617))
+
+
+### Bug Fixes
+
+* added missing type declaration ([d3407e9](https://github.com/sonrad10/Whide/commit/d3407e9c0fbd6307dc983208da87e936dfab8296))
+* double click to expand folders ([d916bdf](https://github.com/sonrad10/Whide/commit/d916bdff296c3a0fc2adf2dc3434c74e758aec5c))
+* minor styling refactoring ([c8513db](https://github.com/sonrad10/Whide/commit/c8513dba91b9a9db92a0e0feceda9ef059a5a7dc))
+
 ## [1.2.0](https://github.com/sonrad10/Whide/compare/v1.1.3...v1.2.0) (2021-03-25)
 
 
