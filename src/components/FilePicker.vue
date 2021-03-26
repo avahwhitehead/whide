@@ -8,11 +8,12 @@
 						class="collapse-icon"
 						:class="{'expanded': expanded, 'collapsed': !expanded}"
 						:icon="expanded ? 'caret-down' : 'caret-right'"
-						@click="expanded = !expanded"
+						@click="toggleExpand"
 					/>
 				</span>
 
-				<span @click="onClick(file)" v-text="displayName" />
+				<span v-if="file.folder" @click="onClick(file)" @dblclick="toggleExpand" v-text="displayName" />
+				<span v-else @click="onClick(file)" @dblclick="onClick(file)" v-text="displayName" />
 			</div>
 
 			<div v-if="file.folder && expanded">
@@ -93,6 +94,9 @@ export default Vue.extend({
 			(this.file as InternalFolder).loadChildren().then(c => {
 				this.children = c
 			});
+		},
+		toggleExpand() {
+			this.expanded = !this.expanded;
 		},
 	},
 	watch: {
