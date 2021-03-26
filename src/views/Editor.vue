@@ -151,7 +151,7 @@ export default Vue.extend({
 					message: arg.description || "",
 					type: arg.type || 'string',
 					//Allow empty optional arguments, or validate the input
-					validator: async (s) => arg.optional && !s || await validator(s),
+					validator: async (s: string) => arg.optional && !s || await validator(s),
 				});
 				//End here if the user presses cancel
 				if (val === undefined) return;
