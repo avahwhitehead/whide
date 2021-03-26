@@ -3,14 +3,13 @@
 	<div class="fileTree">
 		<div v-if="file">
 			<div>
-				<span v-if="file.folder" style="display: inline; margin-right: .5em">
-					<font-awesome-icon
-						class="collapse-icon"
-						:class="{'expanded': expanded, 'collapsed': !expanded}"
-						:icon="expanded ? 'caret-down' : 'caret-right'"
-						@click="toggleExpand"
-					/>
-				</span>
+				<font-awesome-icon
+					v-if="file.folder"
+					class="collapse-icon"
+					:class="{'expanded': expanded, 'collapsed': !expanded}"
+					:icon="expanded ? 'caret-down' : 'caret-right'"
+					@click="toggleExpand"
+				/>
 
 				<span v-if="file.folder" @click="onClick(file)" @dblclick="toggleExpand" v-text="displayName" />
 				<span v-else @click="onClick(file)" @dblclick="onClick(file)" v-text="displayName" />
@@ -26,7 +25,7 @@
 					/>
 				</div>
 				<div v-else class="children">
-					<span class="child" style="font-style: italic">(No children)</span>
+					<span class="child empty">(No children)</span>
 				</div>
 			</div>
 		</div>
@@ -136,7 +135,7 @@ export default Vue.extend({
 	text-align: left;
 }
 
-.fileTree p {
+.fileTree .child {
 	text-align: left;
 	user-select: none;
 }
@@ -146,7 +145,12 @@ export default Vue.extend({
 	border-left: 1px dotted black;
 }
 
+.fileTree .children .child.empty {
+	font-style: italic;
+}
+
 .fileTree .collapse-icon {
 	width: .5em;
+	margin-right: .3em;
 }
 </style>
