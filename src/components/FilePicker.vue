@@ -122,7 +122,9 @@ export default Vue.extend({
 				if (!this.children) this.runLoadChildren();
 			} else {
 				this.children = undefined;
-				(this.file as InternalFolder).unloadChildren();
+				if (this.file) {
+					(this.file as InternalFolder).unloadChildren();
+				}
 			}
 		}
 	},
