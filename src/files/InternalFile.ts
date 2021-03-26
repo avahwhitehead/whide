@@ -157,6 +157,13 @@ export class InternalFolder extends AbstractInternalFile {
 	}
 
 	/**
+	 * Unsave all the children of this directory
+	 */
+	async unloadChildren() : Promise<void> {
+		this._children = undefined;
+	}
+
+	/**
 	 * Return whether `this.loadChildren` has been called successfully yet
 	 */
 	get isLoaded() : boolean {

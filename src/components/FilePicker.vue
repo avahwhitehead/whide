@@ -1,11 +1,21 @@
 <template>
-	<!-- TODO: Make folders collapsible -->
 	<!-- TODO: Use folder expand instead of "load" button -->
 	<div class="fileTree">
 		<div v-if="file">
-			<p @click="onClick(file)" v-text="displayName" />
+			<div>
+				<font-awesome-icon
+					v-if="file.folder"
+					class="collapse-icon"
+					:class="{'expanded': expanded, 'collapsed': !expanded}"
+					:icon="expanded ? 'caret-down' : 'caret-right'"
+					@click="toggleExpand"
+				/>
 
-			<div v-if="file.folder">
+				<span v-if="file.folder" @click="onClick(file)" @dblclick="toggleExpand" v-text="displayName" />
+				<span v-else @click="onClick(file)" @dblclick="onClick(file)" v-text="displayName" />
+			</div>
+
+			<div v-if="file.folder && expanded">
 				<div v-if="children" class="children">
 					<FilePicker
 						:directory="child.fullPath"
@@ -15,7 +25,7 @@
 					/>
 				</div>
 				<div v-else class="children">
-					<button @click="runLoadChildren" class="load-button">Load</button>
+					<span class="child empty">(No children)</span>
 				</div>
 			</div>
 		</div>
@@ -27,15 +37,23 @@
 
 <script lang="ts">
 import Vue from "vue";
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+library.add(faCaretDown, faCaretRight);
 import { pathToFile, AbstractInternalFile, InternalFolder } from "@/files/InternalFile";
 
 interface DataTypeInterface {
 	file?: AbstractInternalFile;
 	children?: AbstractInternalFile[];
+	expanded: boolean;
 }
 
 export default Vue.extend({
 	name: 'FilePicker',
+	components: {
+		FontAwesomeIcon,
+	},
 	props: {
 		directory: {
 			type: String,
@@ -49,6 +67,7 @@ export default Vue.extend({
 		return {
 			children: undefined,
 			file: undefined,
+			expanded: false,
 		}
 	},
 	computed: {
@@ -60,7 +79,7 @@ export default Vue.extend({
 			if (this.file.file) return this.file.name;
 			//This is a folder - add a trailing slash
 			return `${this.file.name}/`;
-		}
+		},
 	},
 	mounted() {
 		pathToFile(this.directory).then((f : AbstractInternalFile) => this.file = f);
@@ -71,8 +90,12 @@ export default Vue.extend({
 		},
 		runLoadChildren() : void {
 			if (!this.file || !this.file.folder) return;
-
-			(this.file as InternalFolder).loadChildren().then(c => this.children = c);
+			(this.file as InternalFolder).loadChildren().then(c => {
+				this.children = c
+			});
+		},
+		toggleExpand() {
+			this.expanded = !this.expanded;
 		},
 	},
 	watch: {
@@ -89,6 +112,20 @@ export default Vue.extend({
 					this.children = folder.children;
 				});
 			}
+		},
+		children(newChildren?: AbstractInternalFile[]) {
+			this.expanded = !!newChildren;
+		},
+		expanded(expanded: boolean) {
+			if (expanded) {
+				//Only load children if not already loaded
+				if (!this.children) this.runLoadChildren();
+			} else {
+				this.children = undefined;
+				if (this.file) {
+					(this.file as InternalFolder).unloadChildren();
+				}
+			}
 		}
 	},
 });
@@ -100,7 +137,7 @@ export default Vue.extend({
 	text-align: left;
 }
 
-.fileTree p {
+.fileTree .child {
 	text-align: left;
 	user-select: none;
 }
@@ -110,7 +147,12 @@ export default Vue.extend({
 	border-left: 1px dotted black;
 }
 
-.fileTree .load-button {
-	padding: 0;
+.fileTree .children .child.empty {
+	font-style: italic;
+}
+
+.fileTree .collapse-icon {
+	width: .5em;
+	margin-right: .3em;
 }
 </style>

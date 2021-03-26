@@ -12,6 +12,13 @@
 
 		<div class="body">
 			<Container class="left filler">
+				<!-- TODO: There must be a better way than this -->
+				<label>
+					<select v-model="cwd" class="cwd-dropdown">
+						<option v-for="(opt, i) of parent_paths" :key="i">{{opt}}</option>
+					</select>
+				</label>
+				<button @click="handleChangeRootClick">Change Root</button>
 				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)"/>
 			</Container>
 
@@ -63,6 +70,7 @@ import { CustomDict } from "@/types/CustomDict";
 import { InternalMenu } from "@/api/types/InternalMenus";
 import { PluginInfo } from "@/api/PluginInfo";
 import { pluginManager, vars } from "@/utils/globals";
+import path from "path";
 
 /**
  * Type declaration for the data() values
@@ -104,6 +112,9 @@ export default Vue.extend({
 		menus() : InternalMenu[] {
 			return pluginManager.menuManager.menus;
 		},
+		parent_paths() : string[] {
+			return this.getPaths(this.cwd);
+		}
 	},
 	methods: {
 		openTreeViewer() {
@@ -130,6 +141,25 @@ export default Vue.extend({
 			} else {
 				console.log(`No file open to download`);
 			}
+		},
+		getPaths(filePath: string) : string[] {
+			let r = [filePath];
+			while (filePath && filePath !== '/') {
+				filePath = path.dirname(filePath);
+				r.push(filePath);
+			}
+			return r;
+		},
+		handleChangeRootClick() {
+			if (!this.ioController) throw new Error("Couldn't get IO Controller");
+			this.ioController.getInput({
+				title: "Choose folder root",
+				message: "Select the folder to use as the new directory root",
+				type: "folder"
+			}).then((folder?: string) => {
+				if (!folder) return;
+				this.cwd = folder;
+			})
 		},
 
 		async runPluginFunc(data : { plugin: PluginInfo, command: string }) : Promise<void> {
