@@ -1,6 +1,8 @@
 <template>
 	<div class="InputElement">
-		<div>
+		<div
+			v-if="type === 'label' || type === 'string' || type === 'number'"
+		>
 			<p
 				v-if="type === 'label'"
 				v-text="descriptor"
@@ -19,8 +21,23 @@
 				@change="handleChange"
 				@error="handleError"
 			/>
+
+			<span
+				class="help-button"
+				v-if="descriptor.description"
+				id="help-button"
+				v-tooltip="helpTooltip"
+				v-text="'?'"
+			/>
+		</div>
+
+		<div
+			v-else-if="type === 'path' || type === 'file' || type === 'folder'"
+		>
 			<FileInputElement
-				v-else-if="type === 'path' || type === 'file' || type === 'folder'"
+				class="file-picker"
+				:name="descriptor.name"
+				:description="descriptor.description"
 				:type="type"
 				@change="handleChange"
 				@error="handleError"
@@ -46,6 +63,9 @@ import StringInputElement from "@/components/_internal/inputs/StringInput.vue";
 import NumberInputElement from "@/components/_internal/inputs/NumberInput.vue";
 import FileInputElement from "@/components/_internal/inputs/FileInput.vue";
 import { InputPromptTypes } from "@whide/whide-types";
+import VTooltip from 'v-tooltip';
+
+Vue.use(VTooltip);
 
 export type InputElementDescriptor = {
 	name: string,
@@ -97,6 +117,12 @@ export default Vue.extend({
 			if (!this.descriptor) return undefined;
 			if (typeof this.descriptor === 'string') return 'label';
 			return this.descriptor.type;
+		},
+		helpTooltip() : any {
+			return {
+				content: this.descriptor.description,
+				placement: "right",
+			};
 		}
 	},
 	methods: {
@@ -113,7 +139,14 @@ export default Vue.extend({
 
 <!--suppress CssUnusedSymbol -->
 <style scoped>
-.InputElement {
+span.help-button {
+	display: inline-block;
+	text-align: center;
+	background-color: lightgrey;
+	border-radius: 1em;
+	width: 1em;
+	height: 1em;
+	padding: 5px;
 }
 
 .error {
@@ -122,7 +155,7 @@ export default Vue.extend({
 }
 
 .file-picker {
-	height: 20em;
+	height: fit-content;
 }
 
 .fade-enter-active, .fade-leave-active {

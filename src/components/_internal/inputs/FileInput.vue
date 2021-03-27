@@ -1,25 +1,37 @@
 <template>
 	<div class="FileInputElement">
-		<div v-text="name" />
+		<p>
+			<b v-text="name" />:
+			<span v-if="description" v-text="description" />
+		</p>
 
 		<div>
-			<span v-if="path">Selected:&nbsp; {{ path.fullPath }}</span>
-			<span v-else>No file selected</span>
+			<span v-if="path">Selected:&nbsp;{{ path.fullPath }}</span>
+			<span v-else>
+				Pick a
+				<span v-if="type === 'file'">file</span>
+				<span v-else-if="type === 'folder'">folder</span>
+				<span v-else>file or folder</span>:
+			</span>
 		</div>
 
 		<div
 			class="expand-button"
 			@click="open = !open"
-			v-text="`(${open ? 'collapse' : 'expand'})`"
+			v-text="`(${open ? 'hide' : 'show'} file picker)`"
 		/>
 
 		<transition name="fade">
-			<FilePicker
+			<div
+				class="file-picker-container"
 				v-if="open"
-				class="file-picker"
-				:directory="vars.cwd"
-				@change="onFileClick"
-			/>
+			>
+				<FilePicker
+					class="file-picker"
+					:directory="vars.cwd"
+					@change="onFileClick"
+				/>
+			</div>
 		</transition>
 	</div>
 </template>
@@ -49,11 +61,15 @@ export default Vue.extend({
 			type: String as PropType<'path'|'file'|'folder'>,
 			default: 'path',
 		},
+		description: {
+			type: String,
+			required: false,
+		}
 	},
 	data(): DataTypeDescriptor {
 		return {
 			path: undefined,
-			open: false,
+			open: true,
 			vars,
 		};
 	},
@@ -93,8 +109,17 @@ export default Vue.extend({
 	text-decoration: underline
 }
 
+.file-picker-container {
+	overflow-y: auto;
+	margin: 5px 0;
+	padding: 5px;
+	/*Only show top/bottom borders*/
+	border: solid black;
+	border-width: 1px 0;
+}
+
 .file-picker, .fade-enter-active, .fade-leave-active {
-	height: 20em;
+	height: 10em;
 }
 
 .fade-enter-active, .fade-leave-active {
