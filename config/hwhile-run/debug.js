@@ -61,7 +61,7 @@ async function updateVars(hWhileConnector, instanceController, prog_name) {
 	for (let v of cur_vars.keys()) instanceController.variables[v] = cur_vars.get(v);
 }
 
-module.exports.run = async function({ args, editorController, ioController, runPanelController, path }) {
+module.exports.run = async function({ args, config, editorController, ioController, runPanelController, path }) {
 	//The input expression
 	const expr = args["expression"];
 	//Run the currently focused file
@@ -83,7 +83,7 @@ module.exports.run = async function({ args, editorController, ioController, runP
 	//Start the interpreter in the same directory as the file
 	const folder_path = path.dirname(filePath);
 	const hWhileConnector = new InteractiveHWhileConnector({
-		hwhile: "hwhile",
+		hwhile: config["hwhile-path"],
 		cwd: folder_path,
 	});
 

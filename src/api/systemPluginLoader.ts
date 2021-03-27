@@ -60,6 +60,7 @@ export async function run_load(pluginManager : PluginManager) : Promise<void> {
 			path: modulePath,
 			description: description,
 			menus: pluginModule.menus,
+			settings: pluginModule.settings,
 			converters: pluginModule.converters,
 			external: false,
 			disabled: false,

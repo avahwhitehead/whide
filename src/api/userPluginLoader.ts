@@ -68,6 +68,7 @@ export async function run_load(pluginManager : PluginManager) : Promise<void> {
 				description: description,
 				menus: pluginModule.menus,
 				converters: pluginModule.converters,
+				settings: pluginModule.settings,
 				external: true,
 				disabled: false,
 			});

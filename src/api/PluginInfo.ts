@@ -1,4 +1,4 @@
-import { PluginFunction, TreeConverter } from "@whide/whide-types";
+import { PluginFunction, SettingsItem, TreeConverter } from "@whide/whide-types";
 import { Menu } from "@whide/whide-types";
 import { InternalMenu } from "@/api/types/InternalMenus";
 import setupMenus from "@/api/parsers/MenuParser";
@@ -35,6 +35,10 @@ export interface PluginInfoProps {
 	 * The custom tree converters defined by the plugin
 	 */
 	converters?: TreeConverter[];
+	/**
+	 * The settings options used by the plugin
+	 */
+	settings?: SettingsItem[];
 }
 
 /**
@@ -48,6 +52,8 @@ export class PluginInfo {
 	private _filePath: string;
 	private readonly _menus: InternalMenu[];
 	private readonly _converters: TreeConverter[];
+	private readonly _settings: SettingsItem[];
+	private readonly _settingValues: { [key: string]: string|undefined };
 
 	private readonly funcs : Map<string, PluginFunction>;
 
@@ -71,6 +77,17 @@ export class PluginInfo {
 		this._converters = props.converters || [];
 		//Functions defined by the plugin
 		this.funcs = new Map();
+
+		//The plugin's settings and values
+		this._settings = props.settings || [];
+		this._settingValues = {};
+		for (let setting of this._settings) {
+			//Ignore if it is an output
+			if (typeof setting === "string") continue;
+			//Use the default input value
+			//TODO: Persist settings
+			this._settingValues[setting.id] = setting.default;
+		}
 	}
 
 	get name(): string {
@@ -119,6 +136,14 @@ export class PluginInfo {
 
 	get converters(): TreeConverter[] {
 		return this._converters;
+	}
+
+	public get settings() {
+		return this._settings;
+	}
+
+	public get settingValues() {
+		return this._settingValues;
 	}
 
 	/**

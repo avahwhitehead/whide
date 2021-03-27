@@ -29,6 +29,7 @@ export class PluginManager {
 			name: props.name,
 			path: props.path,
 			menus: props.menus || [],
+			settings: props.settings || [],
 			converters: props.converters || [],
 			external: (props.external === undefined) ? true : props.external,
 			disabled: (props.disabled === undefined) ? false : props.disabled,

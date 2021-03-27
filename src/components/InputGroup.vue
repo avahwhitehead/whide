@@ -5,6 +5,7 @@
 			class="input-element"
 			v-for="(element, i) of elements"
 			:key="i"
+			@change="v => onElementChange(element, v)"
 		/>
 	</div>
 </template>
@@ -21,6 +22,13 @@ export default Vue.extend({
 	props: {
 		elements: {
 			type: Array as PropType<InputElementDescriptor[]>
+		}
+	},
+	methods: {
+		onElementChange(element: InputElementDescriptor, value?: string) {
+			if (typeof element !== "string") {
+				this.$emit('change', element.id || element.name, value);
+			}
 		}
 	},
 })

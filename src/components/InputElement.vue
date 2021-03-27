@@ -69,6 +69,7 @@ Vue.use(VTooltip);
 
 export type InputElementDescriptor = {
 	name: string,
+	id?: string,
 	type: InputPromptTypes,
 	description?: string,
 	placeholder?: string,

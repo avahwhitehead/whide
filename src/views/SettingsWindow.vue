@@ -17,11 +17,23 @@
 					<div class="header-info">
 						<h1 v-text="current_page.name" style="text-decoration: underline" />
 						<p v-text="current_page.description || 'No description provided.'" />
-						<p>Provided by <span v-text="current_page.plugin || 'not specified'" style="text-decoration: underline; font-style: italic" />.</p>
+						<p v-if="current_page.plugin">
+							Provided by
+							<span class="plugin-name">{{ current_page.plugin.name }}</span>
+							<span>&nbsp;({{ current_page.plugin.isExternal ? 'user' : 'system' }})</span>
+							.
+						</p>
+						<p v-else>Provider plugin not specified.</p>
 					</div>
+
 					<hr />
-					<InputGroup :elements="current_page.settings" />
+
+					<InputGroup
+						:elements="current_page.settings"
+						@change="onInputValueChange"
+					/>
 				</div>
+				<code v-if="current_page && current_page.plugin" v-text="current_page.plugin.settingValues"></code>
 			</div>
 		</div>
 	</div>
@@ -32,6 +44,9 @@
 import Vue from "vue";
 import InputGroup from "@/components/InputGroup.vue";
 import { InputElementDescriptor } from "@/components/InputElement.vue";
+import { pluginManager } from "@/utils/globals";
+import { PluginInfo } from "@/api/PluginInfo";
+import { SettingsItem } from "@whide/whide-types";
 
 interface PageInfo {
 	//The page name
@@ -41,7 +56,21 @@ interface PageInfo {
 	//Array to build the settings page from
 	settings: InputElementDescriptor[];
 	//The plugin providing this page
-	plugin?: string;
+	plugin?: PluginInfo;
+}
+
+function settingToInputDescriptor(setting: SettingsItem) : InputElementDescriptor {
+	if (typeof setting === 'string') return setting;
+
+	return {
+		description: setting.description,
+		default: setting.default,
+		name: setting.name,
+		id: setting.id,
+		placeholder: setting.placeholder,
+		type: setting.type,
+		validator: setting.validator,
+	};
 }
 
 /**
@@ -63,47 +92,31 @@ export default Vue.extend({
 	},
 	computed: {
 		pages() : PageInfo[] {
-			//TODO: Get this from plugins
-			return [
-				{
-					name: "General",
-					settings: [
-						"This is the 'general' page",
-						{
-							name: "First Name",
-							type: "string",
-							description: "Your forename"
-						},
-						{
-							name: "Last Name",
-							type: "string",
-							description: "Your surname"
-						},
-					]
-				},
-				{
-					name: "Appearance",
-					settings: [
-						"This is the 'appearance' page",
-					]
-				},
-				{
-					name: "HWhile",
-					settings: [
-						"This is the 'hwhile' page",
-						{
-							name: "Path to HWhile",
-							type: "file",
-							description: "Path to the HWhile executable"
-						}
-					]
-				},
-			];
+			return pluginManager.getPlugins().map((p: PluginInfo) => {
+				return {
+					name: p.name,
+					description: p.description,
+					plugin: p,
+					settings: p.settings.map(s => settingToInputDescriptor(s)),
+				};
+			});
 		}
 	},
 	mounted() {
 		this.current_page = this.pages[0];
 	},
+	methods: {
+		onInputValueChange(id: string, value?: string) {
+			if (this.current_page && this.current_page.plugin) {
+				Vue.set(
+					this.current_page.plugin.settingValues,
+					id,
+					value
+				);
+				// this.current_page.plugin.settingValues[id] = value;
+			}
+		}
+	}
 });
 </script>
 
@@ -148,5 +161,10 @@ export default Vue.extend({
 
 .header-info {
 	margin: 0 5px;
+}
+
+span.plugin-name {
+	text-decoration: underline;
+	font-style: italic;
 }
 </style>
