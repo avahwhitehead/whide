@@ -1,6 +1,6 @@
 <template>
 	<div class="FileInputElement">
-		<p>
+		<p class="description">
 			<b v-text="name" />:
 			<span v-if="description" v-text="description" />
 		</p>
@@ -104,6 +104,10 @@ export default Vue.extend({
 
 <!--suppress CssUnusedSymbol -->
 <style scoped>
+.description {
+	margin: 5px 0;
+}
+
 .expand-button {
 	color: blue;
 	text-decoration: underline
@@ -111,7 +115,6 @@ export default Vue.extend({
 
 .file-picker-container {
 	overflow-y: auto;
-	margin: 5px 0;
 	padding: 5px;
 	/*Only show top/bottom borders*/
 	border: solid black;
