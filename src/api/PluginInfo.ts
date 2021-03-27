@@ -16,6 +16,10 @@ export interface PluginInfoProps {
 	 */
 	path: string;
 	/**
+	 * The plugin's description.
+	 */
+	description?: string;
+	/**
 	 * Whether the plugin should be disabled
 	 */
 	disabled?: boolean;
@@ -38,6 +42,7 @@ export interface PluginInfoProps {
  */
 export class PluginInfo {
 	private _name: string;
+	private _description: string;
 	private _disabled: boolean;
 	private _isExternal: boolean;
 	private _filePath: string;
@@ -51,8 +56,9 @@ export class PluginInfo {
 	 * @param props	Initialisation parameters
 	 */
 	constructor(props: PluginInfoProps) {
-		//Plugin name
+		//Plugin name and description
 		this._name = props.name;
+		this._description = props.description || '';
 		//Plugin file path
 		this._filePath = props.path;
 		//Whether the plugin is first party
@@ -73,6 +79,14 @@ export class PluginInfo {
 
 	set name(value: string) {
 		this._name = value;
+	}
+
+	get description(): string {
+		return this._description;
+	}
+
+	set description(value: string) {
+		this._description = value;
 	}
 
 	get disabled(): boolean {
