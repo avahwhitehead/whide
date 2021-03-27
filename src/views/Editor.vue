@@ -40,7 +40,7 @@
 			<run-panel />
 		</Container>
 
-		<InputPrompt :cwd="cwd" @controller="c => this.ioController = c" />
+		<InputPrompt @controller="c => this.ioController = c" />
 	</div>
 </template>
 
