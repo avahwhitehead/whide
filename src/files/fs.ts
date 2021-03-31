@@ -3,24 +3,22 @@ import { createFsFromVolume, IFs, Volume } from 'memfs';
 import { IPromisesAPI } from "memfs/lib/promises";
 import { Union } from "unionfs/lib/union";
 import { IFS } from "unionfs/lib/fs";
-import localforage from "localforage";
+import PersistentDataStore from "@/api/PersistentDataStore";
 
-//Storage library used for persisting the memfs data
-localforage.config({
-	driver: localforage.INDEXEDDB,
-	name: 'whide-fs',
-	version: 1.0,
-	storeName: 'filestore',
-	description: 'Virtual file store for the Whide editor'
+//Get the data store object
+const store = new PersistentDataStore({
+	dbName: 'filestore',
+	description: 'Virtual file store for the Whide editor',
 });
+//Key to store the files against in the database
+const FILE_KEY = 'files';
 
 /**
  * Read the exported memfs data from persistent storage
  */
 async function _readFsJson() : Promise<any> {
 	//Read the object as a string
-	const stored = await localforage.getItem('files');
-	return stored;
+	return store.read(FILE_KEY);
 }
 
 /**
@@ -29,7 +27,7 @@ async function _readFsJson() : Promise<any> {
  */
 async function _writeFsJson(json: any) : Promise<void> {
 	//Convert the json to a string, and write it to the storage
-	await localforage.setItem('files', json);
+	await store.write(FILE_KEY, json);
 }
 
 /**

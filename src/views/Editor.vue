@@ -200,7 +200,7 @@ export default Vue.extend({
 				ioController: this.ioController,
 				runPanelController: runPanelController,
 				fs: fs,
-				config: data.plugin.settingValues,
+				config: data.plugin.makeSettingsObj(),
 			};
 			_runFuncAsync(pluginFunction.run, funcParameters).catch((e) => {
 				//Handle errors produced in the plugin function

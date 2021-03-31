@@ -33,7 +33,11 @@
 						@change="onInputValueChange"
 					/>
 				</div>
-				<code v-if="current_page && current_page.plugin" v-text="current_page.plugin.settingValues"></code>
+				<code v-if="settingValues" v-text="settingValues"></code>
+				<div>
+					<button @click="btnResetClick">Reset</button>
+					<button @click="btnSaveClick">Save</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -47,6 +51,7 @@ import { InputElementDescriptor } from "@/components/InputElement.vue";
 import { pluginManager } from "@/utils/globals";
 import { PluginInfo } from "@/api/PluginInfo";
 import { SettingsItem } from "@whide/whide-types";
+import { CustomDict } from "@/types/CustomDict";
 
 interface PageInfo {
 	//The page name
@@ -77,7 +82,8 @@ function settingToInputDescriptor(setting: SettingsItem) : InputElementDescripto
  * Type declaration for the data() values
  */
 interface DataTypesDescriptor {
-	current_page: PageInfo|undefined;
+	current_page?: PageInfo;
+	settingValues?: CustomDict<string|undefined>;
 }
 
 export default Vue.extend({
@@ -88,7 +94,8 @@ export default Vue.extend({
 	data() : DataTypesDescriptor {
 		return {
 			current_page: undefined,
-		}
+			settingValues: undefined,
+		};
 	},
 	computed: {
 		pages() : PageInfo[] {
@@ -107,14 +114,32 @@ export default Vue.extend({
 	},
 	methods: {
 		onInputValueChange(id: string, value?: string) {
-			if (this.current_page && this.current_page.plugin) {
-				Vue.set(
-					this.current_page.plugin.settingValues,
-					id,
-					value
-				);
+			// if (this.current_page && this.current_page.plugin) {
 				// this.current_page.plugin.settingValues[id] = value;
-			}
+			// }
+			if (this.settingValues) this.settingValues[id] = value;
+		},
+		btnResetClick() {
+			if (!this.current_page || !this.current_page.plugin) return;
+			this.settingValues = this.current_page.plugin.makeSettingsObj();
+			// this.current_page.plugin.resetSettings().then(() => {
+				console.log(`Settings reset`);
+			// });
+		},
+		btnSaveClick() {
+			//Do nothing if there isn't anything to save
+			if (!this.current_page || !this.current_page.plugin || !this.settingValues) return;
+			//Save the settings
+			this.current_page.plugin.saveSettingsObj(this.settingValues).then(() => {
+				console.log(`Settings saved`);
+			});
+		},
+	},
+	watch: {
+		current_page(page?: PageInfo) {
+			//Get a new settings object for the new page
+			if (!page || !page.plugin) this.settingValues = undefined;
+			else this.settingValues = page.plugin.makeSettingsObj();
 		}
 	}
 });

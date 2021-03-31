@@ -1,7 +1,8 @@
-import { PluginFunction, SettingsItem, TreeConverter } from "@whide/whide-types";
-import { Menu } from "@whide/whide-types";
+import { Menu, PluginFunction, SettingsItem, TreeConverter } from "@whide/whide-types";
 import { InternalMenu } from "@/api/types/InternalMenus";
 import setupMenus from "@/api/parsers/MenuParser";
+import PersistentDataStore from "@/api/PersistentDataStore";
+import { CustomDict } from "@/types/CustomDict";
 
 /**
  * The parameters used to initialise the PluginInfo object
@@ -41,6 +42,12 @@ export interface PluginInfoProps {
 	settings?: SettingsItem[];
 }
 
+//Set up the store to store plugin settings information
+const pluginInfoStore = new PersistentDataStore({
+	dbName: `plugin-settings`,
+	description: `Store for plugin-specific settings`,
+});
+
 /**
  *
  */
@@ -50,10 +57,11 @@ export class PluginInfo {
 	private _disabled: boolean;
 	private _isExternal: boolean;
 	private _filePath: string;
+	private _store: PersistentDataStore;
 	private readonly _menus: InternalMenu[];
 	private readonly _converters: TreeConverter[];
 	private readonly _settings: SettingsItem[];
-	private readonly _settingValues: { [key: string]: string|undefined };
+	private _currentSettings: CustomDict<string|undefined>;
 
 	private readonly funcs : Map<string, PluginFunction>;
 
@@ -80,14 +88,13 @@ export class PluginInfo {
 
 		//The plugin's settings and values
 		this._settings = props.settings || [];
-		this._settingValues = {};
-		for (let setting of this._settings) {
-			//Ignore if it is an output
-			if (typeof setting === "string") continue;
-			//Use the default input value
-			//TODO: Persist settings
-			this._settingValues[setting.id] = setting.default;
-		}
+
+		//Store to use to persist settings
+		this._store = pluginInfoStore;
+
+		//Load the stored settings
+		this._currentSettings = {};
+		this._loadSettings().then(value => this._currentSettings = value);
 	}
 
 	get name(): string {
@@ -142,10 +149,6 @@ export class PluginInfo {
 		return this._settings;
 	}
 
-	public get settingValues() {
-		return this._settingValues;
-	}
-
 	/**
 	 * Get a function by its name
 	 * @param funcName	The name of the function
@@ -176,5 +179,34 @@ export class PluginInfo {
 	public registerFunc(func : PluginFunction) {
 		//Store the function in memory
 		this.funcs.set(func.name, func);
+	}
+
+	/**
+	 * Create an object containing the current setting-value values for this plugin.
+	 * Modify this object, and call {@link saveSettingsObj} to save the new values.
+	 * @returns A new object containing the key-value pairs of settings
+	 */
+	public makeSettingsObj() : CustomDict<string | undefined> {
+		return { ...this._currentSettings };
+	}
+
+	/**
+	 * Accepts a key-value map of setting ids to values.
+	 * This object should have been originally produced by {@link makeSettingsObj}.
+	 * @param obj	The new settings object to save
+	 */
+	public async saveSettingsObj(obj: CustomDict<string|undefined>) : Promise<void> {
+		//Save the settings
+		this._currentSettings = { ...obj };
+		//Write the object to persistent storage
+		await this._store.write(this.name, obj);
+	}
+
+	/**
+	 * Read the current settings from persistent storage
+	 * @returns	A new settings object containing the stored settings object configuration
+	 */
+	private async _loadSettings() : Promise<CustomDict<string|undefined>> {
+		return await this._store.read(this.name) || {};
 	}
 }
