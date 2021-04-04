@@ -2,9 +2,8 @@
 	<div class="VariableInspector">
 		<div class="select">
 			<label>
-				<select v-model="selectedConverter">
-					<option v-for="(opt, i) of treeConverterManager.converters" :key="i" :value="i">{{ opt.name }}</option>
-				</select>
+				<input v-model="converter_model" />
+				<button @click="onConvertClick">Show</button>
 			</label>
 		</div>
 
@@ -22,13 +21,13 @@
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import VariableTreeViewer from "@/components/VariableTreeViewer.vue";
-import { TreeConverterManager } from "@/api/managers/TreeConverterManager";
 import { BinaryTree } from "@whide/hwhile-wrapper";
-import { ExtendedBinaryTree, TreeConverter } from "@whide/whide-types/";
-import { pluginManager } from "@/utils/globals";
+import treeConverter, { ConversionResultType, ConvertedBinaryTree } from "@whide/tree-lang";
 
 interface DataTypeDescriptor {
 	selectedConverter: number;
+	converter_model: string;
+	converter_string: string;
 }
 
 export default Vue.extend({
@@ -45,18 +44,22 @@ export default Vue.extend({
 	data(): DataTypeDescriptor {
 		return {
 			selectedConverter: 0,
+			converter_model: 'int',
+			converter_string: 'int',
 		}
 	},
 	computed: {
-		converter_result() :ExtendedBinaryTree {
-			const treeConverter: TreeConverter = this.treeConverterManager.converters[this.selectedConverter];
-			if (treeConverter) return treeConverter.convert(this.tree);
-			return null;
+		converter_result(): ConvertedBinaryTree {
+			const res: ConversionResultType = treeConverter(this.tree, this.converter_string);
+			return res.tree;
 		},
-		treeConverterManager() : TreeConverterManager {
-			return pluginManager.treeConverterManager;
-		}
 	},
+	methods: {
+		onConvertClick(): void {
+			//Redraw the tree with the new string
+			this.converter_string = this.converter_model;
+		}
+	}
 })
 </script>
 

@@ -3,18 +3,20 @@
 		class="node"
 		:class="{
 			'node-internal': d.children,
-			'node-leaf': !d.children
+			'node-leaf': !d.children,
+			'error': d.data.error,
 		}"
 		:transform="`translate(${d.x},${d.y})`"
 	>
-		<NodeLink v-if="d.parent" :d="d" />
-
 		<circle
 			:r="10"
-			v-if="!d.children"
+			v-if="!d.children || d.data.error"
 			class="node-circle"
 			@click="handleClick"
+			v-tooltip="circleTooltip"
 		/>
+
+		<NodeLink v-if="d.parent" :d="d" />
 
 		<text
 			dy=".35em"
@@ -28,6 +30,10 @@
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import NodeLink from "./NodeLink.vue";
+import VTooltip from 'v-tooltip';
+import { TreeType } from "@/components/VariableTreeViewer.vue";
+
+Vue.use(VTooltip);
 
 export default Vue.extend({
 	name: 'NodeGroup',
@@ -35,7 +41,15 @@ export default Vue.extend({
 		NodeLink,
 	},
 	props: {
-		d: Object as PropType<any>,
+		d: Object as PropType<{ data: TreeType }>,
+	},
+	computed: {
+		circleTooltip() : any {
+			return {
+				content: this.d.data.errorMsg,
+				placement: "right",
+			};
+		},
 	},
 	methods: {
 		handleClick() {
@@ -57,8 +71,14 @@ export default Vue.extend({
 	stroke-width: 3px;
 }
 
+.node.error .node-circle {
+	stroke: red;
+	fill: pink;
+}
+
 .node .node-text {
 	text-anchor: middle;
 	font: 12px sans-serif;
+	user-select: none;
 }
 </style>
