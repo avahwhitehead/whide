@@ -1,6 +1,16 @@
 const run = require("./run.js");
 const debug = require("./debug.js");
 
+module.exports.settings = [
+	{
+		name: "HWhile Path",
+		id: "hwhile-path",
+		type: "file",
+		description: "Path to the Hwhile executable",
+		default: 'hwhile',
+	}
+];
+
 module.exports.menus = [
 	{
 		"name": "Run",

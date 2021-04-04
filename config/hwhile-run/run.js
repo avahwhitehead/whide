@@ -7,7 +7,7 @@ module.exports.args = [{
 	type: "string",
 }];
 
-module.exports.run = async function({ args, editorController, ioController, runPanelController, path }) {
+module.exports.run = async function({ args, config, editorController, ioController, runPanelController, path }) {
 	//The input expression
 	const expr = args["expression"];
 	//Run the currently focused file
@@ -28,7 +28,7 @@ module.exports.run = async function({ args, editorController, ioController, runP
 
 	//Start the interpreter in the same directory as the file
 	const hWhileConnector = new HWhileConnector({
-		hwhile: "hwhile",
+		hwhile: config['hwhile-path'],
 		cwd: folder_path,
 	});
 

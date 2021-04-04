@@ -14,6 +14,8 @@ export default Vue.extend({
 
 <!--suppress CssUnusedSymbol -->
 <style>
+@import "../styles/v-tooltip.css";
+
 #app {
 	font-family: Avenir, Helvetica, Arial, sans-serif;
 	-webkit-font-smoothing: antialiased;

@@ -3,23 +3,14 @@ import { PluginManager } from "@/api/managers/PluginManager";
 import path from "path";
 import { PluginModule, PluginFunction } from "@whide/whide-types";
 
-/**
- * Get a module's name from its path
- * @param modulePath	Path to the module root (relative to ../../config/)
- */
-function _getModuleName(modulePath: string) {
-	let moduleName: string;
+function _getPackageJson(modulePath: string) : any {
 	try {
 		//Load the module's package.json file
-		let packageJson: any = require("../../config/" + path.join(modulePath, "package.json"));
-		//Read the module name from the package
-		moduleName = packageJson.name;
+		return require("../../config/" + path.join(modulePath, "package.json"));
 	} catch {
 		//Couldn't read the package.json file
-		moduleName = "";
+		return undefined;
 	}
-	//Use the folder name if the name couldn't be determined
-	return moduleName || path.basename(modulePath);
 }
 
 /**
@@ -47,8 +38,13 @@ export async function run_load(pluginManager : PluginManager) : Promise<void> {
 			throw new Error(`Couldn't load system plugin "${modulePath}"`);
 		}
 
-		//Get the module name
-		let moduleName = _getModuleName(modulePath);
+		//Get the plugin's package.json file
+		let packageJson = _getPackageJson(modulePath);
+
+		//Plugin name
+		let moduleName = (packageJson ? packageJson.name : '') || path.basename(modulePath);
+		//Plugin description
+		let description = (packageJson && packageJson.description) || "";
 
 		//Load the functions
 		const funcs: undefined|PluginFunction|PluginFunction[] = pluginModule.default;
@@ -62,7 +58,9 @@ export async function run_load(pluginManager : PluginManager) : Promise<void> {
 		let info: PluginInfo = pluginManager.register({
 			name: moduleName,
 			path: modulePath,
+			description: description,
 			menus: pluginModule.menus,
+			settings: pluginModule.settings,
 			converters: pluginModule.converters,
 			external: false,
 			disabled: false,
