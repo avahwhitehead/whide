@@ -1,41 +1,43 @@
 <template>
 	<div class="InputPrompt" v-if="controls.visible">
-		<div class="content">
-			<div class="messageHolder">
-				<h1 class="title" v-if="controls.title">{{ controls.title }}</h1>
-				<p class="message">{{ controls.message }}</p>
-			</div>
-			<div>
-				<div class="inputHolder">
-					<InputElement
-						:descriptor="descriptor"
-						@change="onInputChange"
-					/>
+		<Modal :visible="controls.visible">
+			<div slot="body" class="content">
+				<div class="messageHolder">
+					<h1 class="title" v-if="controls.title">{{ controls.title }}</h1>
+					<p class="message">{{ controls.message }}</p>
 				</div>
-
 				<div>
-					<input
-						type="button"
-						@click="onSubmitClick"
-						:value="expectingInput ? 'Submit' : 'Ok'"
-					/>
-					<input
-						type="button"
-						v-if="expectingInput"
-						@click="onCancelClick"
-						value="Cancel"
-					/>
+					<div class="inputHolder">
+						<InputElement
+							:descriptor="descriptor"
+							@change="onInputChange"
+						/>
+					</div>
+
+					<div>
+						<input
+							type="button"
+							@click="onSubmitClick"
+							:value="expectingInput ? 'Submit' : 'Ok'"
+						/>
+						<input
+							type="button"
+							v-if="expectingInput"
+							@click="onCancelClick"
+							value="Cancel"
+						/>
+					</div>
 				</div>
 			</div>
-		</div>
+		</Modal>
 	</div>
 </template>
 
 <script lang="ts">
 import vue from "vue";
 import { InputPromptParams, InputPromptTypes, IOController, OutputPromptParams } from "@whide/whide-types";
-import FilePicker from "@/components/FilePicker.vue";
 import InputElement, { InputElementDescriptor } from "@/components/InputElement.vue";
+import Modal from "@/components/_internal/inputs/Modal.vue";
 
 interface DataTypeDescriptor {
 	input?: string,
@@ -53,8 +55,8 @@ interface DataTypeDescriptor {
 export default vue.extend({
 	name: 'InputPrompt',
 	components: {
+		Modal,
 		InputElement,
-		FilePicker
 	},
 	props: {
 
@@ -178,32 +180,5 @@ export default vue.extend({
 .InputPrompt .title {
 	font-size: larger;
 	text-decoration: underline;
-}
-
-/*
-Popup stylings based broadly on W3Schools':
-https://www.w3schools.com/howto/howto_css_modals.asp
-*/
-.InputPrompt {
-	position: fixed;
-	z-index: 5;
-
-	/*Fill the entire screen*/
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-
-	/*Transparent background, with non-transparent fallback*/
-	background-color: rgb(0,0,0);
-	background-color: rgba(0,0,0,0.4);
-}
-.InputPrompt .content {
-	background-color: #FFFFFF;
-	padding: 20px;
-	border: 1px solid #888;
-	margin: 15% auto;
-	width: 50%;
-	overflow: auto;
 }
 </style>
