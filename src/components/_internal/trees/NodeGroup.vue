@@ -10,8 +10,9 @@
 	>
 		<circle
 			:r="10"
-			v-if="!d.children || d.data.error"
+			v-if="isCircleVisible"
 			class="node-circle"
+			:class="{ 'list': d.data.list }"
 			@click="handleClick"
 			v-tooltip="circleTooltip"
 		/>
@@ -41,7 +42,7 @@ export default Vue.extend({
 		NodeLink,
 	},
 	props: {
-		d: Object as PropType<{ data: TreeType }>,
+		d: Object as PropType<{ data: TreeType, children: any[] }>,
 	},
 	computed: {
 		circleTooltip() : any {
@@ -50,6 +51,10 @@ export default Vue.extend({
 				placement: "right",
 			};
 		},
+		isCircleVisible(): boolean {
+			const data = this.d.data;
+			return !this.d.children || !!data.error || !!data.list;
+		}
 	},
 	methods: {
 		handleClick() {
@@ -69,6 +74,11 @@ export default Vue.extend({
 	fill: #fff;
 	stroke: steelblue;
 	stroke-width: 3px;
+}
+
+/*noinspection CssUnusedSymbol*/
+.node .node-circle.list {
+	stroke: green;
 }
 
 .node.error .node-circle {
