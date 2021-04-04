@@ -1,33 +1,32 @@
 <template>
 	<div class="InputPrompt" v-if="controls.visible">
 		<Modal :visible="controls.visible">
-			<div slot="body" class="content">
-				<div class="messageHolder">
-					<h1 class="title" v-if="controls.title">{{ controls.title }}</h1>
-					<p class="message">{{ controls.message }}</p>
-				</div>
-				<div>
-					<div class="inputHolder">
-						<InputElement
-							:descriptor="descriptor"
-							@change="onInputChange"
-						/>
-					</div>
+			<div slot="header" v-if="!expectingInput">
+				<h3 v-text="controls.title" />
+				<p v-text="controls.description" />
+			</div>
 
-					<div>
-						<input
-							type="button"
-							@click="onSubmitClick"
-							:value="expectingInput ? 'Submit' : 'Ok'"
-						/>
-						<input
-							type="button"
-							v-if="expectingInput"
-							@click="onCancelClick"
-							value="Cancel"
-						/>
-					</div>
+			<div slot="body" class="content">
+				<div class="inputHolder">
+					<InputElement
+						:descriptor="descriptor"
+						@change="onInputChange"
+					/>
 				</div>
+			</div>
+
+			<div slot="footer">
+				<input
+					type="button"
+					v-if="expectingInput"
+					@click="onCancelClick"
+					value="Cancel"
+				/>
+				<input
+					type="button"
+					@click="onSubmitClick"
+					:value="expectingInput ? 'Submit' : 'Ok'"
+				/>
 			</div>
 		</Modal>
 	</div>
@@ -86,8 +85,9 @@ export default vue.extend({
 				return undefined;
 			}
 			return {
-				name: 'Input',
+				name: this.controls.title,
 				type: this.controls.inputType,
+				description: this.controls.message,
 			}
 		},
 	},
@@ -120,6 +120,7 @@ export default vue.extend({
 					//Show the message
 					this.controls.title = props.title || "";
 					this.controls.message = props.message;
+					// this.descriptor = props.message || 'my message';
 					//When the user enters the value
 					this.controls.callback = (val? : string) => {
 						//Hide the prompt
@@ -177,8 +178,5 @@ export default vue.extend({
 
 
 <style scoped>
-.InputPrompt .title {
-	font-size: larger;
-	text-decoration: underline;
-}
+
 </style>

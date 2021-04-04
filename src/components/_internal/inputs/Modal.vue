@@ -40,7 +40,15 @@ export default vue.extend({
 		visible: {
 			type: Boolean,
 			default: true,
-		}
+		},
+		title: {
+			type: String,
+			default: undefined,
+		},
+		description: {
+			type: String,
+			default: undefined,
+		},
 	},
 	data() : DataTypeDescriptor {
 		return { };
@@ -68,7 +76,9 @@ export default vue.extend({
 }
 
 .modal-container {
-	width: 300px;
+	display: flex;
+	flex-direction: column;
+	width: 400px;
 	margin: 0 auto;
 	padding: 20px 30px;
 	background-color: #fff;
@@ -78,13 +88,19 @@ export default vue.extend({
 	font-family: Helvetica, Arial, sans-serif;
 }
 
-.modal-header h3 {
+.modal-header h3, .modal-header p {
 	margin-top: 0;
-	color: #42b983;
+	/*padding-top: 0;*/
+	margin-bottom: 8px;
 }
 
 .modal-body {
-	margin: 20px 0;
+	margin: 10px 0;
+	flex: 1;
+}
+
+.modal-header, .modal-footer {
+	max-height: 3em;
 }
 
 .modal-default-button {

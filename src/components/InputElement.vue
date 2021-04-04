@@ -1,12 +1,11 @@
 <template>
 	<div class="InputElement">
-		<div
-			v-if="type === 'label' || type === 'string' || type === 'number'"
-		>
+		<div v-if="type === 'label' || type === 'string' || type === 'number'">
 			<p
 				v-if="type === 'label'"
 				v-text="descriptor"
 			/>
+
 			<StringInputElement
 				v-else-if="type === 'string'"
 				:name="descriptor.name"
@@ -14,6 +13,7 @@
 				@change="handleChange"
 				@error="handleError"
 			/>
+
 			<NumberInputElement
 				v-else-if="type === 'number'"
 				:name="descriptor.name"
@@ -31,9 +31,7 @@
 			/>
 		</div>
 
-		<div
-			v-else-if="type === 'path' || type === 'file' || type === 'folder'"
-		>
+		<div v-else-if="type === 'path' || type === 'file' || type === 'folder'">
 			<FileInputElement
 				class="file-picker"
 				:name="descriptor.name"
@@ -131,7 +129,7 @@ export default Vue.extend({
 			this.$emit('change', val);
 		},
 		handleError(error: string) {
-			this.errors.push(error);
+			this.errors = [error];
 		},
 	}
 })
@@ -148,6 +146,7 @@ span.help-button {
 	width: 1em;
 	height: 1em;
 	padding: 5px;
+	margin-left: .5em;
 }
 
 .error {

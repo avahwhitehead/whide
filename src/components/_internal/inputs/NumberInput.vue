@@ -1,6 +1,6 @@
 <template>
 	<label class="NumberInput">
-		<span>{{name}}</span>
+		<span v-if="name" class="input-name" v-text="name" />
 		<input type="number" v-model="model" :placeholder="placeholder" />
 	</label>
 </template>
@@ -20,6 +20,7 @@ export default Vue.extend({
 		},
 		placeholder: {
 			type: String,
+			default: 'Your value'
 		},
 	},
 	data(): DataTypeDescriptor {
@@ -38,5 +39,7 @@ export default Vue.extend({
 
 <!--suppress CssUnusedSymbol -->
 <style scoped>
-
+.input-name {
+	margin-right: .5em;
+}
 </style>

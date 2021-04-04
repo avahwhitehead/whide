@@ -11,6 +11,8 @@
 			<!-- This div will hold the code editor -->
 			<div ref="codeHolder" class="codeHolder"></div>
 		</div>
+
+		<InputPrompt @controller="ioControllerChange"/>
 	</div>
 </template>
 
@@ -36,11 +38,14 @@ import 'codemirror/lib/codemirror.css';
 import WHILE from "@/assets/whileSyntaxMode";
 import { CustomDict } from "@/types/CustomDict";
 import { AbstractInternalFile, InternalFile, pathToFile } from "@/files/InternalFile";
+import InputPrompt from "@/components/InputPrompt.vue";
+import { IOController } from "@whide/whide-types";
 
 interface DataType {
 	selectedFile: InternalFile|undefined;
 	editor: ExtendedCodeEditorWrapper|undefined;
 	editorController: EditorControllerInterface|undefined;
+	ioController: IOController|undefined;
 	openFiles: InternalFile[];
 }
 
@@ -172,6 +177,7 @@ abstract class EditorController extends EventEmitter implements EditorController
 export default Vue.extend({
 	name: 'CodeEditorContainer',
 	components: {
+		InputPrompt,
 		TabbedPanel,
 	},
 	props: {
@@ -188,6 +194,7 @@ export default Vue.extend({
 			editor: undefined,
 			editorController: undefined,
 			openFiles: [],
+			ioController: undefined,
 		}
 	},
 	mounted() {
@@ -298,10 +305,25 @@ export default Vue.extend({
 		 */
 		onTabClose(fileName: string) : void {
 			const index : number = this._indexFromFileName(fileName);
+
+			// if (!this.ioController) return;
+			//
+			// this.ioController.getInput({
+			// 	:
+			// })
+			window.confirm('Do you want to save the file?')
+
 			//Save the file
 			this.openFiles[index].write();
 			//Close the tab
 			this.openFiles.splice(index, 1);
+		},
+
+		/**
+		 * Handle the IO controller updating
+		 */
+		ioControllerChange(controller: IOController) {
+			this.ioController = controller;
 		},
 
 		_indexFromFileName(fileName: string) : number {
