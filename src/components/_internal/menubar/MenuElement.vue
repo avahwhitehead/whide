@@ -1,6 +1,6 @@
 <template>
 	<div class="menuElement" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
-		<div class="name">{{ menu.name }}</div>
+		<div class="name" v-text="menu.name" />
 		<div class="dropdown" :class="{ 'visible': dropdownVisible }">
 			<MenuItemElement @run="passRunUp"
 				v-for="(child,i) in menu.children" :item="child" :key="i"
