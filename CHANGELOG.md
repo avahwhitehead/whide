@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/sonrad10/Whide/compare/v1.3.0...v1.4.0) (2021-04-04)
+
+
+### Features
+
+* added a help message with descriptions to input elements ([a230c19](https://github.com/sonrad10/Whide/commit/a230c19cb050a642aea606d3e088fb1e6183959d))
+* added a settings page ([db9da20](https://github.com/sonrad10/Whide/commit/db9da203fd0d97e3d9b67db3cadf9e558090d318))
+* added support for the tree conversion language ([fa1d69e](https://github.com/sonrad10/Whide/commit/fa1d69e00d2b6d47b3de00126a213fc50c106750))
+* made list node elements display in a different colour ([022633a](https://github.com/sonrad10/Whide/commit/022633a33705157cf9191858c59f9e14c209166b))
+* made settings persist across restarts ([a4482bb](https://github.com/sonrad10/Whide/commit/a4482bb6167e2c22d99e6055226f9dc57fb88df0))
+* plugin descriptions are loaded from the package.json file ([5024c23](https://github.com/sonrad10/Whide/commit/5024c2379b885bcdacd76f89dc5e59ee412d2680))
+* plugins can define settings for the settings menu ([bf14593](https://github.com/sonrad10/Whide/commit/bf145938320036540fc38e01510d5485381b423a))
+* refactored to move specialist input elements into their own components ([429d6dd](https://github.com/sonrad10/Whide/commit/429d6dd058aba60a29eb771b350da72d17aaf9f0))
+
+
+### Bug Fixes
+
+* fixed using local package paths instead of versions ([92b191b](https://github.com/sonrad10/Whide/commit/92b191bfcc1d23b1997a4bae7df9bf4ac6c8f55b))
+
 ## [1.3.0](https://github.com/sonrad10/Whide/compare/v1.2.0...v1.3.0) (2021-03-26)
 
 
