@@ -11,6 +11,10 @@ import Vue, { PropType } from "vue";
 export default Vue.extend({
 	name: 'NodeLink',
 	props: {
+		curved: {
+			type: Boolean,
+			default: true,
+		},
 		d: Object as PropType<any>,
 	},
 	computed: {
@@ -21,7 +25,7 @@ export default Vue.extend({
 
 			//Cubic curve from the current node to its parent
 			//The current node is centred at (0,0)
-			return `M0,0C0,${pY/2} ${pX},${pY/2} ${pX},${pY}`;
+			return this.curved ? `M0,0C0,${pY/2} ${pX},${pY/2} ${pX},${pY}` : `M0,0L${pX},${pY}`;
 		}
 	}
 });

@@ -1,7 +1,9 @@
 <template>
 	<div class="tree-window">
 		<div>
-			<input v-model="tree_input"/>
+			<label>
+				<input v-model="tree_input"/>
+			</label>
 			<button @click="showTree">Submit</button>
 		</div>
 		<div>

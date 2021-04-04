@@ -14,31 +14,16 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { ExtendedBinaryTree } from "@whide/whide-types";
 import * as d3 from "d3";
 import { HierarchyPointNode } from "d3";
 import NodeGroup from "@/components/_internal/trees/NodeGroup.vue";
 
 export interface TreeType {
 	name: any;
+	list?: boolean,
+	error?: boolean,
+	errorMsg?: string,
 	children?: TreeType[];
-}
-
-/**
- * Convert a binary tree into d3's more general tree format
- * @param tree	The binary tree in the external format
- * @returns The {@code tree} represented in d3's tree format
- */
-function _convertTree(tree: ExtendedBinaryTree|string) : TreeType {
-	if (tree === null) return { name: 'nil' };
-	if (typeof tree === "string") return { name: tree };
-	return {
-		name: '',
-		children: [
-			_convertTree(tree.left),
-			_convertTree(tree.right)
-		],
-	};
 }
 
 interface DataTypeInterface {
@@ -71,27 +56,24 @@ interface DataTypeInterface {
 export default Vue.extend({
 	name: 'VariableTreeViewer',
 	props: {
-		tree: [
-			Object as () => ExtendedBinaryTree,
-			String,
-		],
+		tree: Object as () => TreeType,
 	},
 	data() : DataTypeInterface {
 		return {
 			margin: {
 				left: 20,
 				right: 20,
-				top: 40,
-				bottom: 50,
+				top: 20,
+				bottom: 20,
 			},
 			width: 660,
 			height: 500,
 			drag: {
 				dragging: false,
-				offset: { x: 0, y: 0 },
+				offset: { x: -66, y: 50 },
 				start: { x: 0, y: 0 },
 			},
-			scale: 1
+			scale: 1.25
 		};
 	},
 	computed: {
@@ -144,12 +126,11 @@ export default Vue.extend({
 		 * Based on this example: https://bl.ocks.org/d3noob/72f43406bbe9e104e957f44713b8413c
 		 * @param treeData
 		 */
-		drawTree(treeData: ExtendedBinaryTree) {
+		drawTree(treeData: TreeType) {
 			//Tell d3 to work with a tree, and stay in the diagram limits
 			let treemap = d3.tree().size([this.diagramWidth, this.diagramHeight]);
 
-			//Convert the tree from the external representation into the form accepted by d3
-			let converted : TreeType = _convertTree(treeData);
+			let converted : TreeType = treeData;
 			//Use the parent-child hierarchy to build the tree
 			let nodes: HierarchyPointNode<unknown> = treemap(d3.hierarchy(converted));
 
@@ -170,7 +151,7 @@ export default Vue.extend({
 		this.drawTree(this.tree);
 	},
 	watch: {
-		tree(newTree: ExtendedBinaryTree) {
+		tree(newTree: TreeType): void {
 			this.drawTree(newTree);
 		}
 	}

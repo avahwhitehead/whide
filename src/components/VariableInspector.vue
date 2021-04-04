@@ -2,18 +2,17 @@
 	<div class="VariableInspector">
 		<div class="select">
 			<label>
-				<select v-model="selectedConverter">
-					<option v-for="(opt, i) of treeConverterManager.converters" :key="i" :value="i">{{ opt.name }}</option>
-				</select>
+				<input v-model="converter_model" />
+				<button @click="onConvertClick">Show</button>
 			</label>
 		</div>
 
 		<div class="inspector">
 			<div class="left">
-				<VariableTreeViewer :tree="tree"></VariableTreeViewer>
+				<VariableTreeViewer :tree="binaryTree"></VariableTreeViewer>
 			</div>
 			<div class="right">
-				<VariableTreeViewer :tree="converter_result"></VariableTreeViewer>
+				<VariableTreeViewer :tree="convertedTree"></VariableTreeViewer>
 			</div>
 		</div>
 	</div>
@@ -21,14 +20,14 @@
 
 <script lang="ts">
 import Vue, { PropType } from "vue";
-import VariableTreeViewer from "@/components/VariableTreeViewer.vue";
-import { TreeConverterManager } from "@/api/managers/TreeConverterManager";
+import VariableTreeViewer, { TreeType } from "@/components/VariableTreeViewer.vue";
 import { BinaryTree } from "@whide/hwhile-wrapper";
-import { ExtendedBinaryTree, TreeConverter } from "@whide/whide-types/";
-import { pluginManager } from "@/utils/globals";
+import treeConverter, { ConversionResultType, ConvertedBinaryTree } from "@whide/tree-lang";
 
 interface DataTypeDescriptor {
 	selectedConverter: number;
+	converter_model: string;
+	converter_string: string;
 }
 
 export default Vue.extend({
@@ -45,18 +44,65 @@ export default Vue.extend({
 	data(): DataTypeDescriptor {
 		return {
 			selectedConverter: 0,
+			converter_model: 'int',
+			converter_string: 'int',
 		}
 	},
 	computed: {
-		converter_result() :ExtendedBinaryTree {
-			const treeConverter: TreeConverter = this.treeConverterManager.converters[this.selectedConverter];
-			if (treeConverter) return treeConverter.convert(this.tree);
-			return null;
+		binaryTree(): TreeType {
+			return this._convertBinaryTree(this.tree);
 		},
-		treeConverterManager() : TreeConverterManager {
-			return pluginManager.treeConverterManager;
-		}
+		convertedTree(): TreeType {
+			const res: ConversionResultType = treeConverter(this.tree, this.converter_string);
+			return this._convertConvertedTree(res.tree)
+		},
 	},
+	methods: {
+		onConvertClick(): void {
+			//Redraw the tree with the new string
+			this.converter_string = this.converter_model;
+		},
+		_convertBinaryTree(binary: BinaryTree) : TreeType {
+			//Display 'null' nodes as 'nil'
+			if (binary === null) {
+				return { name: 'nil', children: [], };
+			}
+			//Add the children
+			let children: TreeType[] = [
+				this._convertBinaryTree(binary.left),
+				this._convertBinaryTree(binary.right),
+			];
+			//Return the created node
+			return {
+				name: '',
+				children,
+			};
+		},
+
+		_convertConvertedTree(conv: ConvertedBinaryTree, error = false, list = false) : TreeType {
+			//Label the node 'nil' if it is null, or use its value
+			let name: string|number = '';
+			if (conv.value === null) name = 'nil';
+			else if (conv.value !== undefined) name = conv.value;
+
+			const isErrored = error || !!conv.error;
+			const isList = list || !!conv.list;
+
+			//Add the children
+			let children: TreeType[] = [];
+			for (let child of (conv.children || [])) {
+				children.push(this._convertConvertedTree(child, isErrored, isList));
+			}
+			//Return the created node
+			return {
+				name: name,
+				list: isList,
+				errorMsg: conv.error,
+				error: isErrored,
+				children,
+			};
+		}
+	}
 })
 </script>
 
