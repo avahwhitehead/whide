@@ -3,14 +3,14 @@ const { _displayError } = require("../utils");
 module.exports.name = "run_delete";
 module.exports.args = [
 	{
-		name: "path",
-		description: "File/Folder to delete",
+		name: "Folder",
+		description: "Choose the file/folder to delete",
 		type: 'path',
 	},
 ];
 
 module.exports.run = async function ({args, ioController, fs}) {
-	const filePath = args["path"];
+	const filePath = args["Folder"];
 	//See if the path is a file or a folder
 	fs.stat(filePath, (err, stat) => {
 		if (err) {
