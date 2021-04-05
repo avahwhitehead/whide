@@ -2,7 +2,6 @@ const { _displayError, _exists } = require("../utils");
 const path = require('path');
 
 module.exports.name = "run_new_folder";
-module.exports.name = "run_new_file";
 module.exports.args = [
 	{
 		name: "Parent Folder",
