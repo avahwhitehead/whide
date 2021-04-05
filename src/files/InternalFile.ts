@@ -100,6 +100,7 @@ export abstract class AbstractInternalFile {
  */
 export class InternalFile extends AbstractInternalFile {
 	private _content : string;
+	private _lastSave?: string;
 
 	constructor(props: InternalFileProps) {
 		super(props);
@@ -112,6 +113,7 @@ export class InternalFile extends AbstractInternalFile {
 	 */
 	async read() : Promise<string> {
 		this._content = await fs.promises.readFile(this.fullPath, { encoding: 'utf-8' });
+		this._lastSave = this._content;
 		return this.content;
 	}
 
@@ -119,7 +121,8 @@ export class InternalFile extends AbstractInternalFile {
 	 * Writes the value of `this.content` as a string to this file.
 	 */
 	async write() : Promise<void> {
-		return fs.promises.writeFile(this.fullPath, this.content);
+		await fs.promises.writeFile(this.fullPath, this.content);
+		this._lastSave = this.content;
 	}
 
 	/**
@@ -129,12 +132,34 @@ export class InternalFile extends AbstractInternalFile {
 		return true;
 	}
 
+	/**
+	 * Get the current file contents.
+	 * This may contain unsaved changes.
+	 */
 	get content() : string {
 		return this._content;
 	}
 
+	/**
+	 * Set (without saving) the file contents
+	 * @param value		The new file contents
+	 */
 	set content(value: string) {
 		this._content = value;
+	}
+
+	/**
+	 * Get the contents of the file at its last save
+	 */
+	get lastSave() : string|undefined {
+		return this._lastSave;
+	}
+
+	/**
+	 * Get whether the file content has been modified since it was last saved
+	 */
+	get modified(): boolean {
+		return this.content !== this.lastSave;
 	}
 }
 
