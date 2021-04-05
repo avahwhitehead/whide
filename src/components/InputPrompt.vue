@@ -191,5 +191,7 @@ export default vue.extend({
 
 
 <style scoped>
-
+.content p {
+	white-space: pre-line;
+}
 </style>
