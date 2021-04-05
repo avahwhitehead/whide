@@ -140,7 +140,7 @@ export default vue.extend({
 
 						//Return the input value
 						//Or undefined if the user cancels
-						if (val === 'Cancel') resolve(this.input);
+						if (val === 'Submit') resolve(this.input);
 						else resolve(undefined);
 					},
 				};
