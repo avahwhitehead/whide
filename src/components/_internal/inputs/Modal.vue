@@ -88,23 +88,13 @@ export default vue.extend({
 	font-family: Helvetica, Arial, sans-serif;
 }
 
-.modal-header h3, .modal-header p {
-	margin-top: 0;
-	/*padding-top: 0;*/
-	margin-bottom: 8px;
-}
-
 .modal-body {
 	margin: 10px 0;
-	flex: 1;
+	flex: .8;
 }
 
 .modal-header, .modal-footer {
-	max-height: 3em;
-}
 
-.modal-default-button {
-	float: right;
 }
 
 /*

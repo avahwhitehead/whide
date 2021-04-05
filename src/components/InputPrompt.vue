@@ -3,10 +3,11 @@
 		<Modal :visible="controls.visible">
 			<div slot="header" v-if="!expectingInput">
 				<h3 v-text="controls.title" />
-				<p v-text="controls.description" />
 			</div>
 
 			<div slot="body" class="content">
+				<p v-text="controls.message" />
+
 				<div class="inputHolder">
 					<InputElement
 						:descriptor="descriptor"
