@@ -1,5 +1,4 @@
 <template>
-	<!-- TODO: Use folder expand instead of "load" button -->
 	<div class="fileTree">
 		<div v-if="file">
 			<div>
