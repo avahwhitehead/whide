@@ -119,6 +119,7 @@ export default Vue.extend({
 			//Limit zooming in/out
 			this.scale = Math.max(this.scale, 0.3);
 			this.scale = Math.min(this.scale, 5);
+			event.preventDefault();
 		},
 
 		/**
@@ -130,9 +131,8 @@ export default Vue.extend({
 			//Tell d3 to work with a tree, and stay in the diagram limits
 			let treemap = d3.tree().size([this.diagramWidth, this.diagramHeight]);
 
-			let converted : TreeType = treeData;
 			//Use the parent-child hierarchy to build the tree
-			let nodes: HierarchyPointNode<unknown> = treemap(d3.hierarchy(converted));
+			let nodes: HierarchyPointNode<unknown> = treemap(d3.hierarchy(treeData));
 
 			//Get the SVG element, and remove any existing child nodes
 			const svg = d3.select(this.$refs["mysvg"] as Element);
