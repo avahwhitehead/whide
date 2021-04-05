@@ -2,14 +2,14 @@ const { HWhileConnector } = require("@whide/hwhile-wrapper");
 
 module.exports.name = "run_code";
 module.exports.args = [{
-	name: "expression",
+	name: "Input Expression",
 	description: "Expression to pass as input to the program",
 	type: "string",
 }];
 
 module.exports.run = async function({ args, config, editorController, ioController, runPanelController, path }) {
 	//The input expression
-	const expr = args["expression"];
+	const expr = args["Input Expression"];
 	//Run the currently focused file
 	const filePath = editorController.focusedFile;
 
