@@ -119,7 +119,7 @@ export default Vue.extend({
 	methods: {
 		openTreeViewer() {
 			let routeData = this.$router.resolve({ path: '/trees' });
-			window.open(routeData.href, '_blank', "height=400");
+			window.open(routeData.href, '_blank', "height=700");
 		},
 		async openFile(abstractFile: AbstractInternalFile) : Promise<void> {
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
