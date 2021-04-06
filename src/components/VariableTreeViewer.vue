@@ -1,15 +1,19 @@
 <template>
-	<svg
-		:height="height"
-		:viewBox="viewbox"
-		preserveAspectRatio="xMinYMin meet"
-		@mousedown="startDrag"
-		@mouseup="stopDrag"
-		@mousemove="handleDrag"
-		@wheel="handleZoom"
-	>
-		<g ref="mysvg"/>
-	</svg>
+	<div class="parent">
+		<svg
+			@scroll.prevent=""
+			:height="height"
+			ref="svgelement"
+			:viewBox="viewbox"
+			preserveAspectRatio="xMinYMin meet"
+			@mousedown="startDrag"
+			@mouseup="stopDrag"
+			@mousemove="handleDrag"
+			@wheel="handleZoom"
+		>
+			<g ref="mysvg"/>
+		</svg>
+	</div>
 </template>
 
 <script lang="ts">
@@ -89,7 +93,6 @@ export default Vue.extend({
 			const width = this.width;
 			const height = this.height;
 			const scale = this.scale;
-
 			return `${-X / scale} ${-Y / scale} ${width / scale} ${height / scale}`;
 		},
 	},
@@ -161,6 +164,9 @@ export default Vue.extend({
 
 <style scoped>
 svg {
-	width: 100%;
+	border: 1px solid black;
+}
+.parent {
+	overflow: hidden;
 }
 </style>

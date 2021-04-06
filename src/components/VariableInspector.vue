@@ -2,16 +2,18 @@
 	<div class="VariableInspector">
 		<div class="select">
 			<label>
-				<input v-model="converter_model" />
+				<input v-model="converter_model" placeholder="<any.<any.nil>>>" />
 				<button @click="onConvertClick">Show</button>
 			</label>
 		</div>
 
 		<div class="inspector">
 			<div class="left">
+				<p>Original:</p>
 				<VariableTreeViewer :tree="binaryTree"></VariableTreeViewer>
 			</div>
 			<div class="right">
+				<p>Converted:</p>
 				<VariableTreeViewer :tree="convertedTree"></VariableTreeViewer>
 			</div>
 		</div>
@@ -115,7 +117,6 @@ export default Vue.extend({
 .VariableInspector .inspector .left, .inspector .right {
 	display: inline-block;
 	width: calc(50% - 2px);
-	border: 1px solid black;
 	min-height: 8em;
 }
 
