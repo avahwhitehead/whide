@@ -1,9 +1,7 @@
 <template>
-	<div class="parent">
+	<div class="parent" @scroll.prevent="">
 		<svg
-			@scroll.prevent=""
 			:height="height"
-			ref="svgelement"
 			:viewBox="viewbox"
 			preserveAspectRatio="xMinYMin meet"
 			@mousedown="startDrag"
@@ -117,12 +115,17 @@ export default Vue.extend({
 			}
 		},
 		handleZoom(event: WheelEvent) {
-			//Scale by to adjust the jump size
-			this.scale += (-.05 * event.deltaY);
+			let scale = this.scale;
+			///Fixed jump size on all browsers
+			let jump = .2;
+			if (event.deltaY > 0) scale -= jump;
+			else scale += jump;
+
 			//Limit zooming in/out
-			this.scale = Math.max(this.scale, 0.3);
-			this.scale = Math.min(this.scale, 5);
-			event.preventDefault();
+			scale = Math.max(scale, 0.3);
+			scale = Math.min(scale, 5);
+			//Save the new scale
+			this.scale = scale;
 		},
 
 		/**
