@@ -15,8 +15,8 @@
 			<div class="page-content">
 				<div v-if="current_page">
 					<div class="header-info">
-						<h1 v-text="current_page.name" style="text-decoration: underline" />
-						<p v-text="current_page.description || 'No description provided.'" />
+						<h3 v-text="current_page.name" />
+						<p v-text="current_page.description" v-if="current_page.description" />
 						<p v-if="current_page.plugin">
 							Provided by
 							<span class="plugin-name">{{ current_page.plugin.name }}</span>
@@ -33,7 +33,6 @@
 						@change="onInputValueChange"
 					/>
 				</div>
-				<code v-if="settingValues" v-text="settingValues"></code>
 				<div>
 					<button @click="btnResetClick">Reset</button>
 					<button @click="btnSaveClick">Save</button>
@@ -64,9 +63,8 @@ interface PageInfo {
 	plugin?: PluginInfo;
 }
 
-function settingToInputDescriptor(setting: SettingsItem) : InputElementDescriptor {
+function settingToInputDescriptor(setting: SettingsItem, currSettings: CustomDict<string | undefined>) : InputElementDescriptor {
 	if (typeof setting === 'string') return setting;
-
 	return {
 		description: setting.description,
 		default: setting.default,
@@ -75,6 +73,7 @@ function settingToInputDescriptor(setting: SettingsItem) : InputElementDescripto
 		placeholder: setting.placeholder,
 		type: setting.type,
 		validator: setting.validator,
+		value: currSettings[setting.id || setting.name]
 	};
 }
 
@@ -99,12 +98,19 @@ export default Vue.extend({
 	},
 	computed: {
 		pages() : PageInfo[] {
-			return pluginManager.getPlugins().map((p: PluginInfo) => {
+			//Filter to only plugins defined settings
+			let plugins = pluginManager.getPlugins().filter(
+				(p: PluginInfo) => p.settings && p.settings.length
+			);
+			//Convert from plugin settings to PageInfo
+			return plugins.map((p: PluginInfo) => {
+				let currSettings = p.makeSettingsObj();
+				console.log(currSettings, p.settings);
 				return {
 					name: p.name,
 					description: p.description,
 					plugin: p,
-					settings: p.settings.map(s => settingToInputDescriptor(s)),
+					settings: p.settings.map(s => settingToInputDescriptor(s, currSettings)),
 				};
 			});
 		}
@@ -114,17 +120,11 @@ export default Vue.extend({
 	},
 	methods: {
 		onInputValueChange(id: string, value?: string) {
-			// if (this.current_page && this.current_page.plugin) {
-				// this.current_page.plugin.settingValues[id] = value;
-			// }
 			if (this.settingValues) this.settingValues[id] = value;
 		},
 		btnResetClick() {
 			if (!this.current_page || !this.current_page.plugin) return;
 			this.settingValues = this.current_page.plugin.makeSettingsObj();
-			// this.current_page.plugin.resetSettings().then(() => {
-				console.log(`Settings reset`);
-			// });
 		},
 		btnSaveClick() {
 			//Do nothing if there isn't anything to save
@@ -186,6 +186,10 @@ export default Vue.extend({
 
 .header-info {
 	margin: 0 5px;
+}
+
+.header-info h3 {
+	text-decoration: underline
 }
 
 span.plugin-name {
