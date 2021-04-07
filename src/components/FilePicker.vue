@@ -125,7 +125,6 @@ export default Vue.extend({
 			this.runLoadChildren();
 		},
 		dirUpClick(): void {
-			if (!this.file || !this.file.folder) return;
 			//Return the same path if this is a file, or the root directory
 			let folder: InternalFolder = this.file as InternalFolder;
 			if (folder.fullPath === '/') return;

@@ -31,6 +31,10 @@ export default Vue.extend({
 	watch: {
 		model(val: string) {
 			this.$emit('change', val);
+		},
+		value(val?: string) {
+			if (!val) return;
+			this.model = val;
 		}
 	}
 })

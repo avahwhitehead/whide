@@ -10,6 +10,7 @@
 				v-else-if="type === 'string'"
 				:name="descriptor.name"
 				:placeholder="descriptor.placeholder"
+				:value="descriptor.value || descriptor.default"
 				@change="handleChange"
 				@error="handleError"
 			/>
@@ -18,6 +19,7 @@
 				v-else-if="type === 'number'"
 				:name="descriptor.name"
 				:placeholder="descriptor.placeholder"
+				:value="descriptor.value || descriptor.default"
 				@change="handleChange"
 				@error="handleError"
 			/>
@@ -37,6 +39,7 @@
 				:name="descriptor.name"
 				:description="descriptor.description"
 				:type="type"
+				:value="descriptor.value || descriptor.default"
 				@change="handleChange"
 				@error="handleError"
 			/>
@@ -71,6 +74,7 @@ export type InputElementDescriptor = {
 	type: InputPromptTypes,
 	description?: string,
 	placeholder?: string,
+	value?: string|undefined,
 	default?: string,
 	validator?: (arg0: string) => Promise<boolean>,
 }|string;
@@ -98,6 +102,10 @@ export default Vue.extend({
 				Object,	//TODO: This should be `InputElementDescriptor`
 				String,
 			],
+		},
+		value: {
+			type: String,
+			required: false,
 		}
 	},
 	data(): DataTypeDescriptor {

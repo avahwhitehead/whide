@@ -23,6 +23,13 @@
 			/>
 		</div>
 
+		<div>
+			<label>
+				<input v-model="dir" placeholder="File path"/>
+			</label>
+			<div class="error" v-text="error" v-if="error" />
+		</div>
+
 		<transition name="fade">
 			<div
 				class="file-picker-container"
@@ -30,7 +37,7 @@
 			>
 				<FilePicker
 					class="file-picker"
-					:directory="vars.cwd"
+					:directory="dir"
 					@change="onFileClick"
 				/>
 			</div>
@@ -47,7 +54,8 @@ import { vars } from '@/utils/globals';
 interface DataTypeDescriptor {
 	path?: AbstractInternalFile;
 	open: boolean;
-	vars: typeof vars;
+	dir: string;
+	error?: string;
 }
 
 export default Vue.extend({
@@ -66,17 +74,22 @@ export default Vue.extend({
 		description: {
 			type: String,
 			required: false,
-		}
+		},
+		value: {
+			type: String,
+			required: false,
+		},
 	},
 	data(): DataTypeDescriptor {
 		return {
 			path: undefined,
 			open: true,
-			vars,
+			error: undefined,
+			dir: vars.cwd,
 		};
 	},
 	mounted() {
-
+		this._onValueChange(this.value);
 	},
 	methods: {
 		onFileClick(file: AbstractInternalFile) {
@@ -93,15 +106,18 @@ export default Vue.extend({
 				this.$emit("error", file.folder ? '' : "You must select a folder");
 			}
 		},
-		error(msg?: string) {
-			this.$emit("error", msg);
+		_onValueChange(val?: string) {
+			this.dir = val || vars.cwd;
 		}
 	},
 	watch: {
 		path(val?: AbstractInternalFile) {
 			if (val) this.$emit('change', val.fullPath);
 			else this.$emit('change', undefined);
-		}
+		},
+		value(val?: string) {
+			this._onValueChange(val);
+		},
 	}
 })
 </script>
@@ -114,6 +130,10 @@ export default Vue.extend({
 }
 .description-holder .name {
 	font-weight: bold;
+}
+
+.error {
+	color: red;
 }
 
 .selected-output {

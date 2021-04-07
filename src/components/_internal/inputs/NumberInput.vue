@@ -22,6 +22,10 @@ export default Vue.extend({
 			type: String,
 			default: 'Your value'
 		},
+		value: {
+			type: String,
+			required: false,
+		},
 	},
 	data(): DataTypeDescriptor {
 		return {
@@ -31,6 +35,12 @@ export default Vue.extend({
 	watch: {
 		model(val: number) {
 			this.$emit('change', val);
+		},
+		value(val?: string) {
+			if (!val) return;
+			let v: number = Number.parseInt(val);
+			if (isNaN(v)) return;
+			this.model = v;
 		}
 	}
 })
