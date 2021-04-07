@@ -7,6 +7,12 @@
 			<div class="right">
 				<button @click="openTreeViewer">Tree Viewer</button>
 				<button @click="download" :disabled="!focused_file">Download File</button>
+				<font-awesome-icon
+					class="settings icon"
+					icon="cog"
+					title="Open Settings"
+					@click="openSettings"
+				/>
 			</div>
 		</div>
 
@@ -51,6 +57,11 @@ import MenuBar from "@/components/MenuBar.vue";
 import PluginToggler from "@/components/PluginToggler.vue";
 import RunPanel, { runPanelController } from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
+//FontAwesome
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { faCog } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+library.add(faCog);
 //Other imports
 import {
 	EditorController,
@@ -89,6 +100,7 @@ export default Vue.extend({
 		FilePicker,
 		Container,
 		CodeEditorElement,
+		FontAwesomeIcon,
 		MenuBar,
 		PluginToggler,
 		RunPanel,
@@ -116,6 +128,10 @@ export default Vue.extend({
 		openTreeViewer() {
 			let routeData = this.$router.resolve({ path: '/trees' });
 			window.open(routeData.href, '_blank', "height=700");
+		},
+		openSettings() {
+			let routeData = this.$router.resolve({ path: '/settings' });
+			window.open(routeData.href, '_blank');//, "height=700");
 		},
 		async openFile(abstractFile: AbstractInternalFile) : Promise<void> {
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
@@ -243,6 +259,11 @@ export default Vue.extend({
 
 .no-scroll {
 	overflow: hidden;
+}
+
+.settings.icon:hover {
+	cursor: pointer;
+	color: #555555;
 }
 
 .body {
