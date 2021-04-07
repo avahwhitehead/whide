@@ -68,6 +68,7 @@ export default Vue.extend({
 });
 </script>
 
+<!--suppress CssUnusedSymbol -->
 <style scoped>
 .name-holder {
 
@@ -101,7 +102,7 @@ ul {
 ul .menu-item {
 	position: relative;
 
-	padding: 8px;
+	padding: 4px 8px;
 	background: white;
 }
 

@@ -12,6 +12,15 @@
 
 				<span v-if="file.folder" @click="onClick(file)" @dblclick="toggleExpand" v-text="displayName" />
 				<span v-else @click="onClick(file)" @dblclick="onClick(file)" v-text="displayName" />
+
+				<span class="controls-holder" v-if="showControls">
+					<font-awesome-icon
+						class="refresh-icon"
+						icon="sync"
+						title="Refresh"
+						@click="refreshClick"
+					/>
+				</span>
 			</div>
 
 			<div v-if="file.folder && expanded">
@@ -20,6 +29,7 @@
 						:directory="child.fullPath"
 						:loadLevel="loadLevel - 1"
 						class="child" @change="onClick"
+						:show-controls="false"
 						v-for="(child,i) in children" v-bind:key="i"
 					/>
 				</div>
@@ -37,9 +47,9 @@
 <script lang="ts">
 import Vue from "vue";
 import { library } from "@fortawesome/fontawesome-svg-core";
-import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons';
+import { faCaretDown, faCaretRight, faSync } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-library.add(faCaretDown, faCaretRight);
+library.add(faCaretDown, faCaretRight, faSync);
 import { pathToFile, AbstractInternalFile, InternalFolder } from "@/files/InternalFile";
 
 interface DataTypeInterface {
@@ -61,6 +71,10 @@ export default Vue.extend({
 			type: Number,
 			default: 1,
 		},
+		showControls: {
+			type: Boolean,
+			default: true,
+		}
 	},
 	data() : DataTypeInterface {
 		return {
@@ -96,6 +110,10 @@ export default Vue.extend({
 		toggleExpand() {
 			this.expanded = !this.expanded;
 		},
+		refreshClick() {
+			this.children = [];
+			this.runLoadChildren();
+		}
 	},
 	watch: {
 		directory() {
@@ -134,6 +152,11 @@ export default Vue.extend({
 <style scoped>
 .fileTree {
 	text-align: left;
+}
+
+.fileTree .controls-holder {
+	text-align: right;
+	float: right;
 }
 
 .fileTree .child {

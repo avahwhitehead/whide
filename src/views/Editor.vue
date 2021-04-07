@@ -17,8 +17,8 @@
 					<select v-model="cwd" class="cwd-dropdown">
 						<option v-for="(opt, i) of parent_paths" :key="i">{{opt}}</option>
 					</select>
+					<button @click="handleChangeRootClick">Change Root</button>
 				</label>
-				<button @click="handleChangeRootClick">Change Root</button>
 				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)"/>
 			</Container>
 
