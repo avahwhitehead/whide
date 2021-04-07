@@ -13,13 +13,8 @@
 		<div class="body">
 			<Container class="left filler">
 				<!-- TODO: There must be a better way than this -->
-				<label>
-					<select v-model="cwd" class="cwd-dropdown">
-						<option v-for="(opt, i) of parent_paths" :key="i">{{opt}}</option>
-					</select>
-					<button @click="handleChangeRootClick">Change Root</button>
-				</label>
-				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)"/>
+				<button @click="handleChangeRootClick">Change Root</button>
+				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)" @dir="dirChange"/>
 			</Container>
 
 			<Container class="middle code-editor no-scroll">
@@ -80,7 +75,6 @@ interface DataTypesDescriptor {
 	codeEditor? : ExtendedCodeEditorWrapper;
 	editorController?: EditorController;
 	ioController? : IOController;
-	cwd: string;
 }
 
 //Run a function asynchronously
@@ -105,7 +99,6 @@ export default Vue.extend({
 			codeEditor: undefined,
 			editorController: undefined,
 			ioController: undefined,
-			cwd: vars.cwd,
 		}
 	},
 	computed: {
@@ -114,6 +107,9 @@ export default Vue.extend({
 		},
 		parent_paths() : string[] {
 			return this.getPaths(this.cwd);
+		},
+		cwd(): string {
+			return vars.cwd;
 		}
 	},
 	methods: {
@@ -142,6 +138,10 @@ export default Vue.extend({
 				console.log(`No file open to download`);
 			}
 		},
+		dirChange(dir: string) {
+			//Change the working directory
+			vars.cwd = dir;
+		},
 		getPaths(filePath: string) : string[] {
 			let r = [filePath];
 			while (filePath && filePath !== '/') {
@@ -158,7 +158,7 @@ export default Vue.extend({
 				type: "folder"
 			}).then((folder?: string) => {
 				if (!folder) return;
-				this.cwd = folder;
+				vars.cwd = folder;
 			})
 		},
 

@@ -1,6 +1,21 @@
 <template>
 	<div class="fileTree">
 		<div v-if="file">
+			<div class="controls-holder" v-if="showControls">
+				<font-awesome-icon
+					class="icon"
+					icon="level-up-alt"
+					title="Parent Directory"
+					@click="dirUpClick"
+				/>
+				<font-awesome-icon
+					class="icon"
+					icon="sync"
+					title="Refresh"
+					@click="refreshClick"
+				/>
+			</div>
+
 			<div>
 				<font-awesome-icon
 					v-if="file.folder"
@@ -12,15 +27,6 @@
 
 				<span v-if="file.folder" @click="onClick(file)" @dblclick="toggleExpand" v-text="displayName" />
 				<span v-else @click="onClick(file)" @dblclick="onClick(file)" v-text="displayName" />
-
-				<span class="controls-holder" v-if="showControls">
-					<font-awesome-icon
-						class="refresh-icon"
-						icon="sync"
-						title="Refresh"
-						@click="refreshClick"
-					/>
-				</span>
 			</div>
 
 			<div v-if="file.folder && expanded">
@@ -47,15 +53,18 @@
 <script lang="ts">
 import Vue from "vue";
 import { library } from "@fortawesome/fontawesome-svg-core";
-import { faCaretDown, faCaretRight, faSync } from '@fortawesome/free-solid-svg-icons';
+import { faCaretDown, faCaretRight, faSync, faLevelUpAlt } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-library.add(faCaretDown, faCaretRight, faSync);
+library.add(faCaretDown, faCaretRight, faSync, faLevelUpAlt);
 import { pathToFile, AbstractInternalFile, InternalFolder } from "@/files/InternalFile";
+import path from "path";
+import { vars } from "@/utils/globals";
 
 interface DataTypeInterface {
 	file?: AbstractInternalFile;
 	children?: AbstractInternalFile[];
 	expanded: boolean;
+	root: string;
 }
 
 export default Vue.extend({
@@ -81,6 +90,7 @@ export default Vue.extend({
 			children: undefined,
 			file: undefined,
 			expanded: false,
+			root: vars.cwd,
 		}
 	},
 	computed: {
@@ -113,12 +123,24 @@ export default Vue.extend({
 		refreshClick() {
 			this.children = [];
 			this.runLoadChildren();
+		},
+		dirUpClick(): void {
+			if (!this.file || !this.file.folder) return;
+			//Return the same path if this is a file, or the root directory
+			let folder: InternalFolder = this.file as InternalFolder;
+			if (folder.fullPath === '/') return;
+			//Return the parent directory
+			this.root = path.dirname(folder.fullPath);
 		}
 	},
 	watch: {
-		directory() {
+		directory(dir: string) {
+			this.root = dir;
+		},
+		root(root: string) {
 			this.file = undefined;
-			pathToFile(this.directory).then((f : AbstractInternalFile) => this.file = f);
+			pathToFile(root).then((f : AbstractInternalFile) => this.file = f);
+			this.$emit('dir', root);
 		},
 		file(newFile : AbstractInternalFile) {
 			this.children = undefined;
@@ -157,6 +179,10 @@ export default Vue.extend({
 .fileTree .controls-holder {
 	text-align: right;
 	float: right;
+}
+
+.fileTree .controls-holder .icon {
+	margin: 0 5px;
 }
 
 .fileTree .child {
