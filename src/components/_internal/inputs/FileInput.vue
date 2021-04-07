@@ -136,8 +136,15 @@ export default Vue.extend({
 }
 
 .file-picker, .fade-enter-active, .fade-leave-active {
+	/*Fixed height*/
 	height: 10em;
+	/*Don't show the scrollbar when fading*/
 	overflow-y: hidden;
+}
+
+.file-picker {
+	/*Override the collapsing scrollbar settings*/
+	overflow-y: auto;
 }
 
 .fade-enter-active, .fade-leave-active {
