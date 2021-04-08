@@ -1,4 +1,4 @@
-import { Menu, PluginFunction, SettingsItem, TreeConverter } from "@whide/whide-types";
+import { Menu, PluginFunction, SettingsItem } from "@whide/whide-types";
 import { InternalMenu } from "@/api/types/InternalMenus";
 import setupMenus from "@/api/parsers/MenuParser";
 import PersistentDataStore from "@/api/PersistentDataStore";
@@ -33,10 +33,6 @@ export interface PluginInfoProps {
 	 */
 	menus?: Menu[];
 	/**
-	 * The custom tree converters defined by the plugin
-	 */
-	converters?: TreeConverter[];
-	/**
 	 * The settings options used by the plugin
 	 */
 	settings?: SettingsItem[];
@@ -59,7 +55,6 @@ export class PluginInfo {
 	private _filePath: string;
 	private _store: PersistentDataStore;
 	private readonly _menus: InternalMenu[];
-	private readonly _converters: TreeConverter[];
 	private readonly _settings: SettingsItem[];
 	private _currentSettings: CustomDict<string|undefined>;
 
@@ -81,8 +76,6 @@ export class PluginInfo {
 		this._disabled = !!props.disabled;
 		//The menus created by the plugin (default: [])
 		this._menus = setupMenus(props.menus || [], this);
-		//The custom tree converters created by the plugin (default: [])
-		this._converters = props.converters || [];
 		//Functions defined by the plugin
 		this.funcs = new Map();
 
@@ -139,10 +132,6 @@ export class PluginInfo {
 
 	get menus(): InternalMenu[] {
 		return this._menus;
-	}
-
-	get converters(): TreeConverter[] {
-		return this._converters;
 	}
 
 	public get settings() {

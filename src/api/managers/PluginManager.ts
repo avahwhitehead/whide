@@ -30,7 +30,6 @@ export class PluginManager {
 			path: props.path,
 			menus: props.menus || [],
 			settings: props.settings || [],
-			converters: props.converters || [],
 			external: (props.external === undefined) ? true : props.external,
 			disabled: (props.disabled === undefined) ? false : props.disabled,
 		});
@@ -90,8 +89,6 @@ export class PluginManager {
 	public enablePlugin(pluginInfo: PluginInfo) {
 		//Register the menus
 		pluginInfo.menus.forEach(m => this._menuManager.register(m));
-		//Register the tree converters
-		pluginInfo.converters.forEach(c => this._treeConverterManager.register(c));
 
 		//Mark as enabled
 		pluginInfo.disabled = false;
@@ -108,8 +105,6 @@ export class PluginManager {
 
 		//Unregister the menus
 		pluginInfo.menus.forEach(m => this._menuManager.unregister(m));
-		//Unregister the tree converters
-		pluginInfo.converters.forEach(c => this._treeConverterManager.unregister(c));
 
 		//Mark as disabled
 		pluginInfo.disabled = true;
