@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="root">
 		<Container
 			:left="['play', 'step-forward', 'stop']"
 			@iconClick="onIconClick"
@@ -134,6 +134,13 @@ export default Vue.extend({
 
 
 <style scoped>
+.root {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: hidden;
+}
+
 .DebuggerPanel {
 	display: flex;
 	flex-direction: column;
@@ -162,7 +169,6 @@ export default Vue.extend({
 .variable-viewer {
 	float: right;
 	min-width: 30em;
-	width: 20%;
 	max-width: 50%;
 }
 
