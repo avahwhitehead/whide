@@ -175,9 +175,13 @@ export default Vue.extend({
 svg {
 	border: 1px solid black;
 }
+
 .parent {
 	overflow: hidden;
 	position: relative;
+	max-width: min-content;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .controls {
