@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.5.0](https://github.com/sonrad10/Whide/compare/v1.4.0...v1.5.0) (2021-04-09)
+
+
+### Features
+
+* added button to open settings window ([0086abf](https://github.com/sonrad10/Whide/commit/0086abf32b05e11ef41d8fee7f92ca12f0408db7))
+* added global error catchers to display errors to the user ([e60fc35](https://github.com/sonrad10/Whide/commit/e60fc35d7f33d2751c20d332b855ef36736f541b))
+* added popup support for prompts with arbitrary buttons ([6b334de](https://github.com/sonrad10/Whide/commit/6b334dee4d00e6abae1ab934de87d172bcdc2bbb))
+* added zoom buttons to tree viewer ([7914a49](https://github.com/sonrad10/Whide/commit/7914a4977b1934073a4107cea7556c02ffe4db11))
+* allowed changing directory from the file picker ([3f16b18](https://github.com/sonrad10/Whide/commit/3f16b18cf419bb613e8eeb498165f858e1b20aa9))
+* made the debugger variable viewer use the conversion language ([9bea83b](https://github.com/sonrad10/Whide/commit/9bea83b65598d922ce85dbd65f1dcf7d5576cfa5))
+* removed converters from the plugin system ([194acd5](https://github.com/sonrad10/Whide/commit/194acd50178ba5fb17bb67cc62c5153b3992d335))
+
+
+### Bug Fixes
+
+* added running error if hwhile path is not set in settings ([f3ba9f0](https://github.com/sonrad10/Whide/commit/f3ba9f0bea35102fd5662ecbf20b4ad94c001297))
+* added scrollbar back to the file picker ([ed0f5f4](https://github.com/sonrad10/Whide/commit/ed0f5f4e98c41094533132fd78f1faf4ec95b1d5))
+* clicking on a tree in program output opens the right page ([9937a70](https://github.com/sonrad10/Whide/commit/9937a7075f4bab447fe0f9ac5e8500c9738c3e20))
+* deleted virtual folders are now persisted ([b66cb43](https://github.com/sonrad10/Whide/commit/b66cb4354c3897e952f01ff6a4387b7213848ed0))
+* fixed `getInput` always returning undefined ([81ce4d5](https://github.com/sonrad10/Whide/commit/81ce4d588485363270fce17f90d4a5dd57243412))
+* fixed menu items not always triggering when clicked ([db20e3b](https://github.com/sonrad10/Whide/commit/db20e3bf6cc6fa0c323a30d412a8d61fa8ff811f))
+* fixed new files being created as folders ([cb251ee](https://github.com/sonrad10/Whide/commit/cb251ee4de2ee2e6aafb5487d95c43ff7703ef3a))
+* fixed program run output not showing without selecting a tab ([08cb63d](https://github.com/sonrad10/Whide/commit/08cb63d945f6fb79096371fc561cab01b52f4b55))
+* fixed scrolling in the run panel ([13ba2b5](https://github.com/sonrad10/Whide/commit/13ba2b5e65662b2b36b17ebfd84801536fe525f7))
+* fixed tree viewer scaling breaking on resisize ([be18233](https://github.com/sonrad10/Whide/commit/be1823343e540ab76bac3891d378bf6dce215e19))
+* fixed tree-lang dependency breaking build ([f2caff4](https://github.com/sonrad10/Whide/commit/f2caff4b98997f60bdb114a7168c35fe4b19766a))
+* improved new folder / delete popup messages ([778e43c](https://github.com/sonrad10/Whide/commit/778e43c566aa4578a79e8375e8c2640ef921c404))
+* improved run/debug popup messages ([f1d9e7e](https://github.com/sonrad10/Whide/commit/f1d9e7e19b3ebae13ce8b8747101604b53b28d2a))
+* improved the menubar styling ([c3b7225](https://github.com/sonrad10/Whide/commit/c3b7225ee5f42c1d4f824cdfb244fae8a9efc9f6))
+* made settings show the last saved settings value in inputs ([ab4d9c2](https://github.com/sonrad10/Whide/commit/ab4d9c2acd9c8fdf161a932d4fe90ed509e1847e))
+* plugins without settings are hidden from the settings window ([768caa8](https://github.com/sonrad10/Whide/commit/768caa8953e24e45bdacbab5d9a1189a0b606c58))
+* popups preserve line breaks ([6772fb5](https://github.com/sonrad10/Whide/commit/6772fb5d4e893268f5b1b0332314f38e2469727b))
+* refactored/changed styling around inputs to improve input prompts ([9af2f5d](https://github.com/sonrad10/Whide/commit/9af2f5d47839256bbcdb92db165287643c025f39))
+* removed finished TODO ([9e3ec5d](https://github.com/sonrad10/Whide/commit/9e3ec5d8b040ddeaf898c447e8abc9b748fe8f97))
+* run panel opens new tabs automatically ([b28a830](https://github.com/sonrad10/Whide/commit/b28a830ed51d10097c16d862d0c60459680e7841))
+* tree viewer no longer scrolls externally when zooming ([7a14d57](https://github.com/sonrad10/Whide/commit/7a14d576fe8bc025d9278b8a05566d20b92ebac0))
+* tree viewer opens in a better sized window ([cbbb575](https://github.com/sonrad10/Whide/commit/cbbb575814cbb7244e92802e3699b8a6dc0a6fa0))
+* tree viewer zooming is now consistent across browsers ([f6195c3](https://github.com/sonrad10/Whide/commit/f6195c369da9ee5e6e26ec712d25ed2a94a8d9fc))
+* updated dependencies ([c3c8659](https://github.com/sonrad10/Whide/commit/c3c86598872c057195a6093868c0c8918d4eb2fe))
+
 ## [1.4.0](https://github.com/sonrad10/Whide/compare/v1.3.0...v1.4.0) (2021-04-04)
 
 
