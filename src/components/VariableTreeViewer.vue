@@ -11,6 +11,10 @@
 		>
 			<g ref="mysvg"/>
 		</svg>
+		<div class="controls">
+			<input type="button" class="button" @click="() => _zoom(1)" value="+">
+			<input type="button" class="button" @click="() => _zoom(-1)" value="-">
+		</div>
 	</div>
 </template>
 
@@ -115,12 +119,14 @@ export default Vue.extend({
 			}
 		},
 		handleZoom(event: WheelEvent) {
-			let scale = this.scale;
-			///Fixed jump size on all browsers
-			let jump = .2;
-			if (event.deltaY > 0) scale -= jump;
-			else scale += jump;
-
+			//Zoom in the scroll direction
+			this._zoom(-event.deltaY);
+			//Don't scroll the page
+			event.preventDefault();
+		},
+		_zoom(direction: number): void {
+			//Fixed jump size on all browsers
+			let scale = this.scale + .2 * (direction >= 0 ? 1 : -1);
 			//Limit zooming in/out
 			scale = Math.max(scale, 0.3);
 			scale = Math.min(scale, 5);
@@ -171,5 +177,31 @@ svg {
 }
 .parent {
 	overflow: hidden;
+	position: relative;
+}
+
+.controls {
+	/*Position to the top-right corner*/
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	/*Display buttons as a stack*/
+	width: 50px;
+}
+
+.controls .button {
+	height: 25px;
+	cursor: pointer;
+
+	/*Positioning*/
+	width: 100%;
+	margin-bottom: 5px;
+
+	/*Formatting*/
+	padding: 0;
+	text-align: center;
+	border: 1px solid #999999;
+	border-radius: 5px;
+	background-color: white;
 }
 </style>
