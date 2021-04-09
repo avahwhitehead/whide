@@ -124,9 +124,11 @@ export default Vue.extend({
 			if (selected === undefined) this.instanceController = undefined;
 			else this.instanceController = await this.runPanelController.getByName(selected);
 		},
-		tabNames(tabs: string[]) {
-			if (this.selectedTab !== undefined || tabs.length === 0) return;
-			this.selectedTab = tabs[0];
+		tabNames(tabs: string[], oldTabs: string[]) {
+			//If a new tab is opened, select that
+			if (oldTabs.length + 1 === tabs.length) {
+				this.selectedTab = tabs[tabs.length - 1];
+			}
 		}
 	}
 })
