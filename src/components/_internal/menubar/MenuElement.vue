@@ -1,75 +1,118 @@
 <template>
-	<div class="menuElement" @mouseenter="onMouseEnter" @mouseleave="onMouseLeave">
-		<div class="name">{{ menu.name }}</div>
-		<div class="dropdown" :class="{ 'visible': dropdownVisible }">
-			<MenuItemElement @run="passRunUp"
-				v-for="(child,i) in menu.children" :item="child" :key="i"
-			/>
+	<li class="menu-item">
+		<div @click="onClick">
+			<span class="name-holder" v-text="menu.name" />
+			<span class="child-indicator" v-if="isParent && showPopoutIcon">&nbsp;&gt;</span>
 		</div>
-	</div>
+
+		<ul v-if="isParent">
+			<MenuElement
+				v-for="(child,i) in menu.children" :item="child" :key="i"
+				:menu="child"
+				:show-popout-icon="true"
+				@run="passRunUp"
+			/>
+		</ul>
+	</li>
 </template>
 
 <script lang="ts">
-import MenuItemElement from "@/components/_internal/menubar/MenuItemElement.vue";
-import { InternalMenu } from "@/api/types/InternalMenus";
-import Vue from "vue";
+import { InternalMenu, InternalMenuItem } from "@/api/types/InternalMenus";
+import Vue, { PropType } from "vue";
 import { PluginInfo } from "@/api/PluginInfo";
 
 interface DataTypeInterface {
-	dropdownVisible: boolean;
+
 }
 
 export default Vue.extend({
-	name: 'Menu',
+	name: 'MenuElement',
 	components: {
-		MenuItemElement
 	},
 	props: {
 		menu: {
-			type: Object as () => InternalMenu,
+			type: Object as PropType<InternalMenu|InternalMenuItem>,
+		},
+		showPopoutIcon: {
+			type: Boolean,
+			default: false,
+		}
+	},
+	computed: {
+		isParent(): boolean {
+			const menu = this.menu as InternalMenu;
+			return menu.children && (menu.children.length > 0);
 		}
 	},
 	data() : DataTypeInterface {
 		return {
-			dropdownVisible: false,
+
 		}
 	},
 	methods: {
-		onMouseEnter() : void {
-			this.dropdownVisible = true;
-		},
-		onMouseLeave() : void {
-			this.dropdownVisible = false;
-		},
 		passRunUp(data : { plugin: PluginInfo, command: string }) : void {
 			this.$emit("run", data);
-		}
+		},
+		async onClick() : Promise<void> {
+			//Shorthand access to the menu item
+			let item : InternalMenuItem = this.menu as InternalMenuItem;
+			//Don't do anything if the item doesn't have a command to run
+			if (item.command) {
+				this.$emit("run", {
+					plugin: item.plugin,
+					command: item.command,
+				});
+			}
+		},
 	}
 });
 </script>
 
-
+<!--suppress CssUnusedSymbol -->
 <style scoped>
-.menuElement {
-	display: inline-block;
-	padding: 2px 5px;
-	border: 1px solid black;
-	background-color: #FFFFFF;
+.name-holder {
+
 }
 
-.name {
-	width: 100%;
-	user-select: none;
+.child-indicator {
+	text-align: right;
+	float: right;
+	color: grey;
+	height: 1em;
+	vertical-align: middle;
 }
 
-.dropdown {
+/*Submenu styling*/
+ul {
+	width: 100px;
+
 	display: none;
-	position: absolute;
-	background: white;
 	border: 1px solid black;
+
+	position: absolute;
+	left: 0;
+	top: 100%;
+	margin: 0;
+	padding: 0;
+
+	/*Hide bullets*/
+	list-style-type: none;
 }
 
-.dropdown.visible {
+ul .menu-item {
+	position: relative;
+
+	padding: 4px 8px;
+	background: white;
+}
+
+/*Set background color on hover*/
+ul .menu-item:hover {
+	background-color: #AAAAAA;
+}
+
+/*Show the submenu on hover*/
+ul .menu-item:hover > ul {
 	display: block;
 }
 </style>

@@ -1,25 +1,34 @@
 <template>
 	<div class="FileInputElement">
-		<p class="description">
-			<b v-text="name" />:
-			<span v-if="description" v-text="description" />
+		<p class="description-holder">
+			<span class="name" v-if="name">{{ name }}:&nbsp;</span>
+			<span class="description" v-if="description" v-text="description" />
 		</p>
 
 		<div>
-			<span v-if="path">Selected:&nbsp;{{ path.fullPath }}</span>
-			<span v-else>
-				Pick a
-				<span v-if="type === 'file'">file</span>
-				<span v-else-if="type === 'folder'">folder</span>
-				<span v-else>file or folder</span>:
-			</span>
+			<div class="selected-output">
+				<span v-if="path">Selected:&nbsp;{{ path.fullPath }}</span>
+				<span v-else>
+					Pick a
+					<span v-if="type === 'file'">file</span>
+					<span v-else-if="type === 'folder'">folder</span>
+					<span v-else>file or folder</span>:
+				</span>
+			</div>
+
+			<div
+				class="expand-button"
+				@click="open = !open"
+				v-text="`(${open ? 'hide' : 'show'} file picker)`"
+			/>
 		</div>
 
-		<div
-			class="expand-button"
-			@click="open = !open"
-			v-text="`(${open ? 'hide' : 'show'} file picker)`"
-		/>
+		<div>
+			<label>
+				<input v-model="dir" placeholder="File path"/>
+			</label>
+			<div class="error" v-text="error" v-if="error" />
+		</div>
 
 		<transition name="fade">
 			<div
@@ -28,7 +37,7 @@
 			>
 				<FilePicker
 					class="file-picker"
-					:directory="vars.cwd"
+					:directory="dir"
 					@change="onFileClick"
 				/>
 			</div>
@@ -45,7 +54,8 @@ import { vars } from '@/utils/globals';
 interface DataTypeDescriptor {
 	path?: AbstractInternalFile;
 	open: boolean;
-	vars: typeof vars;
+	dir: string;
+	error?: string;
 }
 
 export default Vue.extend({
@@ -64,17 +74,22 @@ export default Vue.extend({
 		description: {
 			type: String,
 			required: false,
-		}
+		},
+		value: {
+			type: String,
+			required: false,
+		},
 	},
 	data(): DataTypeDescriptor {
 		return {
 			path: undefined,
 			open: true,
-			vars,
+			error: undefined,
+			dir: vars.cwd,
 		};
 	},
 	mounted() {
-
+		this._onValueChange(this.value);
 	},
 	methods: {
 		onFileClick(file: AbstractInternalFile) {
@@ -84,19 +99,25 @@ export default Vue.extend({
 			} else if (this.type === "file") {
 				//Require a file
 				if (file.file) this.path = file;
-				else this.$emit("error", "You must select a file");
+				this.$emit("error", file.file ? '' : "You must select a file");
 			} else if (this.type === "folder") {
 				//Require a folder
 				if (file.folder) this.path = file;
-				else this.$emit("error", "You must select a folder");
+				this.$emit("error", file.folder ? '' : "You must select a folder");
 			}
 		},
+		_onValueChange(val?: string) {
+			this.dir = val || vars.cwd;
+		}
 	},
 	watch: {
 		path(val?: AbstractInternalFile) {
 			if (val) this.$emit('change', val.fullPath);
 			else this.$emit('change', undefined);
-		}
+		},
+		value(val?: string) {
+			this._onValueChange(val);
+		},
 	}
 })
 </script>
@@ -104,11 +125,24 @@ export default Vue.extend({
 
 <!--suppress CssUnusedSymbol -->
 <style scoped>
-.description {
+.description-holder {
 	margin: 5px 0;
+}
+.description-holder .name {
+	font-weight: bold;
+}
+
+.error {
+	color: red;
+}
+
+.selected-output {
+	float: left;
+	text-align: left;
 }
 
 .expand-button {
+	text-align: right;
 	color: blue;
 	text-decoration: underline
 }
@@ -122,7 +156,15 @@ export default Vue.extend({
 }
 
 .file-picker, .fade-enter-active, .fade-leave-active {
+	/*Fixed height*/
 	height: 10em;
+	/*Don't show the scrollbar when fading*/
+	overflow-y: hidden;
+}
+
+.file-picker {
+	/*Override the collapsing scrollbar settings*/
+	overflow-y: auto;
 }
 
 .fade-enter-active, .fade-leave-active {

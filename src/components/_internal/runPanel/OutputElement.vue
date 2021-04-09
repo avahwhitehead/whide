@@ -60,7 +60,8 @@ export default Vue.extend({
 		onSegmentClick(segment: Segment) {
 			if (!segment.isTree) return;
 			//Open the tree in a tree viewer
-			window.open('/trees?t=' + segment.content, '_blank', "height=400");
+			let routeData = this.$router.resolve({ path: '/trees', query: { t: segment.content } });
+			window.open(routeData.href, '_blank');
 		},
 	},
 	updated() {

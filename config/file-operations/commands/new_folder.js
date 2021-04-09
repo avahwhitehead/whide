@@ -4,13 +4,13 @@ const path = require('path');
 module.exports.name = "run_new_folder";
 module.exports.args = [
 	{
-		name: "parent",
-		description: "Folder to create the file in",
+		name: "Parent Folder",
+		description: "Choose the folder to hold the file",
 		type: 'folder',
 	},
 	{
-		name: "name",
-		description: "Name of the new folder",
+		name: "Folder Name",
+		description: "Name of the file",
 		validator: function (name) {
 			return name.match(/^[a-zA-Z0-9_ \-.]+$/);
 		},
@@ -18,8 +18,8 @@ module.exports.args = [
 ];
 
 module.exports.run = async function ({args, ioController, fs}) {
-	const parent = args["parent"];
-	const name = args["name"];
+	const parent = args["Parent Folder"];
+	const name = args["Folder Name"];
 	//Build the full directory path
 	const full_path = path.join(parent, name);
 

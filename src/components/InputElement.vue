@@ -1,23 +1,25 @@
 <template>
 	<div class="InputElement">
-		<div
-			v-if="type === 'label' || type === 'string' || type === 'number'"
-		>
+		<div v-if="type === 'label' || type === 'string' || type === 'number'">
 			<p
 				v-if="type === 'label'"
 				v-text="descriptor"
 			/>
+
 			<StringInputElement
 				v-else-if="type === 'string'"
 				:name="descriptor.name"
 				:placeholder="descriptor.placeholder"
+				:value="descriptor.value || descriptor.default"
 				@change="handleChange"
 				@error="handleError"
 			/>
+
 			<NumberInputElement
 				v-else-if="type === 'number'"
 				:name="descriptor.name"
 				:placeholder="descriptor.placeholder"
+				:value="descriptor.value || descriptor.default"
 				@change="handleChange"
 				@error="handleError"
 			/>
@@ -31,14 +33,13 @@
 			/>
 		</div>
 
-		<div
-			v-else-if="type === 'path' || type === 'file' || type === 'folder'"
-		>
+		<div v-else-if="type === 'path' || type === 'file' || type === 'folder'">
 			<FileInputElement
 				class="file-picker"
 				:name="descriptor.name"
 				:description="descriptor.description"
 				:type="type"
+				:value="descriptor.value || descriptor.default"
 				@change="handleChange"
 				@error="handleError"
 			/>
@@ -73,6 +74,7 @@ export type InputElementDescriptor = {
 	type: InputPromptTypes,
 	description?: string,
 	placeholder?: string,
+	value?: string|undefined,
 	default?: string,
 	validator?: (arg0: string) => Promise<boolean>,
 }|string;
@@ -100,6 +102,10 @@ export default Vue.extend({
 				Object,	//TODO: This should be `InputElementDescriptor`
 				String,
 			],
+		},
+		value: {
+			type: String,
+			required: false,
 		}
 	},
 	data(): DataTypeDescriptor {
@@ -131,7 +137,7 @@ export default Vue.extend({
 			this.$emit('change', val);
 		},
 		handleError(error: string) {
-			this.errors.push(error);
+			this.errors = [error];
 		},
 	}
 })
@@ -148,6 +154,7 @@ span.help-button {
 	width: 1em;
 	height: 1em;
 	padding: 5px;
+	margin-left: .5em;
 }
 
 .error {

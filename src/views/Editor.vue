@@ -7,19 +7,19 @@
 			<div class="right">
 				<button @click="openTreeViewer">Tree Viewer</button>
 				<button @click="download" :disabled="!focused_file">Download File</button>
+				<font-awesome-icon
+					class="settings icon"
+					icon="cog"
+					title="Open Settings"
+					@click="openSettings"
+				/>
 			</div>
 		</div>
 
 		<div class="body">
 			<Container class="left filler">
-				<!-- TODO: There must be a better way than this -->
-				<label>
-					<select v-model="cwd" class="cwd-dropdown">
-						<option v-for="(opt, i) of parent_paths" :key="i">{{opt}}</option>
-					</select>
-				</label>
 				<button @click="handleChangeRootClick">Change Root</button>
-				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)"/>
+				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)" @dir="dirChange"/>
 			</Container>
 
 			<Container class="middle code-editor no-scroll">
@@ -37,7 +37,7 @@
 		</div>
 
 		<Container class="footer">
-			<run-panel />
+			<run-panel @controller="c => this.runPanelController = c" />
 		</Container>
 
 		<InputPrompt @controller="c => this.ioController = c" />
@@ -54,8 +54,13 @@ import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import PluginToggler from "@/components/PluginToggler.vue";
-import RunPanel, { runPanelController } from "@/components/RunPanel.vue";
+import RunPanel from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
+//FontAwesome
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { faCog } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+library.add(faCog);
 //Other imports
 import {
 	EditorController,
@@ -70,6 +75,7 @@ import { CustomDict } from "@/types/CustomDict";
 import { InternalMenu } from "@/api/types/InternalMenus";
 import { PluginInfo } from "@/api/PluginInfo";
 import { pluginManager, vars } from "@/utils/globals";
+import RunPanelController from "@/api/controllers/RunPanelController";
 import path from "path";
 
 /**
@@ -80,7 +86,7 @@ interface DataTypesDescriptor {
 	codeEditor? : ExtendedCodeEditorWrapper;
 	editorController?: EditorController;
 	ioController? : IOController;
-	cwd: string;
+	runPanelController?: RunPanelController;
 }
 
 //Run a function asynchronously
@@ -95,6 +101,7 @@ export default Vue.extend({
 		FilePicker,
 		Container,
 		CodeEditorElement,
+		FontAwesomeIcon,
 		MenuBar,
 		PluginToggler,
 		RunPanel,
@@ -105,21 +112,25 @@ export default Vue.extend({
 			codeEditor: undefined,
 			editorController: undefined,
 			ioController: undefined,
-			cwd: vars.cwd,
+			runPanelController: undefined,
 		}
 	},
 	computed: {
 		menus() : InternalMenu[] {
 			return pluginManager.menuManager.menus;
 		},
-		parent_paths() : string[] {
-			return this.getPaths(this.cwd);
+		cwd(): string {
+			return vars.cwd;
 		}
 	},
 	methods: {
 		openTreeViewer() {
 			let routeData = this.$router.resolve({ path: '/trees' });
-			window.open(routeData.href, '_blank', "height=400");
+			window.open(routeData.href, '_blank');
+		},
+		openSettings() {
+			let routeData = this.$router.resolve({ path: '/settings' });
+			window.open(routeData.href, '_blank');
 		},
 		async openFile(abstractFile: AbstractInternalFile) : Promise<void> {
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
@@ -142,6 +153,10 @@ export default Vue.extend({
 				console.log(`No file open to download`);
 			}
 		},
+		dirChange(dir: string) {
+			//Change the working directory
+			vars.cwd = dir;
+		},
 		getPaths(filePath: string) : string[] {
 			let r = [filePath];
 			while (filePath && filePath !== '/') {
@@ -158,7 +173,7 @@ export default Vue.extend({
 				type: "folder"
 			}).then((folder?: string) => {
 				if (!folder) return;
-				this.cwd = folder;
+				vars.cwd = folder;
 			})
 		},
 
@@ -177,7 +192,7 @@ export default Vue.extend({
 				validator = arg.validator || (() => true);
 				//Prompt the user for the argument input
 				let val = await this.ioController.getInput({
-					title: `INPUT: ${arg.name}`,
+					title: arg.name,
 					message: arg.description || "",
 					type: arg.type || 'string',
 					//Allow empty optional arguments, or validate the input
@@ -192,13 +207,14 @@ export default Vue.extend({
 			//Make sure the code editor and controller are defined (these should never happen)
 			if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
+			if (!this.runPanelController) throw new Error("Couldn't get run panel controller instance");
 
 			//Run the function
 			const funcParameters : PluginFunctionParameters = {
 				args: args,
 				editorController: this.editorController,
 				ioController: this.ioController,
-				runPanelController: runPanelController,
+				runPanelController: this.runPanelController,
 				fs: fs,
 				config: data.plugin.makeSettingsObj(),
 			};
@@ -243,6 +259,11 @@ export default Vue.extend({
 
 .no-scroll {
 	overflow: hidden;
+}
+
+.settings.icon:hover {
+	cursor: pointer;
+	color: #555555;
 }
 
 .body {

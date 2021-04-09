@@ -3,8 +3,9 @@
 		<div>
 			<label>
 				<input v-model="tree_input"/>
+				<button @click="showTree">Submit</button>
 			</label>
-			<button @click="showTree">Submit</button>
+			<p class="error" v-if="error" v-text="error" />
 		</div>
 		<div>
 			<VariableInspector :tree="parsed_tree" />
@@ -25,6 +26,7 @@ interface DataTypesDescriptor {
 	cwd: string;
 	tree_input : string;
 	parsed_tree : BinaryTree;
+	error?: string,
 }
 
 /**
@@ -54,6 +56,7 @@ export default Vue.extend({
 				left: null,
 				right: { left: null, right: null },
 			},
+			error: undefined,
 		}
 	},
 	mounted() {
@@ -61,12 +64,19 @@ export default Vue.extend({
 	},
 	methods: {
 		showTree() : void {
-			this.parsed_tree = parseTree(this.tree_input);
+			try {
+				this.parsed_tree = parseTree(this.tree_input);
+				this.error = undefined;
+			} catch (e) {
+				this.error = e;
+			}
 		},
 	},
 });
 </script>
 
 <style scoped>
-
+.error {
+	color: red;
+}
 </style>

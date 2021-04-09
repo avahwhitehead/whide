@@ -1,52 +1,56 @@
 <template>
-	<Container
-		:left="['play', 'step-forward', 'stop']"
-		@iconClick="onIconClick"
-	>
-		<div class="DebuggerPanel">
-		<div class="tabs-holder">
-			<TabbedPanel
-				:names="runPanelController.names"
-				:selected-tab="selectedTab"
-				@change="onTabChange"
-				@close="onTabClose"
-			/>
-		</div>
+	<div class="root">
+		<Container
+			:left="['play', 'step-forward', 'stop']"
+			@iconClick="onIconClick"
+		>
+			<div class="DebuggerPanel">
+				<div class="tabs-holder">
+					<TabbedPanel
+						:names="tabNames"
+						:selected-tab="selectedTab"
+						@change="onTabChange"
+						@close="onTabClose"
+					/>
+				</div>
 
-		<div class="run-panel-body">
-			<div class="output-holder">
-				<OutputElement v-if="instanceController" :value="instanceController.output" />
-			</div>
+				<div class="run-panel-body">
+					<div class="output-holder">
+						<OutputElement v-if="instanceController" :value="instanceController.output" />
+					</div>
 
-			<div class="variable-viewer" v-if="variables.length">
-				<VariableTable :variables="variables" />
+					<div class="variable-viewer" v-if="variables.length">
+						<VariableTable :variables="variables" />
+					</div>
+				</div>
 			</div>
-		</div>
-		</div>
-	</Container>
+		</Container>
+		<InputPrompt @controller="(controller) => this.ioController = controller" />
+	</div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
 import TabbedPanel from "@/components/TabbedPanel.vue";
 import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
-import { DebuggerControllerInterface } from "@whide/whide-types";
+import { DebuggerControllerInterface, IOController } from "@whide/whide-types";
 import Container from "@/components/Container.vue";
 import VariableTable from "@/components/_internal/runPanel/VariableTable.vue";
 import { BinaryTree } from "@whide/hwhile-wrapper";
 import OutputElement from "@/components/_internal/runPanel/OutputElement.vue";
+import InputPrompt from "@/components/InputPrompt.vue";
 
 interface DataTypeDescriptor {
-	runPanelController: RunPanelController;
-	instanceController: RunPanelInstanceController|undefined;
+	runPanelController?: RunPanelController;
+	instanceController?: RunPanelInstanceController;
 	selectedTab?: string;
+	ioController?: IOController,
 }
-
-export const runPanelController = new RunPanelController();
 
 export default Vue.extend({
 	name: 'RunPanel',
 	components: {
+		InputPrompt,
 		OutputElement,
 		Container,
 		TabbedPanel,
@@ -55,9 +59,10 @@ export default Vue.extend({
 	props: {},
 	data() : DataTypeDescriptor {
 		return {
-			runPanelController: runPanelController,
+			runPanelController: undefined,
 			instanceController: undefined,
 			selectedTab: undefined,
+			ioController: undefined,
 		}
 	},
 	computed: {
@@ -72,27 +77,58 @@ export default Vue.extend({
 				});
 			}
 			return res;
+		},
+		tabNames() : string[] {
+			if (!this.runPanelController) return [];
+			return this.runPanelController.names;
 		}
 	},
+	mounted() {
+		this.runPanelController = new RunPanelController();
+		this.$emit('controller', this.runPanelController);
+	},
 	methods: {
-		async onTabChange(selected : string) {
+		async onTabChange(selected : string|undefined) {
 			this.selectedTab = selected;
-			this.instanceController = await this.runPanelController.getByName(selected);
 		},
 		async onTabClose(closed : string) {
+			//Shouldn't happen
+			if (!this.runPanelController) throw new Error("Couldn't get run panel controller");
+			//Get the tab's controller
 			const instanceController: RunPanelInstanceController|undefined = await this.runPanelController.getByName(closed);
 			if (!instanceController) return;
 			//Remove the instance controller
 			await this.runPanelController.removeOutputStream(instanceController);
 		},
 		onIconClick(icon: string) {
-			if (!this.instanceController) return;
-			const debuggerCallbackHandler : DebuggerControllerInterface|undefined = this.instanceController.debuggerCallbackHandler;
-			if (!debuggerCallbackHandler) return;
+			const debuggerCallbackHandler : DebuggerControllerInterface|undefined = this.instanceController?.debuggerCallbackHandler;
+			if (!debuggerCallbackHandler) {
+				this.ioController?.prompt({
+					title: 'No files running',
+					message: 'Start debugging a program to use these controls',
+					options: ['Ok']
+				});
+				return;
+			}
 
 			if (icon === 'play') debuggerCallbackHandler.run();
 			if (icon === 'step-forward') debuggerCallbackHandler.step();
 			if (icon === 'stop') debuggerCallbackHandler.stop();
+		}
+	},
+	watch: {
+		async selectedTab(selected: string|undefined) {
+			//Shouldn't happen
+			if (!this.runPanelController) throw new Error("Couldn't get run panel controller");
+			//Set the active instance controller
+			if (selected === undefined) this.instanceController = undefined;
+			else this.instanceController = await this.runPanelController.getByName(selected);
+		},
+		tabNames(tabs: string[], oldTabs: string[]) {
+			//If a new tab is opened, select that
+			if (oldTabs.length + 1 === tabs.length) {
+				this.selectedTab = tabs[tabs.length - 1];
+			}
 		}
 	}
 })
@@ -100,6 +136,13 @@ export default Vue.extend({
 
 
 <style scoped>
+.root {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: hidden;
+}
+
 .DebuggerPanel {
 	display: flex;
 	flex-direction: column;
@@ -128,7 +171,6 @@ export default Vue.extend({
 .variable-viewer {
 	float: right;
 	min-width: 30em;
-	width: 20%;
 	max-width: 50%;
 }
 

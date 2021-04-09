@@ -11,6 +11,8 @@
 			<!-- This div will hold the code editor -->
 			<div ref="codeHolder" class="codeHolder"></div>
 		</div>
+
+		<InputPrompt @controller="ioControllerChange"/>
 	</div>
 </template>
 
@@ -34,13 +36,15 @@ import CodeMirror from "codemirror";
 import 'codemirror/lib/codemirror.css';
 //While language syntax definition
 import WHILE from "@/assets/whileSyntaxMode";
-import { CustomDict } from "@/types/CustomDict";
 import { AbstractInternalFile, InternalFile, pathToFile } from "@/files/InternalFile";
+import InputPrompt from "@/components/InputPrompt.vue";
+import { IOController } from "@whide/whide-types";
 
 interface DataType {
 	selectedFile: InternalFile|undefined;
 	editor: ExtendedCodeEditorWrapper|undefined;
 	editorController: EditorControllerInterface|undefined;
+	ioController: IOController|undefined;
 	openFiles: InternalFile[];
 }
 
@@ -172,6 +176,7 @@ abstract class EditorController extends EventEmitter implements EditorController
 export default Vue.extend({
 	name: 'CodeEditorContainer',
 	components: {
+		InputPrompt,
 		TabbedPanel,
 	},
 	props: {
@@ -188,6 +193,7 @@ export default Vue.extend({
 			editor: undefined,
 			editorController: undefined,
 			openFiles: [],
+			ioController: undefined,
 		}
 	},
 	mounted() {
@@ -287,8 +293,8 @@ export default Vue.extend({
 		 */
 		onTabChange(fileName : string|undefined) : void {
 			//Update the selected file
-			this.selectedFile = undefined;
 			if (fileName) this.selectedFile = this.openFiles[this._indexFromFileName(fileName)];
+			else this.selectedFile = undefined;
 			//Alert the external listeners
 			this.$emit("file-focus", this.selectedFile);
 		},
@@ -296,12 +302,38 @@ export default Vue.extend({
 		 * Handle a tab closing
 		 * @param fileName		The tab which has closed
 		 */
-		onTabClose(fileName: string) : void {
-			const index : number = this._indexFromFileName(fileName);
-			//Save the file
-			this.openFiles[index].write();
+		async onTabClose(fileName: string) : Promise<void> {
+			const index: number = this._indexFromFileName(fileName);
+			const file: InternalFile = this.openFiles[index];
+
+			if (file.modified) {
+				if (!this.ioController) {
+					console.error("Couldn't get IO controller");
+					return;
+				}
+
+				let res: string = await this.ioController.prompt({
+					title: 'Unsaved changes',
+					message: 'Do you want to save the file before closing?',
+					options: ['Cancel', `Don't Save`, 'Save'],
+				});
+
+				//Stop here if the user presses cancel
+				if (res === 'Cancel') return;
+
+				//Save the file
+				if (res === 'Save') await file.write();
+			}
+
 			//Close the tab
 			this.openFiles.splice(index, 1);
+		},
+
+		/**
+		 * Handle the IO controller updating
+		 */
+		ioControllerChange(controller: IOController) {
+			this.ioController = controller;
 		},
 
 		_indexFromFileName(fileName: string) : number {
@@ -340,7 +372,7 @@ export default Vue.extend({
 		/**
 		 * Emit an event when the open files list changes
 		 */
-		openFiles(newOpenFiles: CustomDict<InternalFile>) {
+		openFiles(newOpenFiles: InternalFile[]) {
 			this.$emit('filesChange', newOpenFiles);
 		},
 	}

@@ -1,41 +1,38 @@
 <template>
 	<div class="InputPrompt" v-if="controls.visible">
-		<div class="content">
-			<div class="messageHolder">
-				<h1 class="title" v-if="controls.title">{{ controls.title }}</h1>
-				<p class="message">{{ controls.message }}</p>
+		<Modal :visible="controls.visible">
+			<div slot="header" v-if="!expectingInput">
+				<h3 v-text="controls.title" />
 			</div>
-			<div>
+
+			<div slot="body" class="content">
+				<p v-text="controls.message" />
+
 				<div class="inputHolder">
 					<InputElement
 						:descriptor="descriptor"
 						@change="onInputChange"
 					/>
 				</div>
-
-				<div>
-					<input
-						type="button"
-						@click="onSubmitClick"
-						:value="expectingInput ? 'Submit' : 'Ok'"
-					/>
-					<input
-						type="button"
-						v-if="expectingInput"
-						@click="onCancelClick"
-						value="Cancel"
-					/>
-				</div>
 			</div>
-		</div>
+
+			<div slot="footer">
+				<input
+					type="button"
+					@click="onButtonClick(name)"
+					:value="name"
+					v-for="(name, i) of buttons" :key="i"
+				/>
+			</div>
+		</Modal>
 	</div>
 </template>
 
 <script lang="ts">
 import vue from "vue";
-import { InputPromptParams, InputPromptTypes, IOController, OutputPromptParams } from "@whide/whide-types";
-import FilePicker from "@/components/FilePicker.vue";
+import { InputPromptParams, InputPromptTypes, IOController, OutputPromptParams, PromptParams } from "@whide/whide-types";
 import InputElement, { InputElementDescriptor } from "@/components/InputElement.vue";
+import Modal from "@/components/_internal/inputs/Modal.vue";
 
 interface DataTypeDescriptor {
 	input?: string,
@@ -45,16 +42,16 @@ interface DataTypeDescriptor {
 		title: string;
 		message: string;
 		inputType: InputPromptTypes|"none";
-		callback: (val?: string) => void;
-		cancelCallback: () => void;
+		buttons?: string[],
+		callback?: (val: string) => void;
 	}
 }
 
 export default vue.extend({
 	name: 'InputPrompt',
 	components: {
+		Modal,
 		InputElement,
-		FilePicker
 	},
 	props: {
 
@@ -70,8 +67,7 @@ export default vue.extend({
 				title: "",
 				message: "",
 				inputType: "none",
-				callback: () => {},
-				cancelCallback: () => {},
+				buttons: [],
 			}
 		}
 	},
@@ -84,72 +80,93 @@ export default vue.extend({
 				return undefined;
 			}
 			return {
-				name: 'Input',
+				name: this.controls.title,
 				type: this.controls.inputType,
+				description: this.controls.message,
 			}
 		},
+		buttons(): string[] {
+			//use the preferred buttons if possible
+			if (this.controls.buttons && this.controls.buttons.length) {
+				return this.controls.buttons;
+			}
+			//Or default to Ok/Cancel
+			return ['Cancel', 'Ok'];
+		}
 	},
 	mounted() {
 		this.ioController = {
 			showOutput: (props: OutputPromptParams) : Promise<void> => {
-				return new Promise(resolve => {
-					//Make visible
-					this.controls.visible = true;
-					//Don't the text box
-					this.controls.inputType = "none";
-					//Set the message to show
-					this.controls.title = props.title || "";
-					this.controls.message = props.message;
-					//When the user submits
-					this.controls.callback = () => {
-						//Hide the prompt
-						this._hideInput();
-						//Done
-						resolve();
-					};
-				});
+				return this.showOutput(props);
 			},
 			getInput: (props: InputPromptParams) : Promise<string|undefined> => {
-				return new Promise(resolve => {
-					//Make visible
-					this.controls.visible = true;
-					//Show the text box
-					this.controls.inputType = props.type || "string";
-					//Show the message
-					this.controls.title = props.title || "";
-					this.controls.message = props.message;
-					//When the user enters the value
-					this.controls.callback = (val? : string) => {
-						//Hide the prompt
-						this._hideInput();
-						//Done
-						resolve(val);
-					};
-					//If the user cancels the operation
-					this.controls.cancelCallback = () => {
-						this._hideInput();
-						resolve(undefined);
-					};
-				});
+				return this.getInput(props);
+			},
+			prompt: (props: PromptParams) : Promise<string> => {
+				return this.prompt(props);
 			},
 		};
 	},
 	methods: {
-		onSubmitClick() {
-			if (!this.controls.callback) return;
-			//Get parameters to feedback to the controller
-			let result : string|undefined = this.input
-			//Call the input's callback
-			if (result === undefined) this.controls.callback();
-			else this.controls.callback(result);
-		},
-		onCancelClick() {
-			if (!this.controls.cancelCallback) return;
-			//Call the cancel callback
-			this.controls.cancelCallback();
+		onButtonClick(name: string) {
+			if (this.controls.callback) {
+				this.controls.callback(name);
+			}
 		},
 		onInputChange(val: string) {
 			this.input = val;
+		},
+		async showOutput(props: OutputPromptParams) : Promise<void> {
+			await this.prompt({
+				title: props.title,
+				message: props.message,
+				options: ['Ok']
+			});
+		},
+		async getInput(props: InputPromptParams) : Promise<string|undefined> {
+			return new Promise(resolve => {
+				this.controls = {
+					//Make visible
+					visible: true,
+					//Show the text box
+					inputType: props.type || "string",
+					//Show the message
+					title: props.title || "",
+					message: props.message,
+					buttons: ['Cancel', 'Submit'],
+					//When the user enters the value
+					callback: (val? : string) => {
+						//Hide the prompt
+						this._hideInput();
+
+						//Return the input value
+						//Or undefined if the user cancels
+						if (val === 'Submit') resolve(this.input);
+						else resolve(undefined);
+					},
+				};
+			});
+		},
+		async prompt(props: PromptParams) : Promise<string> {
+			return new Promise(resolve => {
+				this.controls = {
+					//Make visible
+					visible: true,
+					//Show the text box
+					inputType: "none",
+					//Show the message
+					title: props.title || "",
+					message: props.message,
+					buttons: props.options || ['Ok'],
+					//When the user enters the value
+					callback: (val : string) => {
+						//Hide the prompt
+						this._hideInput();
+						//Return the button click
+						resolve(val);
+					},
+				};
+			});
 		},
 
 		async _hideInput() : Promise<void> {
@@ -161,8 +178,7 @@ export default vue.extend({
 			this.controls.title = "";
 			this.controls.message = "";
 			//Clear the callback
-			this.controls.callback = () => {};
-			this.controls.cancelCallback = () => {};
+			this.controls.callback = undefined;
 		},
 	},
 	watch: {
@@ -175,35 +191,7 @@ export default vue.extend({
 
 
 <style scoped>
-.InputPrompt .title {
-	font-size: larger;
-	text-decoration: underline;
-}
-
-/*
-Popup stylings based broadly on W3Schools':
-https://www.w3schools.com/howto/howto_css_modals.asp
-*/
-.InputPrompt {
-	position: fixed;
-	z-index: 5;
-
-	/*Fill the entire screen*/
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-
-	/*Transparent background, with non-transparent fallback*/
-	background-color: rgb(0,0,0);
-	background-color: rgba(0,0,0,0.4);
-}
-.InputPrompt .content {
-	background-color: #FFFFFF;
-	padding: 20px;
-	border: 1px solid #888;
-	margin: 15% auto;
-	width: 50%;
-	overflow: auto;
+.content p {
+	white-space: pre-line;
 }
 </style>

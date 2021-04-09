@@ -1,15 +1,21 @@
 <template>
-	<svg
-		:height="height"
-		:viewBox="viewbox"
-		preserveAspectRatio="xMinYMin meet"
-		@mousedown="startDrag"
-		@mouseup="stopDrag"
-		@mousemove="handleDrag"
-		@wheel="handleZoom"
-	>
-		<g ref="mysvg"/>
-	</svg>
+	<div class="parent" @scroll.prevent="">
+		<svg
+			:height="height"
+			:viewBox="viewbox"
+			preserveAspectRatio="xMinYMin meet"
+			@mousedown="startDrag"
+			@mouseup="stopDrag"
+			@mousemove="handleDrag"
+			@wheel="handleZoom"
+		>
+			<g ref="mysvg"/>
+		</svg>
+		<div class="controls">
+			<input type="button" class="button" @click="() => _zoom(1)" value="+">
+			<input type="button" class="button" @click="() => _zoom(-1)" value="-">
+		</div>
+	</div>
 </template>
 
 <script lang="ts">
@@ -89,7 +95,6 @@ export default Vue.extend({
 			const width = this.width;
 			const height = this.height;
 			const scale = this.scale;
-
 			return `${-X / scale} ${-Y / scale} ${width / scale} ${height / scale}`;
 		},
 	},
@@ -114,11 +119,19 @@ export default Vue.extend({
 			}
 		},
 		handleZoom(event: WheelEvent) {
-			//Scale by to adjust the jump size
-			this.scale += (-.05 * event.deltaY);
+			//Zoom in the scroll direction
+			this._zoom(-event.deltaY);
+			//Don't scroll the page
+			event.preventDefault();
+		},
+		_zoom(direction: number): void {
+			//Fixed jump size on all browsers
+			let scale = this.scale + .2 * (direction >= 0 ? 1 : -1);
 			//Limit zooming in/out
-			this.scale = Math.max(this.scale, 0.3);
-			this.scale = Math.min(this.scale, 5);
+			scale = Math.max(scale, 0.3);
+			scale = Math.min(scale, 5);
+			//Save the new scale
+			this.scale = scale;
 		},
 
 		/**
@@ -130,9 +143,8 @@ export default Vue.extend({
 			//Tell d3 to work with a tree, and stay in the diagram limits
 			let treemap = d3.tree().size([this.diagramWidth, this.diagramHeight]);
 
-			let converted : TreeType = treeData;
 			//Use the parent-child hierarchy to build the tree
-			let nodes: HierarchyPointNode<unknown> = treemap(d3.hierarchy(converted));
+			let nodes: HierarchyPointNode<unknown> = treemap(d3.hierarchy(treeData));
 
 			//Get the SVG element, and remove any existing child nodes
 			const svg = d3.select(this.$refs["mysvg"] as Element);
@@ -161,6 +173,35 @@ export default Vue.extend({
 
 <style scoped>
 svg {
+	border: 1px solid black;
+}
+.parent {
+	overflow: hidden;
+	position: relative;
+}
+
+.controls {
+	/*Position to the top-right corner*/
+	position: absolute;
+	top: 5px;
+	right: 5px;
+	/*Display buttons as a stack*/
+	width: 50px;
+}
+
+.controls .button {
+	height: 25px;
+	cursor: pointer;
+
+	/*Positioning*/
 	width: 100%;
+	margin-bottom: 5px;
+
+	/*Formatting*/
+	padding: 0;
+	text-align: center;
+	border: 1px solid #999999;
+	border-radius: 5px;
+	background-color: white;
 }
 </style>

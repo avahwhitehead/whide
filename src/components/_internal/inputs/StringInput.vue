@@ -1,6 +1,6 @@
 <template>
 	<label class="StringInput">
-		<span>{{name}}</span>
+		<span v-if="name" class="input-name" v-text="name" />
 		<input type="text" v-model="model" :placeholder="placeholder" />
 	</label>
 </template>
@@ -20,6 +20,7 @@ export default Vue.extend({
 		},
 		placeholder: {
 			type: String,
+			default: 'Your text'
 		},
 	},
 	data(): DataTypeDescriptor {
@@ -30,6 +31,10 @@ export default Vue.extend({
 	watch: {
 		model(val: string) {
 			this.$emit('change', val);
+		},
+		value(val?: string) {
+			if (!val) return;
+			this.model = val;
 		}
 	}
 })
@@ -38,5 +43,7 @@ export default Vue.extend({
 
 <!--suppress CssUnusedSymbol -->
 <style scoped>
-
+.input-name {
+	margin-right: .5em;
+}
 </style>
