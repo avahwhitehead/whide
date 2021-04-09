@@ -49,10 +49,8 @@ export async function run_load(pluginManager : PluginManager) : Promise<void> {
 		//Load the functions
 		const funcs: undefined|PluginFunction|PluginFunction[] = pluginModule.default;
 		//Warn if the plugin doesn't do anything
-		if (!pluginModule.converters) {
-			if (!funcs) console.warn(`No exported functions from system plugin "${moduleName}" at "${modulePath}"`);
-			if (!pluginModule.menus) console.warn(`No exported menus from system plugin "${moduleName}" at "${modulePath}"`);
-		}
+		if (!funcs) console.warn(`No exported functions from system plugin "${moduleName}" at "${modulePath}"`);
+		if (!pluginModule.menus) console.warn(`No exported menus from system plugin "${moduleName}" at "${modulePath}"`);
 
 		//Register the plugin
 		let info: PluginInfo = pluginManager.register({

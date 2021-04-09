@@ -1,6 +1,5 @@
 import { PluginInfo, PluginInfoProps } from "@/api/PluginInfo";
 import { MenuManager } from "@/api/managers/MenuManager";
-import { TreeConverterManager } from "@/api/managers/TreeConverterManager";
 
 /**
  * A manager to control which plugins are currently loaded
@@ -8,7 +7,6 @@ import { TreeConverterManager } from "@/api/managers/TreeConverterManager";
 export class PluginManager {
 	private readonly plugins: PluginInfo[];
 	private readonly _menuManager: MenuManager;
-	private readonly _treeConverterManager: TreeConverterManager;
 
 	/**
 	 *
@@ -16,7 +14,6 @@ export class PluginManager {
 	constructor() {
 		this.plugins = [];
 		this._menuManager = new MenuManager();
-		this._treeConverterManager = new TreeConverterManager();
 	}
 
 	/**
@@ -74,13 +71,6 @@ export class PluginManager {
 	 */
 	get menuManager(): MenuManager {
 		return this._menuManager;
-	}
-
-	/**
-	 * Get the Tree Converter manager
-	 */
-	get treeConverterManager(): TreeConverterManager {
-		return this._treeConverterManager;
 	}
 
 	/**

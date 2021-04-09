@@ -17,8 +17,6 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { pluginManager } from "@/utils/globals";
-import { TreeConverter } from "@whide/whide-types";
 import VariableTableRow from "@/components/_internal/runPanel/VariableTableRow.vue";
 import { BinaryTree } from "@whide/hwhile-wrapper";
 
@@ -39,11 +37,6 @@ export default Vue.extend({
 	},
 	data(): DataTypeDescriptor {
 		return {};
-	},
-	computed: {
-		converters() : TreeConverter[] {
-			return pluginManager.treeConverterManager.converters;
-		}
 	},
 })
 </script>
