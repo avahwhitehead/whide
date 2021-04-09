@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.1](https://github.com/sonrad10/Whide/compare/v1.5.0...v1.5.1) (2021-04-09)
+
+
+### Bug Fixes
+
+* fixed misaligned tree viewer buttons in full screen ([891f207](https://github.com/sonrad10/Whide/commit/891f2075a2f2071f1ccba2f5f0189273027dd5fa))
+* removed hangover tree converter usages ([ebf5a38](https://github.com/sonrad10/Whide/commit/ebf5a38eb5e7536910c9bfa27cedc7b94f760155))
+
 ## [1.5.0](https://github.com/sonrad10/Whide/compare/v1.4.0...v1.5.0) (2021-04-09)
 
 
