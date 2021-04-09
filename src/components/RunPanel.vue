@@ -7,7 +7,7 @@
 			<div class="DebuggerPanel">
 				<div class="tabs-holder">
 					<TabbedPanel
-						:names="runPanelController.names"
+						:names="tabNames"
 						:selected-tab="selectedTab"
 						@change="onTabChange"
 						@close="onTabClose"
@@ -25,7 +25,7 @@
 				</div>
 			</div>
 		</Container>
-		<InputPrompt @controller="(controller) => ioController = controller" />
+		<InputPrompt @controller="(controller) => this.ioController = controller" />
 	</div>
 </template>
 
@@ -41,13 +41,11 @@ import OutputElement from "@/components/_internal/runPanel/OutputElement.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 
 interface DataTypeDescriptor {
-	runPanelController: RunPanelController;
-	instanceController: RunPanelInstanceController|undefined;
+	runPanelController?: RunPanelController;
+	instanceController?: RunPanelInstanceController;
 	selectedTab?: string;
 	ioController?: IOController,
 }
-
-export const runPanelController = new RunPanelController();
 
 export default Vue.extend({
 	name: 'RunPanel',
@@ -61,7 +59,7 @@ export default Vue.extend({
 	props: {},
 	data() : DataTypeDescriptor {
 		return {
-			runPanelController: runPanelController,
+			runPanelController: undefined,
 			instanceController: undefined,
 			selectedTab: undefined,
 			ioController: undefined,
@@ -79,29 +77,31 @@ export default Vue.extend({
 				});
 			}
 			return res;
+		},
+		tabNames() : string[] {
+			if (!this.runPanelController) return [];
+			return this.runPanelController.names;
 		}
 	},
+	mounted() {
+		this.runPanelController = new RunPanelController();
+		this.$emit('controller', this.runPanelController);
+	},
 	methods: {
-		async onTabChange(selected : string) {
+		async onTabChange(selected : string|undefined) {
 			this.selectedTab = selected;
-			this.instanceController = await this.runPanelController.getByName(selected);
 		},
 		async onTabClose(closed : string) {
+			//Shouldn't happen
+			if (!this.runPanelController) throw new Error("Couldn't get run panel controller");
+			//Get the tab's controller
 			const instanceController: RunPanelInstanceController|undefined = await this.runPanelController.getByName(closed);
 			if (!instanceController) return;
 			//Remove the instance controller
 			await this.runPanelController.removeOutputStream(instanceController);
 		},
 		onIconClick(icon: string) {
-			if (!this.instanceController) {
-				this.ioController?.prompt({
-					title: 'No files running',
-					message: 'Start debugging a program to use these controls',
-					options: ['Ok']
-				});
-				return;
-			}
-			const debuggerCallbackHandler : DebuggerControllerInterface|undefined = this.instanceController.debuggerCallbackHandler;
+			const debuggerCallbackHandler : DebuggerControllerInterface|undefined = this.instanceController?.debuggerCallbackHandler;
 			if (!debuggerCallbackHandler) {
 				this.ioController?.prompt({
 					title: 'No files running',
@@ -114,6 +114,19 @@ export default Vue.extend({
 			if (icon === 'play') debuggerCallbackHandler.run();
 			if (icon === 'step-forward') debuggerCallbackHandler.step();
 			if (icon === 'stop') debuggerCallbackHandler.stop();
+		}
+	},
+	watch: {
+		async selectedTab(selected: string|undefined) {
+			//Shouldn't happen
+			if (!this.runPanelController) throw new Error("Couldn't get run panel controller");
+			//Set the active instance controller
+			if (selected === undefined) this.instanceController = undefined;
+			else this.instanceController = await this.runPanelController.getByName(selected);
+		},
+		tabNames(tabs: string[]) {
+			if (this.selectedTab !== undefined || tabs.length === 0) return;
+			this.selectedTab = tabs[0];
 		}
 	}
 })

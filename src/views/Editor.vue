@@ -18,7 +18,6 @@
 
 		<div class="body">
 			<Container class="left filler">
-				<!-- TODO: There must be a better way than this -->
 				<button @click="handleChangeRootClick">Change Root</button>
 				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)" @dir="dirChange"/>
 			</Container>
@@ -38,7 +37,7 @@
 		</div>
 
 		<Container class="footer">
-			<run-panel />
+			<run-panel @controller="c => this.runPanelController = c" />
 		</Container>
 
 		<InputPrompt @controller="c => this.ioController = c" />
@@ -55,7 +54,7 @@ import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import PluginToggler from "@/components/PluginToggler.vue";
-import RunPanel, { runPanelController } from "@/components/RunPanel.vue";
+import RunPanel from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 //FontAwesome
 import { library } from "@fortawesome/fontawesome-svg-core";
@@ -76,6 +75,7 @@ import { CustomDict } from "@/types/CustomDict";
 import { InternalMenu } from "@/api/types/InternalMenus";
 import { PluginInfo } from "@/api/PluginInfo";
 import { pluginManager, vars } from "@/utils/globals";
+import RunPanelController from "@/api/controllers/RunPanelController";
 import path from "path";
 
 /**
@@ -86,6 +86,7 @@ interface DataTypesDescriptor {
 	codeEditor? : ExtendedCodeEditorWrapper;
 	editorController?: EditorController;
 	ioController? : IOController;
+	runPanelController?: RunPanelController;
 }
 
 //Run a function asynchronously
@@ -111,14 +112,12 @@ export default Vue.extend({
 			codeEditor: undefined,
 			editorController: undefined,
 			ioController: undefined,
+			runPanelController: undefined,
 		}
 	},
 	computed: {
 		menus() : InternalMenu[] {
 			return pluginManager.menuManager.menus;
-		},
-		parent_paths() : string[] {
-			return this.getPaths(this.cwd);
 		},
 		cwd(): string {
 			return vars.cwd;
@@ -208,13 +207,14 @@ export default Vue.extend({
 			//Make sure the code editor and controller are defined (these should never happen)
 			if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
+			if (!this.runPanelController) throw new Error("Couldn't get run panel controller instance");
 
 			//Run the function
 			const funcParameters : PluginFunctionParameters = {
 				args: args,
 				editorController: this.editorController,
 				ioController: this.ioController,
-				runPanelController: runPanelController,
+				runPanelController: this.runPanelController,
 				fs: fs,
 				config: data.plugin.makeSettingsObj(),
 			};
