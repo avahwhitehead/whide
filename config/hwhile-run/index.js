@@ -6,8 +6,7 @@ module.exports.settings = [
 		name: "HWhile Path",
 		id: "hwhile-path",
 		type: "file",
-		description: "Path to the Hwhile executable",
-		default: 'hwhile',
+		description: "Choose the path to the HWhile executable",
 	}
 ];
 

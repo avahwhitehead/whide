@@ -1,3 +1,4 @@
+const path = require('path');
 const { InteractiveHWhileConnector } = require("@whide/hwhile-wrapper");
 
 module.exports.name = "debug_code";
@@ -61,7 +62,7 @@ async function updateVars(hWhileConnector, instanceController, prog_name) {
 	for (let v of cur_vars.keys()) instanceController.variables[v] = cur_vars.get(v);
 }
 
-module.exports.run = async function({ args, config, editorController, ioController, runPanelController, path }) {
+module.exports.run = async function({ args, config, editorController, ioController, runPanelController }) {
 	//The input expression
 	const expr = args["Input Expression"];
 	//Run the currently focused file
@@ -72,6 +73,14 @@ module.exports.run = async function({ args, config, editorController, ioControll
 		ioController.showOutput({
 			message: "Please open a file and try again",
 			title: "No file to debug",
+		});
+		return;
+	}
+
+	if (!config['hwhile-path']) {
+		ioController.showOutput({
+			message: "Please set the HWhile path in settings.",
+			title: "Path to HWhile not specified",
 		});
 		return;
 	}
