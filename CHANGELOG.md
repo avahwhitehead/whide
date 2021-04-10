@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.2](https://github.com/sonrad10/Whide/compare/v1.5.1...v1.5.2) (2021-04-10)
+
+
+### Bug Fixes
+
+* removed unnecessary converter plugin ([5dd34f8](https://github.com/sonrad10/Whide/commit/5dd34f8b85db97d7d3d646ff3d210c1c5667e6d7))
+
 ### [1.5.1](https://github.com/sonrad10/Whide/compare/v1.5.0...v1.5.1) (2021-04-09)
 
 
