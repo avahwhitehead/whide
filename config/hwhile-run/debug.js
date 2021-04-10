@@ -98,7 +98,7 @@ module.exports.run = async function({ args, config, editorController, ioControll
 
 	//Pass interpreter output straight to the output console
 	let instanceController = await runPanelController.addOutputStream(file_name);
-	hWhileConnector.on("output", data => instanceController.stream.write(data.toString() + '\n'));
+	hWhileConnector.on("output", data => instanceController.stream.write(data.toString()));
 
 	//Handle debugger controller button events
 	instanceController.debuggerCallbackHandler = {
@@ -118,7 +118,7 @@ module.exports.run = async function({ args, config, editorController, ioControll
 	//Setup the program breakpoints
 	const breakpoints = await editorController.editor.getBreakpoints();
 	for (let b of breakpoints) {
-		await hWhileConnector.addBreakpoint(b, false);
+		await hWhileConnector.addBreakpoint(b, false, true);
 	}
 
 	//Run the program until it hits the next breakpoint
