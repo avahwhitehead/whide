@@ -23,9 +23,15 @@
 			/>
 		</div>
 
-		<div>
+		<div class="path-input-holder">
 			<label>
-				<input v-model="dir" placeholder="File path"/>
+				<input
+					class="path-input"
+					v-model="dirModel"
+					placeholder="File path"
+					@keydown.enter="dirInputChoose"
+				/>
+				<button @click="dirInputChoose">Choose</button>
 			</label>
 			<div class="error" v-text="error" v-if="error" />
 		</div>
@@ -39,6 +45,7 @@
 					class="file-picker"
 					:directory="dir"
 					@change="onFileClick"
+					@dir="onFilePickerRootChange"
 				/>
 			</div>
 		</transition>
@@ -56,6 +63,7 @@ interface DataTypeDescriptor {
 	open: boolean;
 	dir: string;
 	error?: string;
+	dirModel: string;
 }
 
 export default Vue.extend({
@@ -86,6 +94,7 @@ export default Vue.extend({
 			open: true,
 			error: undefined,
 			dir: vars.cwd,
+			dirModel: vars.cwd,
 		};
 	},
 	mounted() {
@@ -93,6 +102,9 @@ export default Vue.extend({
 	},
 	methods: {
 		onFileClick(file: AbstractInternalFile) {
+			//Show the file path in the input when the user clicks
+			this.dirModel = file.fullPath;
+
 			if (this.type === "path") {
 				//Allow any existing path
 				this.path = file;
@@ -108,6 +120,12 @@ export default Vue.extend({
 		},
 		_onValueChange(val?: string) {
 			this.dir = val || vars.cwd;
+		},
+		onFilePickerRootChange(root: string) {
+			this.dir = root;
+		},
+		dirInputChoose() {
+			this.dir = this.dirModel;
 		}
 	},
 	watch: {
@@ -145,6 +163,17 @@ export default Vue.extend({
 	text-align: right;
 	color: blue;
 	text-decoration: underline
+}
+
+.path-input-holder, .path-input-holder label {
+	display: flex;
+	width: 100%;
+	flex: 1;
+	flex-direction: row;
+}
+
+.path-input {
+	flex: 1;
 }
 
 .file-picker-container {

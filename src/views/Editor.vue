@@ -87,6 +87,7 @@ interface DataTypesDescriptor {
 	editorController?: EditorController;
 	ioController? : IOController;
 	runPanelController?: RunPanelController;
+	cwd: string;
 }
 
 //Run a function asynchronously
@@ -113,15 +114,13 @@ export default Vue.extend({
 			editorController: undefined,
 			ioController: undefined,
 			runPanelController: undefined,
+			cwd: vars.cwd,
 		}
 	},
 	computed: {
 		menus() : InternalMenu[] {
 			return pluginManager.menuManager.menus;
 		},
-		cwd(): string {
-			return vars.cwd;
-		}
 	},
 	methods: {
 		openTreeViewer() {
@@ -150,12 +149,20 @@ export default Vue.extend({
 			if (this.focused_file) {
 				fileDownloader(this.focused_file.content || "", this.focused_file.name);
 			} else {
-				console.log(`No file open to download`);
+				if (!this.ioController) {
+					console.error("Error: Couldn't get IO Controller");
+					return;
+				}
+				this.ioController.prompt({
+					title: 'No file to download',
+					message: 'Open a file and try again',
+					options: ['Ok']
+				});
 			}
 		},
 		dirChange(dir: string) {
 			//Change the working directory
-			vars.cwd = dir;
+			this.cwd = dir;
 		},
 		getPaths(filePath: string) : string[] {
 			let r = [filePath];
@@ -173,7 +180,7 @@ export default Vue.extend({
 				type: "folder"
 			}).then((folder?: string) => {
 				if (!folder) return;
-				vars.cwd = folder;
+				this.cwd = folder;
 			})
 		},
 
@@ -230,6 +237,11 @@ export default Vue.extend({
 			});
 		},
 	},
+	watch: {
+		cwd(cwd: string): void {
+			vars.cwd = cwd;
+		}
+	}
 });
 </script>
 

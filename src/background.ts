@@ -12,8 +12,11 @@ const program : ExtendedCommand = makeCommandLineParser();
 program.parse();
 //Store the values in the global variable
 const commandLineArgs = program.opts();
-(global as any).cwd = commandLineArgs.workingDir || process.cwd();
-(global as any).safe = !!commandLineArgs.safe;
+
+let myGlobal: any = global as any;
+if (!commandLineArgs.workingDir) myGlobal.cwd = process.cwd();
+else myGlobal.cwd = path.resolve(commandLineArgs.workingDir);
+myGlobal.safe = !!commandLineArgs.safe;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
