@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.3](https://github.com/sonrad10/Whide/compare/v1.5.2...v1.5.3) (2021-04-12)
+
+
+### Bug Fixes
+
+* fixed unable to change root directory ([9028197](https://github.com/sonrad10/Whide/commit/9028197257d5c297ddf10f1e3fe098a65e68e6f5))
+
 ### [1.5.2](https://github.com/sonrad10/Whide/compare/v1.5.1...v1.5.2) (2021-04-10)
 
 
