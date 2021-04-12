@@ -20,12 +20,12 @@ module.exports = {
 				},
 				//Windows
 				win: {
-					target: ['portable', 'nsis'],
+					target: ['portable'],
 					icon: path.resolve(__dirname, 'icon', 'icon.ico'),
 				},
 				//Linux
 				linux: {
-					target: ['AppImage', 'snap', 'deb', 'tar.gz'],
+					target: ['AppImage', 'deb', 'tar.gz'],
 					icon: path.resolve(__dirname, 'icon', 'dist', '512.png'),
 					executableName: 'whide',
 					category: "Development",

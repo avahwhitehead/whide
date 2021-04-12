@@ -39,6 +39,8 @@
 				</div>
 			</div>
 		</div>
+
+		<InputPrompt @controller="c => this.ioController = c" />
 	</div>
 </template>
 
@@ -49,8 +51,9 @@ import InputGroup from "@/components/InputGroup.vue";
 import { InputElementDescriptor } from "@/components/InputElement.vue";
 import { pluginManager } from "@/utils/globals";
 import { PluginInfo } from "@/api/PluginInfo";
-import { SettingsItem } from "@whide/whide-types";
+import { IOController, SettingsItem } from "@whide/whide-types";
 import { CustomDict } from "@/types/CustomDict";
+import InputPrompt from "@/components/InputPrompt.vue";
 
 interface PageInfo {
 	//The page name
@@ -83,12 +86,14 @@ function settingToInputDescriptor(setting: SettingsItem, currSettings: CustomDic
 interface DataTypesDescriptor {
 	current_page?: PageInfo;
 	settingValues?: CustomDict<string|undefined>;
+	ioController?: IOController;
 }
 
 export default Vue.extend({
 	name: 'TreeWindow',
 	components: {
 		InputGroup,
+		InputPrompt
 	},
 	data() : DataTypesDescriptor {
 		return {
@@ -132,6 +137,15 @@ export default Vue.extend({
 			//Save the settings
 			this.current_page.plugin.saveSettingsObj(this.settingValues).then(() => {
 				console.log(`Settings saved`);
+			});
+			if (!this.ioController) {
+				console.error(`Couldn't get IO Controller`);
+				return;
+			}
+			this.ioController.showOutput({
+				title: 'Settings saved',
+				// message: JSON.stringify(this.settingValues, null, 4),
+				message: '',
 			});
 		},
 	},
