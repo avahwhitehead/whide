@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.5](https://github.com/sonrad10/Whide/compare/v1.5.4...v1.5.5) (2021-04-24)
+
+
+### Bug Fixes
+
+* breakpoints are maintained when switching between tabs ([ef35fb8](https://github.com/sonrad10/Whide/commit/ef35fb870d66bf8dc1329228831d31278febf2b3))
+* fixed tree viewer not scaling properly for large trees ([2699de0](https://github.com/sonrad10/Whide/commit/2699de03cc3c993ec0dcf9808a279f740bed508b))
+* issue where only the first open tab was run ([b274c96](https://github.com/sonrad10/Whide/commit/b274c960a25f9542a88cd5cf6d412b5fb849982f))
+* removed unused dependencies ([fbc0c45](https://github.com/sonrad10/Whide/commit/fbc0c45e8b6ce042e338a0454dc74fe42f940abc))
+
 ### [1.5.4](https://github.com/sonrad10/Whide/compare/v1.5.3...v1.5.4) (2021-04-12)
 
 
