@@ -31,7 +31,7 @@ import {
 import { wrapEditor } from "@/types/codeEditor";
 import { EventEmitter } from "events";
 //The code editor
-import CodeMirror from "codemirror";
+import CodeMirror, { Doc } from "codemirror";
 //CodeMirror styling
 import 'codemirror/lib/codemirror.css';
 //While language syntax definition
@@ -46,6 +46,7 @@ interface DataType {
 	editorController: EditorControllerInterface|undefined;
 	ioController: IOController|undefined;
 	openFiles: InternalFile[];
+	docs: Map<string, Doc>,
 }
 
 async function addWidget(editor: CodeEditorWrapper, line: number|CodeMirror.LineHandle, element: HTMLElement) : Promise<CodeMirror.LineWidget> {
@@ -182,6 +183,7 @@ export default Vue.extend({
 			editorController: undefined,
 			openFiles: [],
 			ioController: undefined,
+			docs: new Map(),
 		}
 	},
 	mounted() {
@@ -278,10 +280,6 @@ export default Vue.extend({
 		},
 	},
 	methods: {
-		updateCode(code : string) {
-			if (!this.editor) throw new Error("Couldn't get editor");
-			this.editor.setValue(code);
-		},
 		/**
 		 * Handle the active tab changing
 		 * @param fileName		The new active tab
@@ -322,6 +320,7 @@ export default Vue.extend({
 
 			//Close the tab
 			this.openFiles.splice(index, 1);
+			this.docs.delete(file.fullPath);
 		},
 
 		/**
@@ -354,9 +353,19 @@ export default Vue.extend({
 		/**
 		 * Update the editor content when the selected file is changed (either direction)
 		 */
-		selectedFile(newFile: InternalFile|undefined) {
-			if (!newFile) this.updateCode("");
-			else this.updateCode(newFile.content || "");
+		async selectedFile(newFile: InternalFile|undefined, oldFile: InternalFile|undefined) {
+			if (!this.editor) throw new Error("Couldn't get code editor");
+
+			//Use the path to the file to save the document state
+			//Support using the editor without an open file by using the empty string
+			let newFilePath = newFile?.fullPath || '';
+			let oldFilePath = oldFile?.fullPath || '';
+
+			//If the file is already open, use the existing Doc
+			//Otherwise create a new one
+			let newDoc: Doc = this.docs.get(newFilePath) || CodeMirror.Doc(newFile?.content || '', WHILE);
+			//Swap the current doc out for the new one, saving the old one
+			this.docs.set(oldFilePath, await this.editor.swapDoc(newDoc));
 		},
 		/**
 		 * Emit an event when the editor controller object changes
