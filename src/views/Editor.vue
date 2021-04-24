@@ -27,7 +27,7 @@
 					:focused="focused_file"
 					@controller="onEditorControllerChange"
 					@editorChange="onEditorObjectChange"
-					@file-focus="onOpenFileChange"
+					@fileFocus="onFocusedFileChange"
 				/>
 			</Container>
 
@@ -135,7 +135,7 @@ export default Vue.extend({
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
 			this.editorController.open(abstractFile.fullPath);
 		},
-		onOpenFileChange(fileData : InternalFile|undefined) : void {
+		onFocusedFileChange(fileData : InternalFile|undefined) : void {
 			//Keep track of the currently focused file
 			this.focused_file = fileData || undefined;
 		},

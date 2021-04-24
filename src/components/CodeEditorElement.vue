@@ -148,24 +148,12 @@ function wrapExtendedCodeEditor(_editor : CodeEditorWrapper) : ExtendedCodeEdito
  * Partially implemented EditorController object to allow controlling the editor from within plugins
  */
 abstract class EditorController extends EventEmitter implements EditorControllerInterface {
-	private readonly _editor : ExtendedCodeEditorWrapper;
-	protected _focusedFile? : InternalFile;
-	protected _openFiles : InternalFile[];
-
-	protected constructor(editor: ExtendedCodeEditorWrapper, openFiles: InternalFile[]) {
+	protected constructor() {
 		super();
-		this._editor = editor;
-		this._openFiles = openFiles;
 	}
 
-	get editor() : ExtendedCodeEditorWrapper {
-		return this._editor
-	}
-
-	get focusedFile() : string|undefined {
-		return this._focusedFile?.fullPath
-	}
-
+	abstract get editor() : ExtendedCodeEditorWrapper;
+	abstract get focusedFile() : string|undefined;
 	abstract get openFiles() : string[];
 
 	abstract open(filePath: string) : Promise<void>;
@@ -229,12 +217,19 @@ export default Vue.extend({
 		});
 
 		//Create the editor controller object
+		const that = this;
 		this.editorController = new (class extends EditorController {
-			constructor(editor: ExtendedCodeEditorWrapper, openFiles: InternalFile[]) {
-				super(editor, openFiles);
+			constructor() {
+				super();
+			}
+			get editor(): ExtendedCodeEditorWrapper {
+				return that.editor!;
+			}
+			get focusedFile(): string | undefined {
+				return that.selectedFile?.fullPath;
 			}
 			get openFiles() : string[] {
-				return Object.values(this._openFiles).map(f => f.fullPath);
+				return Object.values(that.openFiles).map(f => f.fullPath);
 			}
 			async close(filePath: string): Promise<void> {
 				this.emit('tab-close', filePath);
@@ -251,19 +246,19 @@ export default Vue.extend({
 					//Read the file
 					await file.read();
 					//Open the file in the editor
-					this._openFiles.push(file);
+					that.openFiles.push(file);
 				}
 				//Focus on this file
-				this._focusedFile = file;
+				that.selectedFile = file;
 				this.emit('tab-focus', filePath);
 			}
 			async saveFiles(): Promise<void> {
-				for (const file of this._openFiles) await file.write();
+				for (const file of that.openFiles) await file.write();
 			}
 			private _isOpen(filePath: string) : boolean{
-				return !!this._openFiles.find(f => f.fullPath === filePath);
+				return !!that.openFiles.find(f => f.fullPath === filePath);
 			}
-		})(this.editor, this.openFiles);
+		})();
 
 		this.editorController.on('tab-close', (filePath: string) => {
 			const file = this._indexFromFilePath(filePath);
@@ -296,7 +291,7 @@ export default Vue.extend({
 			if (fileName) this.selectedFile = this.openFiles[this._indexFromFileName(fileName)];
 			else this.selectedFile = undefined;
 			//Alert the external listeners
-			this.$emit("file-focus", this.selectedFile);
+			this.$emit("fileFocus", this.selectedFile);
 		},
 		/**
 		 * Handle a tab closing
