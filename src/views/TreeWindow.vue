@@ -4,7 +4,7 @@
 			<p class="caption">Original:</p>
 			<label class="input-label">
 				<input type="text" v-model="tree_input" placeholder="<nil.<nil.nil>>" />
-				<button @click="showTree">Convert</button>
+				<button @click="onConvertClick">Convert</button>
 			</label>
 			<p v-if="treeError" v-text="treeError" class="error" />
 			<VariableTreeViewer class="tree-viewer" :tree="binaryTree" />
@@ -14,7 +14,7 @@
 			<p class="caption">Converted:</p>
 			<label class="input-label">
 				<input type="text" v-model="converter_model" placeholder="<any.nil>>" />
-				<button @click="showTree">Convert</button>
+				<button @click="onConvertClick">Convert</button>
 			</label>
 			<p v-if="converterError" v-text="converterError" class="error" />
 			<VariableTreeViewer class="tree-viewer" :tree="convertedTree" />
@@ -89,19 +89,17 @@ export default Vue.extend({
 		},
 	},
 	mounted() {
-		this.showTree();
+		this.onConvertClick();
 	},
 	methods: {
-		showTree() : void {
+		onConvertClick(): void {
 			try {
 				this.parsed_tree = parseTree(this.tree_input);
-				this.treeError = undefined;
 			} catch (e) {
 				this.treeError = e;
+				return;
 			}
-		},
-
-		onConvertClick(): void {
+			this.treeError = undefined;
 			//Redraw the tree with the new string
 			this.converter_string = this.converter_model;
 		},
