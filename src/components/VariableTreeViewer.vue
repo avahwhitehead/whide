@@ -1,9 +1,10 @@
 <template>
-	<div class="parent" @scroll.prevent="">
+	<div class="tree-container" @scroll.prevent="">
+<!--			:height="height"-->
 		<svg
-			:height="height"
 			preserveAspectRatio="xMinYMin meet"
 			ref="svg-el"
+			class="treeViewer"
 		>
 			<g ref="svg-root">
 				<NodeGroup :d="d" v-for="(d, i) in nodes" :key="i" />
@@ -147,16 +148,17 @@ export default Vue.extend({
 
 
 <style scoped>
-svg {
-	border: 1px solid black;
+.tree-container {
+	position: relative;
+	display: flex;
+	flex-direction: column;
 }
 
-.parent {
-	overflow: hidden;
-	position: relative;
-	max-width: min-content;
-	margin-left: auto;
-	margin-right: auto;
+svg.treeViewer {
+	border: 1px solid black;
+	background-size: contain;
+	height: 100%;
+	flex: 1;
 }
 
 .controls {
