@@ -1,6 +1,5 @@
 <template>
 	<div class="tree-container" @scroll.prevent="">
-<!--			:height="height"-->
 		<svg
 			preserveAspectRatio="xMinYMin meet"
 			ref="svg-el"
@@ -13,7 +12,7 @@
 		<div class="controls">
 			<input type="button" class="button" @click="() => _zoom(1)" value="+" />
 			<input type="button" class="button" @click="() => _zoom(-1)" value="-" />
-			<input type="button" class="button" @click="focus" value="Reset" />
+			<input type="button" class="button" @click="focus" value="Focus" />
 		</div>
 	</div>
 </template>
