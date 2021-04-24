@@ -68,12 +68,10 @@ export default Vue.extend({
 	},
 	computed: {
 		diagramWidth() : number {
-			let scale = 1;//(this.nodes?.height || 10) / 1;
-			return (this.width - this.margin.left - this.margin.right) * scale;
+			return (this.width - this.margin.left - this.margin.right);
 		},
 		diagramHeight() : number {
-			let scale = 1;//(this.nodes?.height || 10) / 1;
-			return (this.height - this.margin.top - this.margin.bottom) * scale;
+			return (this.height - this.margin.top - this.margin.bottom);
 		},
 	},
 	methods: {
@@ -112,7 +110,7 @@ export default Vue.extend({
 			let nodes = d3.hierarchy(treeData);
 
 			//Scale for the diagram based on the tree size
-			let scale = Math.max((nodes?.height || 10), 10);
+			let scale = Math.max((nodes?.height || 10), 2);
 
 			//Draw the tree, dynamically setting the sizes
 			let treemap: TreeLayout<unknown> = d3.tree().size([scale * 100, scale * 100]);
