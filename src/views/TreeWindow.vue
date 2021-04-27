@@ -157,17 +157,16 @@ export default Vue.extend({
 			else if (conv.value !== undefined) name = conv.value;
 
 			const isErrored = error || !!conv.error;
-			const isList = list || !!conv.list;
 
 			//Add the children
 			let children: TreeType[] = [];
 			for (let child of (conv.children || [])) {
-				children.push(this._convertConvertedTree(child, isErrored, isList));
+				children.push(this._convertConvertedTree(child, isErrored, !!conv.list));
 			}
 			//Return the created node
 			return {
 				name: name,
-				list: isList,
+				list: list,
 				errorMsg: conv.error,
 				error: isErrored,
 				children,
