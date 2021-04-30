@@ -12,8 +12,6 @@
 			</label>
 			<div v-if="converterError" v-text="converterError" class="error" />
 			<div v-if="treeString" v-text="treeString" />
-
-			<VariableTreeViewer class="tree-viewer" :tree="displayableConvertedTree" />
 		</div>
 
 		<div class="viewer-body" v-else>
@@ -21,9 +19,11 @@
 				<input type="text" v-model="tree_input" placeholder="<nil.<nil.nil>>" />
 			</label>
 			<div v-if="treeError" v-text="treeError" class="error" />
-
-			<VariableTreeViewer class="tree-viewer" :tree="displayableBinaryTree" />
 		</div>
+
+		<VariableTreeViewer class="tree-viewer" :tree="displayableConvertedTree" :class="{'hidden':!show_converted}" />
+
+		<VariableTreeViewer class="tree-viewer" :tree="displayableBinaryTree" :class="{'hidden':show_converted}" />
 	</div>
 </template>
 
@@ -159,5 +159,9 @@ export default Vue.extend({
 
 .error {
 	color: red;
+}
+
+.hidden {
+	display: none;
 }
 </style>
