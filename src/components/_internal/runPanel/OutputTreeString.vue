@@ -110,6 +110,9 @@ https://popper.js.org/docs/v2/tutorial/
 	background: #F5F5F5;
 	padding: 5px;
 	border-radius: 5px;
+	width: 400px;
+	min-width: fit-content;
+	min-height: fit-content;
 }
 
 .arrow, .arrow::before {

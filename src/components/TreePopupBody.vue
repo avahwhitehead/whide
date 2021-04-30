@@ -1,29 +1,31 @@
 <template>
 	<div class="tree-viewer-popup">
 		<div class="tab-holder">
-			<a class="tab-option" :class="{'active':!show_converted}" @click="show_converted = false">Original</a>
+			<p class="tab-option" :class="{'active':!show_converted}" @click="show_converted = false">Original</p>
 			&nbsp;
-			<a class="tab-option" :class="{'active':show_converted}" @click="show_converted = true">Converted</a>
+			<p class="tab-option" :class="{'active':show_converted}" @click="show_converted = true">Converted</p>
 		</div>
 
 		<div class="viewer-body" v-if="show_converted">
 			<label class="input-label">
-				<input type="text" v-model="converter_model" placeholder="<any.nil>" />
+				<input type="text" class="input" v-model="converter_model" placeholder="<any.nil>" />
 			</label>
 			<div v-if="converterError" v-text="converterError" class="error" />
-			<div v-if="treeString" v-text="treeString" />
+			<div v-if="treeString"><b>Result:</b> {{ treeString }}</div>
 		</div>
 
 		<div class="viewer-body" v-else>
 			<label class="input-label">
-				<input type="text" v-model="tree_input" placeholder="<nil.<nil.nil>>" />
+				<input type="text" class="input" v-model="tree_input" placeholder="<nil.<nil.nil>>" />
 			</label>
 			<div v-if="treeError" v-text="treeError" class="error" />
 		</div>
 
-		<VariableTreeViewer class="tree-viewer" :tree="displayableConvertedTree" :class="{'hidden':!show_converted}" />
+		<div class="trees">
+			<VariableTreeViewer class="tree-viewer" :tree="displayableConvertedTree" :class="{'hidden':!show_converted}" />
 
-		<VariableTreeViewer class="tree-viewer" :tree="displayableBinaryTree" :class="{'hidden':show_converted}" />
+			<VariableTreeViewer class="tree-viewer" :tree="displayableBinaryTree" :class="{'hidden':show_converted}" />
+		</div>
 	</div>
 </template>
 
@@ -134,9 +136,8 @@ export default Vue.extend({
 
 <style scoped>
 .tree-viewer-popup {
-	width: 400px;
-	height: 400px;
-	resize: both;
+	display: flex;
+	flex-direction: column;
 }
 
 .tab-holder {
@@ -146,6 +147,8 @@ export default Vue.extend({
 .tab-option {
 	color: blue;
 	user-select: none;
+	margin: 0 auto;
+	display: inline-block;
 }
 .tab-option.active {
 	text-decoration: underline;
@@ -153,6 +156,16 @@ export default Vue.extend({
 .tab-option:hover {
 	text-decoration: underline;
 	cursor: pointer;
+}
+
+.viewer-body {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
+
+.viewer-body .input {
+	flex: 1;
 }
 
 .input-label {
@@ -165,7 +178,18 @@ export default Vue.extend({
 	flex: 1;
 }
 
+.trees {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	/*TODO: Find a user-intuitive way of resizing the viewer*/
+	/*resize: both;*/
+	/*overflow: auto;*/
+}
+
 .tree-viewer {
+	display: flex;
+	flex-wrap: wrap;
 	flex: 1;
 }
 
