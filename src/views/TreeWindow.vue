@@ -70,8 +70,8 @@ export default Vue.extend({
 				left: null,
 				right: { left: null, right: null },
 			},
-			converter_model: 'int',
-			converter_string: 'int',
+			converter_model: chooseInputTree(this.$route.query.c, 'int'),
+			converter_string: chooseInputTree(this.$route.query.c, 'int'),
 			treeError: undefined,
 			converterError: undefined,
 		}

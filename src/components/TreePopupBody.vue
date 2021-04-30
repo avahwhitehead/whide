@@ -1,9 +1,13 @@
 <template>
 	<div class="tree-viewer-popup">
 		<div class="tab-holder">
+			<FontAwesomeIcon icon="external-link-alt" class="open-window-button" @click="onOpenClick" />
+
 			<p class="tab-option" :class="{'active':!show_converted}" @click="show_converted = false">Original</p>
 			&nbsp;
 			<p class="tab-option" :class="{'active':show_converted}" @click="show_converted = true">Converted</p>
+
+			<FontAwesomeIcon icon="times-circle" class="close-button" @click="onCloseClick" />
 		</div>
 
 		<div class="viewer-body" v-if="show_converted">
@@ -36,6 +40,7 @@ import { BinaryTree, parseTree } from "@whide/hwhile-wrapper";
 import VariableTreeViewer, { TreeType } from "@/components/VariableTreeViewer.vue";
 import treeConverter, { ConversionResultType, stringify } from "@whide/tree-lang";
 import { binaryTreeToDisplayable, convertedTreeToDisplayable } from "@/utils/tree_converters";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 /**
  * Type declaration for the data() values
@@ -59,6 +64,7 @@ export default Vue.extend({
 		}
 	},
 	components: {
+		FontAwesomeIcon,
 		VariableTreeViewer,
 	},
 	data() : DataTypesDescriptor {
@@ -107,9 +113,17 @@ export default Vue.extend({
 			}
 			this.treeError = undefined;
 		},
+		converter_model(val: string) {
+			this.$emit('converter', val);
+		},
+		treeString(val: string) {
+			this.$emit('change', val);
+		},
 	},
 	mounted(): void {
 		this.tree_input = this.tree;
+		this.$emit('converter', this.converter_model);
+		this.$emit('change', this.treeString);
 	},
 	methods: {
 		/**
@@ -129,6 +143,12 @@ export default Vue.extend({
 			this.converterError = undefined;
 			//Return the result
 			return res;
+		},
+		onOpenClick() {
+			this.$emit('viewerReq');
+		},
+		onCloseClick() {
+			this.$emit('closeReq');
 		},
 	},
 });
@@ -173,9 +193,23 @@ export default Vue.extend({
 	flex-direction: row;
 	margin-bottom: 5px;
 }
-
 .input-label input[type="text"] {
 	flex: 1;
+}
+.close-button, .open-window-button {
+	width: 1.25em;
+	height: 1.25em;
+}
+.open-window-button {
+	float: left;
+}
+.close-button {
+	text-align: right;
+	float: right;
+	color: red;
+}
+.open-window-button:hover, .close-button:hover {
+	cursor: pointer;
 }
 
 .trees {

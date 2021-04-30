@@ -1,11 +1,14 @@
 <template>
 	<div>
 		<div ref="popup-el" class="tree-popover-container" :class="{'hidden': !show_popup}">
-			<FontAwesomeIcon icon="external-link-alt" class="open-window-button" @click="openTreeInViewer" />
-
-			<FontAwesomeIcon icon="times-circle" class="close-button" @click="show_popup = false" />
-
-			<PopupTreeViewerBody :tree="text" class="tooltip-content" />
+			<PopupTreeViewerBody
+				:tree="text"
+				class="tooltip-content"
+				@viewerReq="openTreeInViewer"
+				@closeReq="show_popup=false"
+				@converter="onConverterChange"
+				@change="onChange"
+			/>
 
 			<div class="arrow" />
 		</div>
@@ -25,19 +28,16 @@
 import Vue from "vue";
 import PopupTreeViewerBody from "@/components/TreePopupBody.vue";
 import { createPopper } from '@popperjs/core';
-import { library } from "@fortawesome/fontawesome-svg-core";
-import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-library.add(faTimesCircle);
 
 interface DataTypeDescriptor {
 	show_popup: boolean;
+	converter: string;
+	converted: string;
 }
 
 export default Vue.extend({
 	name: 'OutputTreeString',
 	components: {
-		FontAwesomeIcon,
 		PopupTreeViewerBody,
 	},
 	props: {
@@ -46,6 +46,8 @@ export default Vue.extend({
 	data(): DataTypeDescriptor {
 		return {
 			show_popup: false,
+			converted: '',
+			converter: '',
 		};
 	},
 	mounted() {
@@ -66,9 +68,15 @@ export default Vue.extend({
 		openTreeInViewer(): void {
 			//Open the tree in a tree viewer in a new window
 			//TODO: Send the conversion string as well
-			let routeData = this.$router.resolve({ path: '/trees', query: { t: this.text } });
+			let routeData = this.$router.resolve({ path: '/trees', query: { t: this.text, c: this.converter } });
 			window.open(routeData.href, '_blank');
-		}
+		},
+		onConverterChange(converter: string) {
+			this.converter = converter;
+		},
+		onChange(converted: string) {
+			this.converted = converted;
+		},
 	}
 })
 </script>
@@ -84,22 +92,6 @@ export default Vue.extend({
 	display: none;
 }
 
-.close-button, .open-window-button {
-	width: 1.25em;
-	height: 1.25em;
-}
-.open-window-button {
-	float: left;
-}
-.close-button {
-	text-align: right;
-	float: right;
-	color: red;
-}
-.open-window-button:hover, .close-button:hover {
-	cursor: pointer;
-}
-
 /*
 Popover CSS adapted from the Popper.js tutorial:
 https://popper.js.org/docs/v2/tutorial/
@@ -111,8 +103,6 @@ https://popper.js.org/docs/v2/tutorial/
 	padding: 5px 5px 15px;
 	border-radius: 5px;
 	width: 400px;
-	min-width: fit-content;
-	min-height: fit-content;
 }
 
 .arrow, .arrow::before {
