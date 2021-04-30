@@ -50,12 +50,18 @@ interface DataTypesDescriptor {
 
 export default Vue.extend({
 	name: 'PopupTreeViewerBody',
+	props: {
+		tree: {
+			type: String,
+			required: true,
+		}
+	},
 	components: {
 		VariableTreeViewer,
 	},
 	data() : DataTypesDescriptor {
 		return {
-			tree_input: "<nil.<nil.nil>>",
+			tree_input: '',
 			cwd: '.',
 			parsed_tree: {
 				left: null,
@@ -87,6 +93,9 @@ export default Vue.extend({
 		}
 	},
 	watch: {
+		tree(tree: string) : void {
+			this.tree_input = tree;
+		},
 		tree_input(): void {
 			try {
 				this.parsed_tree = parseTree(this.tree_input);
@@ -96,6 +105,9 @@ export default Vue.extend({
 			}
 			this.treeError = undefined;
 		},
+	},
+	mounted(): void {
+		this.tree_input = this.tree;
 	},
 	methods: {
 		/**

@@ -5,7 +5,7 @@
 
 			<FontAwesomeIcon icon="times-circle" class="close-button" @click="show_popup = false" />
 
-			<PopupTreeViewerBody class="tooltip-content" />
+			<PopupTreeViewerBody :tree="text" class="tooltip-content" />
 
 			<div class="arrow" data-popper-arrow />
 		</div>
