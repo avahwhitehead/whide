@@ -106,7 +106,7 @@ https://popper.js.org/docs/v2/tutorial/
 */
 
 .tree-popover-container {
-	z-index: 100000;
+	z-index: 9000;
 	background: #F5F5F5;
 	padding: 5px;
 	border-radius: 5px;
