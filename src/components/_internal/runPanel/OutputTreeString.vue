@@ -7,7 +7,7 @@
 
 			<PopupTreeViewerBody :tree="text" class="tooltip-content" />
 
-			<div class="arrow" data-popper-arrow />
+			<div class="arrow" />
 		</div>
 
 		<span
@@ -108,7 +108,7 @@ https://popper.js.org/docs/v2/tutorial/
 .tree-popover-container {
 	z-index: 9000;
 	background: #F5F5F5;
-	padding: 5px;
+	padding: 5px 5px 15px;
 	border-radius: 5px;
 	width: 400px;
 	min-width: fit-content;
@@ -117,8 +117,9 @@ https://popper.js.org/docs/v2/tutorial/
 
 .arrow, .arrow::before {
 	position: absolute;
-	width: 30px;
-	height: 30px;
+	bottom: -5px;
+	width: 20px;
+	height: 20px;
 	background: inherit;
 }
 
