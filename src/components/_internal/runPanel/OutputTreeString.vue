@@ -15,8 +15,8 @@
 
 		<span
 			ref="popup-target"
-			class="highlight popcorn"
-			v-text="text"
+			class="highlight"
+			v-text="displayText"
 			@click="show_popup = !show_popup"
 			@click.middle="openTreeInViewer"
 			@dblclick="openTreeInViewer"
@@ -33,6 +33,7 @@ interface DataTypeDescriptor {
 	show_popup: boolean;
 	converter: string;
 	converted: string;
+	displayText: string;
 }
 
 export default Vue.extend({
@@ -48,6 +49,7 @@ export default Vue.extend({
 			show_popup: false,
 			converted: '',
 			converter: '',
+			displayText: this.text,
 		};
 	},
 	mounted() {
@@ -77,12 +79,20 @@ export default Vue.extend({
 		onChange(converted: string) {
 			this.converted = converted;
 		},
+	},
+	watch: {
+		show_popup(visible: boolean) {
+			if (!visible) this.displayText = this.converted;
+		}
 	}
 })
 </script>
 
 
 <style scoped>
+.highlight {
+	font-weight: bold;
+}
 .highlight:hover {
 	text-decoration: underline;
 	cursor: pointer;
