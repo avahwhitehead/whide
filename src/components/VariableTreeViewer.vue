@@ -32,14 +32,8 @@ export interface TreeType {
 }
 
 interface DataTypeInterface {
-	margin: {
-		top: number,
-		right: number,
-		bottom: number,
-		left: number
-	},
-	width: number;
-	height: number;
+	diagramWidth: number;
+	diagramHeight: number;
 	zoom?: ZoomBehavior<ZoomedElementBaseType, unknown>;
 	nodes?: HierarchyPointNode<unknown>;
 }
@@ -54,25 +48,14 @@ export default Vue.extend({
 	},
 	data() : DataTypeInterface {
 		return {
-			margin: {
-				left: 20,
-				right: 20,
-				top: 20,
-				bottom: 20,
-			},
-			width: 660,
-			height: 500,
+			diagramWidth: 660,
+			diagramHeight: 500,
 			zoom: undefined,
 			nodes: undefined,
 		};
 	},
 	computed: {
-		diagramWidth() : number {
-			return (this.width - this.margin.left - this.margin.right);
-		},
-		diagramHeight() : number {
-			return (this.height - this.margin.top - this.margin.bottom);
-		},
+
 	},
 	methods: {
 		/**
@@ -96,7 +79,7 @@ export default Vue.extend({
 			svg.transition().duration(200).call(
 				this.zoom.transform,
 				d3.zoomIdentity,
-				d3.zoomTransform(svg.node() as any).invert([this.diagramWidth / 2, this.diagramHeight / 2])
+				d3.zoomTransform(svg.node() as any).invert([0,0])
 			);
 		},
 
@@ -110,11 +93,34 @@ export default Vue.extend({
 			let nodes = d3.hierarchy(treeData);
 
 			//Scale for the diagram based on the tree size
-			let scale = Math.max((nodes?.height || 10), 2);
+			let scale = nodes.height * 100;
 
 			//Draw the tree, dynamically setting the sizes
-			let treemap: TreeLayout<unknown> = d3.tree().size([scale * 100, scale * 100]);
-			this.nodes = treemap(d3.hierarchy(treeData));
+			let treemap: TreeLayout<unknown> = d3.tree().size([scale, scale]);
+			let hierarchy = treemap(nodes);
+
+			/**
+			 * Travel recursively through a tree, offsetting each node's X and Y value by a fixed amount.
+			 * This has the effect of translating the tree left and up.
+			 */
+			function _offsetTree(node: d3.HierarchyPointNode<unknown>, offsetX: number, offsetY: number) {
+				node.x -= offsetX;
+				node.y -= offsetY;
+				node.children?.forEach(c => _offsetTree(c, offsetX, offsetY));
+			}
+			//Align the center of the tree to the centre of the canvas
+			//Offset so the root (top middle) is at (0,0) then shift up
+			_offsetTree(hierarchy, hierarchy.x + scale/2, hierarchy.y + scale/2)
+			this.nodes = hierarchy;
+
+			//Adjust the scale to fit the whole graph
+			const svg = d3.select(this.$refs["svg-el"] as Element);
+			if (!this.zoom) return;
+			svg.transition().duration(200).call(
+				this.zoom.scaleTo,
+				5 / ((nodes.height + 1)),
+				[0, 0]
+			);
 		}
 	},
 	mounted() {
@@ -123,7 +129,7 @@ export default Vue.extend({
 		const parentG = d3.select(this.$refs["svg-root"] as Element);
 
 		//Set up panning on the SVG element
-		svg.attr("viewBox", `${0}, ${0}, ${this.diagramWidth}, ${this.diagramHeight}`);
+		svg.attr("viewBox", `${-this.diagramWidth/2}, ${-this.diagramHeight/2}, ${this.diagramWidth}, ${this.diagramHeight}`);
 		//Set up zooming on the SVG element
 		this.zoom = d3.zoom();
 		svg.call(this.zoom
