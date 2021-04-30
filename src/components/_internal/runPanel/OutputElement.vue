@@ -1,16 +1,15 @@
 <template>
 	<code class="OutputElement">
-		<span
-			v-for="(segment, i) of splitContent" :key="i"
-			:class="{'highlight': segment.isTree}"
-			@click="onSegmentClick(segment)"
-			v-text="segment.content"
-		/>
+		<span v-for="(segment, i) of splitContent" :key="i">
+			<OutputTreeString v-if="segment.isTree" :text="segment.content" />
+			<span v-else v-text="segment.content" />
+		</span>
 	</code>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
+import OutputTreeString from "@/components/_internal/runPanel/OutputTreeString.vue";
 
 type Segment = {
 	content: string,
@@ -44,7 +43,9 @@ function getTreeSegments(str: string) : Segment[] {
 
 export default Vue.extend({
 	name: 'OutputElement',
-	components: {},
+	components: {
+		OutputTreeString
+	},
 	props: {
 		value: String,
 	},
@@ -54,14 +55,6 @@ export default Vue.extend({
 	computed: {
 		splitContent() : Segment[] {
 			return getTreeSegments(this.value);
-		},
-	},
-	methods: {
-		onSegmentClick(segment: Segment) {
-			if (!segment.isTree) return;
-			//Open the tree in a tree viewer
-			let routeData = this.$router.resolve({ path: '/trees', query: { t: segment.content } });
-			window.open(routeData.href, '_blank');
 		},
 	},
 	updated() {
@@ -81,9 +74,5 @@ export default Vue.extend({
 .OutputElement {
 	white-space: pre-wrap;
 	max-width: 100%;
-}
-
-.OutputElement span.highlight:hover {
-	text-decoration: underline;
 }
 </style>

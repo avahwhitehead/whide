@@ -27,7 +27,8 @@
 import Vue from "vue";
 import { BinaryTree, parseTree } from "@whide/hwhile-wrapper";
 import VariableTreeViewer, { TreeType } from "@/components/VariableTreeViewer.vue";
-import treeConverter, { ConversionResultType, ConvertedBinaryTree } from "@whide/tree-lang";
+import treeConverter, { ConversionResultType } from "@whide/tree-lang";
+import { binaryTreeToDisplayable, convertedTreeToDisplayable } from "@/utils/tree_converters";
 
 /**
  * Type declaration for the data() values
@@ -77,13 +78,13 @@ export default Vue.extend({
 	},
 	computed: {
 		binaryTree(): TreeType {
-			return this._convertBinaryTree(this.parsed_tree);
+			return binaryTreeToDisplayable(this.parsed_tree);
 		},
 		convertedTree(): TreeType|undefined {
 			//Attempt to convert the tree using the input string
 			let res: ConversionResultType|undefined = this._runTreeConvert(this.parsed_tree, this.converter_string);
 			//Return the tree as a `TreeType` if it is successful
-			if (res) return this._convertConvertedTree(res.tree);
+			if (res) return convertedTreeToDisplayable(res.tree)
 			//Return nothing on error
 			return this.binaryTree;
 		},
@@ -122,56 +123,6 @@ export default Vue.extend({
 			//Return the result
 			return res;
 		},
-
-		/**
-		 * Change a BinaryTree object to the TreeType
-		 * @param binary	The binary tree to convert
-		 */
-		_convertBinaryTree(binary: BinaryTree) : TreeType {
-			//Display 'null' nodes as 'nil'
-			if (binary === null) {
-				return { name: 'nil', children: [], };
-			}
-			//Add the children
-			let children: TreeType[] = [
-				this._convertBinaryTree(binary.left),
-				this._convertBinaryTree(binary.right),
-			];
-			//Return the created node
-			return {
-				name: '',
-				children,
-			};
-		},
-
-		/**
-		 * Change a ConvertedBinaryTree object to the TreeType
-		 * @param conv		The ConvertedBinaryTree
-		 * @param error		(INTERNAL) Whether to display this subtree as an error
-		 * @param list		(INTERNAL) Whether to display this subtree as a list
-		 */
-		_convertConvertedTree(conv: ConvertedBinaryTree, error = false, list = false) : TreeType {
-			//Label the node 'nil' if it is null, or use its value
-			let name: string|number = '';
-			if (conv.value === null) name = 'nil';
-			else if (conv.value !== undefined) name = conv.value;
-
-			const isErrored = error || !!conv.error;
-
-			//Add the children
-			let children: TreeType[] = [];
-			for (let child of (conv.children || [])) {
-				children.push(this._convertConvertedTree(child, isErrored, !!conv.list));
-			}
-			//Return the created node
-			return {
-				name: name,
-				list: list,
-				errorMsg: conv.error,
-				error: isErrored,
-				children,
-			};
-		}
 	},
 });
 </script>
