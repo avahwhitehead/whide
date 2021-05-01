@@ -33,14 +33,29 @@ export interface TreeType {
 }
 
 interface DataTypeInterface {
+	/**
+	 * Base diagram width (scaled as trees are drawn)
+	 */
 	diagramWidth: number;
+	/**
+	 * Base diagram height (scaled as trees are drawn)
+	 */
 	diagramHeight: number;
+	/**
+	 * The d3 zoom control object
+	 */
 	initial: {
 		x: number,
 		y: number,
 		z: number,
 	},
+	/**
+	 * The D3 tree structure used to render the tree
+	 */
 	zoom?: ZoomBehavior<ZoomedElementBaseType, unknown>;
+	/**
+	 * Initial X/Y/Zoom values. Used to refocus the tree
+	 */
 	nodes?: HierarchyPointNode<unknown>;
 }
 
@@ -54,34 +69,16 @@ export default Vue.extend({
 	},
 	data() : DataTypeInterface {
 		return {
-			/**
-			 * Base diagram width (scaled as trees are drawn)
-			 */
 			diagramWidth: 660,
-			/**
-			 * Base diagram height (scaled as trees are drawn)
-			 */
 			diagramHeight: 500,
-			/**
-			 * The d3 zoom control object
-			 */
 			zoom: undefined,
-			/**
-			 * The D3 tree structure used to render the tree
-			 */
 			nodes: undefined,
-			/**
-			 * Initial X/Y/Zoom values. Used to refocus the tree
-			 */
 			initial: {
 				x: 0,
 				y: 0,
 				z: 1,
 			}
 		};
-	},
-	computed: {
-
 	},
 	methods: {
 		/**
