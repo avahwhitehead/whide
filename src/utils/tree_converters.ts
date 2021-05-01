@@ -37,6 +37,16 @@ export function convertedTreeToDisplayable(conv: ConvertedBinaryTree, error = fa
 
 	const isErrored = error || !!conv.error;
 
+	//TODO: This is code to display lists in stringified form instead of tree
+	//if (conv.list) {
+	//	return {
+	//		name: stringify(conv),
+	//		list: list,
+	//		errorMsg: conv.error,
+	//		error: isErrored,
+	//	};
+	//}
+
 	//Add the children
 	let children: TreeType[] = [];
 	for (let child of (conv.children || [])) {
