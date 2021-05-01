@@ -69,7 +69,6 @@ export default Vue.extend({
 	methods: {
 		openTreeInViewer(): void {
 			//Open the tree in a tree viewer in a new window
-			//TODO: Send the conversion string as well
 			let routeData = this.$router.resolve({ path: '/trees', query: { t: this.text, c: this.converter } });
 			window.open(routeData.href, '_blank');
 		},
@@ -112,7 +111,7 @@ https://popper.js.org/docs/v2/tutorial/
 	background: #F5F5F5;
 	padding: 5px 5px 15px;
 	border-radius: 5px;
-	width: 400px;
+	width: 450px;
 }
 
 .arrow, .arrow::before {
