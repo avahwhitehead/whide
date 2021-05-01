@@ -16,7 +16,8 @@
 		<span
 			ref="popup-target"
 			class="highlight"
-			v-text="displayText"
+			v-text="displayText || text"
+			:title="text"
 			@click="show_popup = !show_popup"
 			@click.middle="openTreeInViewer"
 			@dblclick="openTreeInViewer"
@@ -55,7 +56,7 @@ export default Vue.extend({
 	mounted() {
 		//Link the popup and the tree text
 		createPopper(this.$refs["popup-target"] as HTMLElement, this.$refs["popup-el"] as HTMLElement, {
-			placement: 'top',
+			placement: 'top-start',
 			modifiers: [
 				{
 					name: 'offset',
