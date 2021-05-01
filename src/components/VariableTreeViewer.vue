@@ -20,8 +20,9 @@
 <script lang="ts">
 import Vue from "vue";
 import * as d3 from "d3";
-import { HierarchyPointNode, TreeLayout, ZoomBehavior, ZoomedElementBaseType } from "d3";
+import { HierarchyNode, HierarchyPointNode, TreeLayout, ZoomBehavior, ZoomedElementBaseType } from "d3";
 import NodeGroup from "@/components/_internal/trees/NodeGroup.vue";
+import { ZoomTransform } from "d3-zoom";
 
 export interface TreeType {
 	name: any;
@@ -34,6 +35,11 @@ export interface TreeType {
 interface DataTypeInterface {
 	diagramWidth: number;
 	diagramHeight: number;
+	initial: {
+		x: number,
+		y: number,
+		z: number,
+	},
 	zoom?: ZoomBehavior<ZoomedElementBaseType, unknown>;
 	nodes?: HierarchyPointNode<unknown>;
 }
@@ -48,10 +54,30 @@ export default Vue.extend({
 	},
 	data() : DataTypeInterface {
 		return {
+			/**
+			 * Base diagram width (scaled as trees are drawn)
+			 */
 			diagramWidth: 660,
+			/**
+			 * Base diagram height (scaled as trees are drawn)
+			 */
 			diagramHeight: 500,
+			/**
+			 * The d3 zoom control object
+			 */
 			zoom: undefined,
+			/**
+			 * The D3 tree structure used to render the tree
+			 */
 			nodes: undefined,
+			/**
+			 * Initial X/Y/Zoom values. Used to refocus the tree
+			 */
+			initial: {
+				x: 0,
+				y: 0,
+				z: 1,
+			}
 		};
 	},
 	computed: {
@@ -78,8 +104,7 @@ export default Vue.extend({
 			const svg = d3.select(this.$refs["svg-el"] as Element);
 			svg.transition().duration(200).call(
 				this.zoom.transform,
-				d3.zoomIdentity,
-				d3.zoomTransform(svg.node() as any).invert([0,0])
+				d3.zoomIdentity.translate(this.initial.x, this.initial.y).scale(this.initial.z)
 			);
 		},
 
@@ -92,34 +117,54 @@ export default Vue.extend({
 			//Build a d3 tree from the nodes
 			let nodes = d3.hierarchy(treeData);
 
-			//Scale for the diagram based on the tree size
-			let scale = nodes.height * 100;
+			/**
+			 * Depth-first traversal of the tree counting the number of nodes at each level.
+			 * There is no advantage to a breadth-first search here because of how JS arrays work
+			 */
+			function _getLayerWidths(node: HierarchyNode<TreeType>, levels: number[]) {
+				levels[node.depth] = (levels[node.depth] || 0) + 1
+				for (let n of node.children || []) _getLayerWidths(n, levels);
+				return levels;
+			}
+			//Compare the number of nodes at each level to the maximum number of nodes if this was a binary tree
+			//This is used to set a constant node width which grows for trees with more children
+			let levels = _getLayerWidths(nodes, []);
+			levels = levels.map((n:number, i:number) => Math.max(n, i));
 
-			//Draw the tree, dynamically setting the sizes
-			let treemap: TreeLayout<unknown> = d3.tree().size([scale, scale]);
-			let hierarchy = treemap(nodes);
+			//Scale the diagram based on the tree size
+			let width = Math.max(...levels);
+			let xScale = width * 100;
+			let yScale = nodes.height * 100;
+			let zoom = 5 / (width + 1);
+
+			//Assign (x,y) coordinate values to each node in the tree
+			let treemap: TreeLayout<unknown> = d3.tree().size([xScale, yScale]);
+			let hierarchy: HierarchyPointNode<unknown> = treemap(nodes);
 
 			/**
 			 * Travel recursively through a tree, offsetting each node's X and Y value by a fixed amount.
 			 * This has the effect of translating the tree left and up.
 			 */
-			function _offsetTree(node: d3.HierarchyPointNode<unknown>, offsetX: number, offsetY: number) {
+			function _offsetTree(node: d3.HierarchyPointNode<unknown>, offsetX: number, offsetY: number): void {
 				node.x -= offsetX;
 				node.y -= offsetY;
 				node.children?.forEach(c => _offsetTree(c, offsetX, offsetY));
 			}
 			//Align the center of the tree to the centre of the canvas
 			//Offset so the root (top middle) is at (0,0) then shift up
-			_offsetTree(hierarchy, hierarchy.x + scale/2, hierarchy.y + scale/2)
+			_offsetTree(hierarchy, hierarchy.x, hierarchy.y + yScale/2)
 			this.nodes = hierarchy;
 
-			//Adjust the scale to fit the whole graph
-			const svg = d3.select(this.$refs["svg-el"] as Element);
+			//Store the initial X/Y/Zoom values
+			this.initial = { x: 0, y: 0, z: zoom }
+
+			//Zoom the diagram to fit the whole diagram
 			if (!this.zoom) return;
+			const svg = d3.select(this.$refs["svg-el"] as Element);
 			svg.transition().duration(200).call(
 				this.zoom.scaleTo,
-				5 / ((nodes.height + 1)),
-				[0, 0]
+				this.initial.z,
+				[this.initial.x, this.initial.y]
 			);
 		}
 	},
@@ -135,7 +180,7 @@ export default Vue.extend({
 		svg.call(this.zoom
 			.extent([[0, 0], [this.diagramWidth, this.diagramHeight]])
 			.scaleExtent([.1, 10])
-			.on("zoom", ({ transform } : { transform: { k:number, x:number, y:number } }) => {
+			.on("zoom", ({ transform } : { transform: ZoomTransform }) => {
 				parentG.attr("transform", transform as any);
 			})
 		);
