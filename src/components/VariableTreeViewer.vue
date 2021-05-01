@@ -133,6 +133,7 @@ export default Vue.extend({
 			let xScale = width * 100;
 			let yScale = nodes.height * 100;
 			let zoom = 5 / (width + 1);
+			zoom = Math.max(zoom, .25)
 
 			//Assign (x,y) coordinate values to each node in the tree
 			let treemap: TreeLayout<unknown> = d3.tree().size([xScale, yScale]);

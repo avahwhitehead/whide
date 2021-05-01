@@ -35,7 +35,7 @@ export default Vue.extend({
 <style scoped>
 .link {
 	fill: none;
-	stroke: #ccc;
-	stroke-width: 2px;
+	stroke: #BBB;
+	stroke-width: 4px;
 }
 </style>
