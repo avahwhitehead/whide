@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="TreeString">
 		<div ref="popup-el" class="tree-popover-container" :class="{'hidden': !show_popup}">
 			<PopupTreeViewerBody
 				:tree="text"
@@ -90,6 +90,10 @@ export default Vue.extend({
 
 
 <style scoped>
+.TreeString {
+	display: inline-block;
+}
+
 .highlight {
 	font-weight: bold;
 }
