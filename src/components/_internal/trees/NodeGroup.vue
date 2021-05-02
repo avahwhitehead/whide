@@ -17,7 +17,11 @@
 			v-tooltip="circleTooltip"
 		/>
 
-		<NodeLink v-if="d.parent" :d="d" />
+		<path
+			:d="path"
+			class="link"
+			v-if="d.parent"
+		/>
 
 		<text
 			dy=".35em"
@@ -30,19 +34,16 @@
 
 <script lang="ts">
 import Vue, { PropType } from "vue";
-import NodeLink from "./NodeLink.vue";
 import VTooltip from 'v-tooltip';
 import { TreeType } from "@/components/VariableTreeViewer.vue";
+import { HierarchyPointNode } from "d3";
 
 Vue.use(VTooltip);
 
 export default Vue.extend({
 	name: 'NodeGroup',
-	components: {
-		NodeLink,
-	},
 	props: {
-		d: Object as PropType<{ data: TreeType, children: any[] }>,
+		d: Object as PropType<HierarchyPointNode<TreeType>>,
 	},
 	computed: {
 		circleTooltip() : any {
@@ -54,6 +55,16 @@ export default Vue.extend({
 		isCircleVisible(): boolean {
 			const data = this.d.data;
 			return !this.d.children || !!data.error || !!data.list;
+		},
+		path() : string {
+			//Shorthand definitions
+			const pX = this.d.parent!.x - this.d.x;
+			const pY = this.d.parent!.y - this.d.y;
+
+			//Cubic curve from the current node to its parent
+			//The current node is centred at (0,0)
+			return `M0,0C0,${pY/2} ${pX},${pY/2} ${pX},${pY}`;
+			// return `M0,0L${pX},${pY}`;
 		}
 	},
 	methods: {
@@ -76,7 +87,6 @@ export default Vue.extend({
 	stroke-width: 3px;
 }
 
-/*noinspection CssUnusedSymbol*/
 .node .node-circle.list {
 	stroke: green;
 }
@@ -90,5 +100,11 @@ export default Vue.extend({
 	text-anchor: middle;
 	font: 12px sans-serif;
 	user-select: none;
+}
+
+.link {
+	fill: none;
+	stroke: #BBB;
+	stroke-width: 4px;
 }
 </style>
