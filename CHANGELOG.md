@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.6.0](https://github.com/sonrad10/Whide/compare/v1.5.5...v1.6.0) (2021-05-02)
+
+
+### Features
+
+* added a popup tree viewer to the run panel output ([1c4551f](https://github.com/sonrad10/Whide/commit/1c4551fbea287d8bfcd38d08a961278b09302c4d))
+* added maximum tree zoom-out level ([ad24f6f](https://github.com/sonrad10/Whide/commit/ad24f6f0e5c34feb9825c6af3843697e9b273f26))
+* added support for booleans and literal integers (0,1,2,...) to the conversion language ([9dd5c7a](https://github.com/sonrad10/Whide/commit/9dd5c7a9805c5c9de4d64458cdd277f69e610a1e))
+* set the tree viewer initial zoom level to show the entire graph ([ffa0043](https://github.com/sonrad10/Whide/commit/ffa0043f45db653cb54b8cc1064bb772c59af7d5))
+* the converted tree value is shown in the run panel when set in the popup viewer ([eede526](https://github.com/sonrad10/Whide/commit/eede52627723f0fa0f4c2d391c7d113212605680))
+
+
+### Bug Fixes
+
+* fixed popover arrow covering content ([e40e7b7](https://github.com/sonrad10/Whide/commit/e40e7b7c659c5cdb702b832a11dc263e4b00af94))
+* fixed run panel trees being hidden if there is a conversion error ([148068e](https://github.com/sonrad10/Whide/commit/148068e1b9f4fcdf198b9933e57d725d9618b5ec))
+* fixed tree viewer conversion strings not working ([7f0f332](https://github.com/sonrad10/Whide/commit/7f0f332f524d6bc6a57ae58b1ab0aa865be47632))
+* fixed typo ([ff6a59d](https://github.com/sonrad10/Whide/commit/ff6a59d674f6400a7a93f414ef30a0ba996598ba))
+* increased popup tree viewer size ([38e5c86](https://github.com/sonrad10/Whide/commit/38e5c8622562210b6586a1f52d92d5acb937070b))
+* made only the first level of lists display in green ([ce2fb41](https://github.com/sonrad10/Whide/commit/ce2fb4131370324b11e8aa2642ca36907b08aa61))
+* made popup tree viewer use flexboxes ([cbbdf0d](https://github.com/sonrad10/Whide/commit/cbbdf0d3335b1b437c4a0514a98334990652bd7e))
+* made the tree viewers expand with the page ([0b09378](https://github.com/sonrad10/Whide/commit/0b09378fb5591063559fcd2ea029cf5a1c3da54d))
+* opening tree viewer from popup transfers the converter string ([d825aaa](https://github.com/sonrad10/Whide/commit/d825aaadcddeae7335580dba5d8720a558238efd))
+* panning/zooming in the popup tree viewer doesn't affect the other viewer ([a170705](https://github.com/sonrad10/Whide/commit/a170705ca2bba27fac4c26aeb78026f28bd8bfba))
+* popup tree viewer now displays the actual tree instead of 2 ([eb274ad](https://github.com/sonrad10/Whide/commit/eb274ad59dc80a0cc119c4015f9589a0720bc36a))
+* removed redundant code ([248ff0c](https://github.com/sonrad10/Whide/commit/248ff0cbd0a609e32d87947fffc574eb26dd4289))
+* renamed tree viewer focus button ([0a26ead](https://github.com/sonrad10/Whide/commit/0a26eadf28f35d74bc7696b8a8ff556a42f13e73))
+* sped up rendering of large trees by combining components ([3e24369](https://github.com/sonrad10/Whide/commit/3e24369b00a9f82d164d991d1a31c96b7d10b2cc))
+* stopped tree viewer displaying above other popups ([336dd2d](https://github.com/sonrad10/Whide/commit/336dd2d5d95d9edd56c9c5caca251f46138c8131))
+* trees display centred in the viewer ([58e37b1](https://github.com/sonrad10/Whide/commit/58e37b19502a6833112ce6a738fb73e0ed89ef5c))
+
 ### [1.5.5](https://github.com/sonrad10/Whide/compare/v1.5.4...v1.5.5) (2021-04-24)
 
 
