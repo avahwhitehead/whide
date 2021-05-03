@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/sonrad10/Whide/compare/v1.6.0...v1.7.0) (2021-05-03)
+
+
+### Features
+
+* switched to using the tree-lang tree parser to provide support for parsing numbers, lists, trees, and booleans ([4469367](https://github.com/sonrad10/Whide/commit/4469367f8c97ce619a13eafa343a8fa8c9a7ac47))
+
+
+### Bug Fixes
+
+* trees in the output panel no longer display on a new line ([af8014f](https://github.com/sonrad10/Whide/commit/af8014f5fe347a5ec6f66c3e7b434fdcaeb573cc))
+* updated hwhile-wrapper to latest version ([4431557](https://github.com/sonrad10/Whide/commit/44315575cd6dcd070e91e9efdf6d256d845b47a8))
+
 ## [1.6.0](https://github.com/sonrad10/Whide/compare/v1.5.5...v1.6.0) (2021-05-02)
 
 
