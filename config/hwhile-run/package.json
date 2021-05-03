@@ -10,6 +10,6 @@
   "author": "Alaric Whitehead",
   "license": "MIT",
   "dependencies": {
-    "@whide/hwhile-wrapper": "^1.6.2"
+    "@whide/hwhile-wrapper": "^1.7.0"
   }
 }
