@@ -25,9 +25,8 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { BinaryTree, parseTree } from "@whide/hwhile-wrapper";
 import VariableTreeViewer, { TreeType } from "@/components/VariableTreeViewer.vue";
-import treeConverter, { ConversionResultType } from "@whide/tree-lang";
+import treeConverter, { ConversionResultType, BinaryTree, treeParser as parseTree } from "@whide/tree-lang";
 import { binaryTreeToDisplayable, convertedTreeToDisplayable } from "@/utils/tree_converters";
 
 /**

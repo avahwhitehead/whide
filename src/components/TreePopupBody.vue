@@ -36,9 +36,8 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { BinaryTree, parseTree } from "@whide/hwhile-wrapper";
 import VariableTreeViewer, { TreeType } from "@/components/VariableTreeViewer.vue";
-import treeConverter, { ConversionResultType, stringify } from "@whide/tree-lang";
+import treeConverter, { BinaryTree, ConversionResultType, stringify, treeParser as parseTree } from "@whide/tree-lang";
 import { binaryTreeToDisplayable, convertedTreeToDisplayable } from "@/utils/tree_converters";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 

@@ -12,8 +12,7 @@
 
 <script lang="ts">
 import Vue, { PropType } from "vue";
-import { BinaryTree } from "@whide/hwhile-wrapper";
-import runConvert, { ConversionResultType, ConvertedBinaryTree, stringify } from "@whide/tree-lang";
+import runConvert, { BinaryTree, ConversionResultType, ConvertedBinaryTree, stringify } from "@whide/tree-lang";
 
 function extendedTreeAsString(tree: BinaryTree) : string {
 	if (!tree) return 'nil';

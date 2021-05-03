@@ -1,5 +1,4 @@
-import { BinaryTree } from "@whide/hwhile-wrapper";
-import { ConvertedBinaryTree } from "@whide/tree-lang";
+import { BinaryTree, ConvertedBinaryTree } from "@whide/tree-lang";
 import { TreeType } from "@/components/VariableTreeViewer.vue";
 
 /**
