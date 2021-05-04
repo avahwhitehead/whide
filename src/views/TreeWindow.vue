@@ -1,7 +1,11 @@
 <template>
 	<div class="tree-window">
-		<div class="left">
-			<p class="caption">Original:</p>
+		<div class="panel left" v-if="!focusRight">
+			<div class="caption-holder">
+				<span class="maximize-button left" @click="focusLeft = !focusLeft">({{focusLeft ? 'half-screen' : 'maximise' }})</span>
+				<span class="caption">Original:</span>
+			</div>
+
 			<label class="input-label">
 				<input type="text" v-model="tree_input" placeholder="<nil.<nil.nil>>" />
 				<button @click="onConvertClick">Convert</button>
@@ -10,8 +14,12 @@
 			<VariableTreeViewer class="tree-viewer" :tree="binaryTree" />
 		</div>
 
-		<div class="right">
-			<p class="caption">Converted:</p>
+		<div class="panel right" v-if="!focusLeft">
+			<div class="caption-holder">
+				<span class="caption">Converted:</span>
+				<span class="maximize-button right" @click="focusRight = !focusRight">({{focusRight ? 'half-screen' : 'maximise' }})</span>
+			</div>
+
 			<label class="input-label">
 				<input type="text" v-model="converter_model" placeholder="<any.nil>>" />
 				<button @click="onConvertClick">Convert</button>
@@ -40,6 +48,8 @@ interface DataTypesDescriptor {
 	converter_string: string;
 	treeError?: string;
 	converterError?: string;
+	focusLeft: boolean;
+	focusRight: boolean;
 }
 
 /**
@@ -73,6 +83,8 @@ export default Vue.extend({
 			converter_string: chooseInputTree(this.$route.query.c, 'int'),
 			treeError: undefined,
 			converterError: undefined,
+			focusLeft: false,
+			focusRight: false,
 		}
 	},
 	computed: {
@@ -128,20 +140,48 @@ export default Vue.extend({
 
 <style scoped>
 .tree-window {
-	width: 100%;
+	max-width: 100vw;
+	max-height: 100vh;
 	display: flex;
 	flex-direction: row;
-}
-
-.left, .right {
 	flex: 1;
-	display: inline-block;
-	margin: 0 20px;
 }
 
-.caption {
+.panel.left, .panel.right {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	margin: 0 20px;
+	max-height: 100%;
+}
+
+.caption-holder {
+	display: flex;
+	flex-direction: row;
+	width: 100%;
 	margin-top: 5px;
 	margin-bottom: 5px;
+}
+.caption {
+	text-align: center;
+	flex: 1;
+}
+
+.maximize-button {
+	color: blue;
+	display: inline;
+	flex: 0;
+	min-width: fit-content;
+	user-select: none;
+}
+.maximize-button.right {
+	text-align: right;
+}
+.maximize-button.left {
+	text-align: left;
+}
+.maximize-button:hover {
+	text-decoration: underline;
 }
 
 .input-label {
@@ -156,6 +196,8 @@ export default Vue.extend({
 
 .tree-viewer {
 	flex: 1;
+	max-height: 100%;
+	margin-bottom: 10px;
 }
 
 .error {
