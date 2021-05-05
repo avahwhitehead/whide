@@ -7,7 +7,7 @@
 			</div>
 
 			<label class="input-label">
-				<input type="text" v-model="tree_input" placeholder="<nil.<nil.nil>>" />
+				<input type="text" v-model="tree_input" placeholder="<nil.<nil.nil>>" @keypress.enter="onConvertClick" />
 				<button @click="onConvertClick">Convert</button>
 			</label>
 			<p v-if="treeError" v-text="treeError" class="error" />
@@ -21,7 +21,7 @@
 			</div>
 
 			<label class="input-label">
-				<input type="text" v-model="converter_model" placeholder="<any.nil>>" />
+				<input type="text" v-model="converter_model" placeholder="<any.nil>>" @keypress.enter="onConvertClick" />
 				<button @click="onConvertClick">Convert</button>
 			</label>
 			<p v-if="converterError" v-text="converterError" class="error" />
