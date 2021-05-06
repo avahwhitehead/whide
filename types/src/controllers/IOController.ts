@@ -2,11 +2,12 @@
  * Accepted input prompt types
  * {@code "string"} - Prompt the user for a string
  * {@code "number"} - Prompt the user for a number
+ * {@code "tree"} - Prompt the user for a binary tree
  * {@code "path"} - Prompt the user for a valid (existing) file path
  * {@code "file"} - Same as {@code "path"}, but the path is to an existing file
  * {@code "folder"} - Same as {@code "path"}, but the path is to an existing folder
  */
-export type InputPromptTypes = "string" | "number" | "path" | "file" | "folder";
+export type InputPromptTypes = "string" | "number" | "tree" | "path" | "file" | "folder";
 
 /**
  * Parameter object for {@link IOController.getInput} method

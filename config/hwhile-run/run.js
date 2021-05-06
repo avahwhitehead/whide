@@ -5,7 +5,7 @@ module.exports.name = "run_code";
 module.exports.args = [{
 	name: "Input Expression",
 	description: "Expression to pass as input to the program",
-	type: "string",
+	type: "tree",
 }];
 
 module.exports.run = async function({ args, config, editorController, ioController, runPanelController }) {

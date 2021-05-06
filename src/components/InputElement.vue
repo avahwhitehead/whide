@@ -45,6 +45,14 @@
 			/>
 		</div>
 
+		<div v-else-if="type === 'tree'">
+			<TreeInputElement
+				class="file-picker"
+				:value="descriptor.value || descriptor.default || 'nil'"
+				@change="handleChange"
+			/>
+		</div>
+
 		<div class="error-holder">
 			<span
 				class="error"
@@ -63,6 +71,7 @@ import { vars } from '@/utils/globals';
 import StringInputElement from "@/components/_internal/inputs/StringInput.vue";
 import NumberInputElement from "@/components/_internal/inputs/NumberInput.vue";
 import FileInputElement from "@/components/_internal/inputs/FileInput.vue";
+import TreeInputElement from "@/components/_internal/inputs/TreeInput.vue";
 import { InputPromptTypes } from "@whide/whide-types";
 import VTooltip from 'v-tooltip';
 
@@ -92,6 +101,7 @@ interface DataTypeDescriptor {
 export default Vue.extend({
 	name: 'InputElement',
 	components: {
+		TreeInputElement,
 		FileInputElement,
 		NumberInputElement,
 		StringInputElement,
