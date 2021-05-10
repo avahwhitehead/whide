@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.8.1](https://github.com/sonrad10/Whide/compare/v1.8.0...v1.8.1) (2021-05-10)
+
+
+### Bug Fixes
+
+* fixed programs not running with `nil` as input ([d01f4c8](https://github.com/sonrad10/Whide/commit/d01f4c8da92b2ea5df7ab49927019af68595b72a))
+* fixed type error on build ([297eb65](https://github.com/sonrad10/Whide/commit/297eb65288c5aebcfc336e7145ec06cd5c70bf70))
+
 ## [1.8.0](https://github.com/sonrad10/Whide/compare/v1.7.0...v1.8.0) (2021-05-10)
 
 
