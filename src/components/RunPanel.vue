@@ -36,7 +36,7 @@ import RunPanelController, { RunPanelInstanceController } from "@/api/controller
 import { DebuggerControllerInterface, IOController } from "@whide/whide-types";
 import Container from "@/components/Container.vue";
 import VariableTable from "@/components/_internal/runPanel/VariableTable.vue";
-import { BinaryTree } from "@whide/hwhile-wrapper";
+import { BinaryTree } from "@whide/tree-lang";
 import OutputElement from "@/components/_internal/runPanel/OutputElement.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 

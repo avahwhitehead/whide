@@ -18,7 +18,7 @@
 <script lang="ts">
 import Vue from "vue";
 import VariableTableRow from "@/components/_internal/runPanel/VariableTableRow.vue";
-import { BinaryTree } from "@whide/hwhile-wrapper";
+import { BinaryTree } from "@whide/tree-lang";
 
 interface DataTypeDescriptor {
 

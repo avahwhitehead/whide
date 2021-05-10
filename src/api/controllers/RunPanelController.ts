@@ -1,8 +1,7 @@
 import { Transform } from "stream";
-import { RunPanelController as RunPanelControllerInterface } from "@whide/whide-types";
+import { RunPanelController as RunPanelControllerInterface, DebuggerControllerInterface } from "@whide/whide-types";
 import { CustomDict } from "@/types/CustomDict";
-import { BinaryTree } from "@whide/hwhile-wrapper";
-import { DebuggerControllerInterface } from "@whide/whide-types";
+import { BinaryTree } from "@whide/tree-lang";
 
 /**
  * Controller for the "run" panel.
