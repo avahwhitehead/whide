@@ -104,6 +104,7 @@ export default Vue.extend({
 	},
 	mounted(): void {
 		this.tree_input = this.value;
+		this.$emit('change', this.value);
 	},
 	methods: {
 		/**
