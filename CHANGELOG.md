@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.0](https://github.com/sonrad10/Whide/compare/v1.7.0...v1.8.0) (2021-05-10)
+
+
+### Features
+
+* added a tree viewer to the input expression prompt ([9564b8e](https://github.com/sonrad10/Whide/commit/9564b8e78e8efadc3046a9e8453f233a52fd568e))
+* made the tree viewer show using the full page ([87e7d6a](https://github.com/sonrad10/Whide/commit/87e7d6aed4b30ad6b73951d4ee32d91db311e76e))
+
+
+### Bug Fixes
+
+* tree viewer updates when an input is submitted with the enter key ([6e46ea8](https://github.com/sonrad10/Whide/commit/6e46ea8bf48dddddf14545b13da38c2161f35eac))
+* updated dependencies with security vulnerabilities ([9d31349](https://github.com/sonrad10/Whide/commit/9d313498e151f25a8fa36c230ce965ece4af031a))
+* updated tree-lang dependency to latest version ([1562aae](https://github.com/sonrad10/Whide/commit/1562aae46c3dc8d25b5aa8934a20ef52a44d17d4))
+
 ## [1.7.0](https://github.com/sonrad10/Whide/compare/v1.6.0...v1.7.0) (2021-05-03)
 
 
