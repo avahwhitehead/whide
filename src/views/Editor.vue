@@ -59,21 +59,21 @@ library.add(faCog);
 //Other imports
 import {
 	EditorController,
-	ExtendedCodeEditorWrapper,
 	IOController,
 	RunPanelController,
-} from "@whide/whide-types";
+} from "@/types";
 import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
 import { InternalMenu } from "@/api/types/InternalMenus";
 import { vars } from "@/utils/globals";
 import path from "path";
+import CodeMirror from "codemirror";
 
 /**
  * Type declaration for the data() values
  */
 interface DataTypesDescriptor {
 	focused_file? : InternalFile;
-	codeEditor? : ExtendedCodeEditorWrapper;
+	codeEditor? : CodeMirror.Editor;
 	editorController?: EditorController;
 	ioController? : IOController;
 	runPanelController?: RunPanelController;
@@ -126,7 +126,7 @@ export default Vue.extend({
 		onEditorControllerChange(editorController : EditorController) : void {
 			this.editorController = editorController;
 		},
-		onEditorObjectChange(editor : ExtendedCodeEditorWrapper) : void {
+		onEditorObjectChange(editor : CodeMirror.Editor) : void {
 			this.codeEditor = editor;
 		},
 		download() : void {

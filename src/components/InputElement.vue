@@ -72,7 +72,7 @@ import StringInputElement from "@/components/_internal/inputs/StringInput.vue";
 import NumberInputElement from "@/components/_internal/inputs/NumberInput.vue";
 import FileInputElement from "@/components/_internal/inputs/FileInput.vue";
 import TreeInputElement from "@/components/_internal/inputs/TreeInput.vue";
-import { InputPromptTypes } from "@whide/whide-types";
+import { InputPromptTypes } from "@/types";
 import VTooltip from 'v-tooltip';
 
 Vue.use(VTooltip);

@@ -33,7 +33,7 @@
 import Vue from "vue";
 import TabbedPanel from "@/components/TabbedPanel.vue";
 import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
-import { DebuggerControllerInterface, IOController } from "@whide/whide-types";
+import { DebuggerControllerInterface, IOController } from "@/types";
 import Container from "@/components/Container.vue";
 import VariableTable from "@/components/_internal/runPanel/VariableTable.vue";
 import { BinaryTree } from "@whide/tree-lang";

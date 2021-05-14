@@ -1,11 +1,11 @@
-import { ExtendedCodeEditorWrapper } from "../";
 import { EventEmitter } from "events";
+import CodeMirror from "codemirror";
 
 export interface EditorController extends EventEmitter {
 	/**
 	 * The code editor
 	 */
-	readonly editor : ExtendedCodeEditorWrapper;
+	readonly editor : CodeMirror.Editor;
 	/**
 	 * The currently focused file in the editor
  	 */

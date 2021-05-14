@@ -1,5 +1,5 @@
 import { Transform } from "stream";
-import { RunPanelController as RunPanelControllerInterface, DebuggerControllerInterface } from "@whide/whide-types";
+import { RunPanelController as RunPanelControllerInterface, DebuggerControllerInterface } from "@/types";
 import { CustomDict } from "@/types/CustomDict";
 import { BinaryTree } from "@whide/tree-lang";
 

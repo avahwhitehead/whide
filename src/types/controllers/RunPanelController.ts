@@ -1,6 +1,6 @@
-import { BinaryTree } from "@whide/hwhile-wrapper";
-import { CustomDict } from "@whide/hwhile-wrapper/lib/types/CustomDict";
 import { Transform } from "stream";
+import { CustomDict } from "@/types/CustomDict";
+import { BinaryTree } from "@whide/tree-lang";
 
 /**
  * Controller for the "run" panel.

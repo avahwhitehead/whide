@@ -49,7 +49,7 @@
 import Vue from "vue";
 import InputGroup from "@/components/InputGroup.vue";
 import { InputElementDescriptor } from "@/components/InputElement.vue";
-import { IOController } from "@whide/whide-types";
+import { IOController } from "@/types";
 import { CustomDict } from "@/types/CustomDict";
 import InputPrompt from "@/components/InputPrompt.vue";
 

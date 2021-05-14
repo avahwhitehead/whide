@@ -23,33 +23,34 @@ import TabbedPanel from "@/components/TabbedPanel.vue";
 import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
 import BreakpointWidget from "./_internal/codeEditor/BreakpointWidget.vue";
 import {
-	CodeEditorWrapper,
 	EditorController as EditorControllerInterface,
-	ExtendedCodeEditorWrapper,
-	LineWidgetType
-} from "@whide/whide-types/";
-import { wrapEditor } from "@/types/codeEditor";
+} from "@/types";
 import { EventEmitter } from "events";
 //The code editor
-import CodeMirror, { Doc } from "codemirror";
+import CodeMirror, { Doc, LineWidget } from "codemirror";
 //CodeMirror styling
 import 'codemirror/lib/codemirror.css';
 //While language syntax definition
 import WHILE from "@/assets/whileSyntaxMode";
 import { AbstractInternalFile, InternalFile, pathToFile } from "@/files/InternalFile";
 import InputPrompt from "@/components/InputPrompt.vue";
-import { IOController } from "@whide/whide-types";
+import { IOController } from "@/types";
+
 
 interface DataType {
 	selectedFile: InternalFile|undefined;
-	editor: ExtendedCodeEditorWrapper|undefined;
+	editor: CodeMirror.Editor|undefined;
 	editorController: EditorControllerInterface|undefined;
 	ioController: IOController|undefined;
 	openFiles: InternalFile[];
 	docs: Map<string, Doc>,
+	breakpoints: CodeMirror.LineHandle[];
+	errors : LineWidgetType[];
+	infos : LineWidgetType[];
+	warnings : LineWidgetType[];
 }
 
-async function addWidget(editor: CodeEditorWrapper, line: number|CodeMirror.LineHandle, element: HTMLElement) : Promise<CodeMirror.LineWidget> {
+function addWidget(editor: CodeMirror.Editor, line: number|CodeMirror.LineHandle, element: HTMLElement) : CodeMirror.LineWidget {
 	return editor.addLineWidget(line, element, {
 		above: true,
 		coverGutter: true,
@@ -58,91 +59,26 @@ async function addWidget(editor: CodeEditorWrapper, line: number|CodeMirror.Line
 	});
 }
 
-async function asLineHandle(editor: CodeEditorWrapper, line: number|CodeMirror.LineHandle) : Promise<CodeMirror.LineHandle> {
-	if (typeof(line) === "number") return await editor.getLineHandle(line);
+function asLineHandle(editor: CodeMirror.Editor, line: number|CodeMirror.LineHandle) : CodeMirror.LineHandle {
+	if (typeof(line) === "number") return editor.getLineHandle(line);
 	return line;
 }
+export type LineWidgetType = { line: CodeMirror.LineHandle, widget: CodeMirror.LineWidget };
 
-async function makeWidget(editor : CodeEditorWrapper, line: number|CodeMirror.LineHandle, type: string, arr: LineWidgetType[]) : Promise<CodeMirror.LineWidget> {
+function makeWidget(editor : CodeMirror.Editor, line: number|CodeMirror.LineHandle, type: string, arr: LineWidgetType[]) : LineWidget {
 	//Make a new widget element
 	const node: Vue = new EditorWidget({
 		propsData: { type: type }
 	});
 	node.$mount();
 	//Show the widget on the editor
-	const lineWidget = await addWidget(editor, line, node.$el as HTMLElement);
+	const lineWidget = addWidget(editor, line, node.$el as HTMLElement);
 	//Save the line to the list
 	arr.push({
-		line: await asLineHandle(editor, line),
+		line: asLineHandle(editor, line),
 		widget: lineWidget,
 	});
 	return lineWidget;
-}
-
-function wrapExtendedCodeEditor(_editor : CodeEditorWrapper) : ExtendedCodeEditorWrapper {
-	const breakpoints : CodeMirror.LineHandle[] = [];
-	const errors : LineWidgetType[] = [];
-	const infos : LineWidgetType[] = [];
-	const warnings : LineWidgetType[] = [];
-
-	return {
-		editorWrapper: _editor,
-		..._editor,
-
-		addError:
-			async (line: number|CodeMirror.LineHandle): Promise<CodeMirror.LineWidget> => makeWidget(_editor, line, 'error', errors),
-		addInfo:
-			async (line: number|CodeMirror.LineHandle): Promise<CodeMirror.LineWidget> => makeWidget(_editor, line, 'info', infos),
-		addWarning:
-			async (line: number|CodeMirror.LineHandle): Promise<CodeMirror.LineWidget> => makeWidget(_editor, line, 'warning', warnings),
-		removeError:
-			async (widget: CodeMirror.LineWidget): Promise<void> => _editor.removeLineWidget(widget),
-		removeInfo:
-			async (widget: CodeMirror.LineWidget): Promise<void> => _editor.removeLineWidget(widget),
-		removeWarning:
-			async (widget: CodeMirror.LineWidget): Promise<void> => _editor.removeLineWidget(widget),
-		toggleBreakpoint: async (line: number|CodeMirror.LineHandle, enabled?: boolean) : Promise<void> => {
-			//Line info
-			const lineHandle: CodeMirror.LineHandle = await asLineHandle(_editor, line);
-			let info = await _editor.lineInfo(line);
-
-			//Not a valid line
-			if (!info) return;
-
-			//Toggle the breakpoint if a state wasn't specified
-			if (enabled === undefined) enabled = !info.gutterMarkers;
-
-			let marker : HTMLElement|null = null;
-			if (enabled) {
-				//Make a new breakpoint marker
-				const node: Vue = new BreakpointWidget();
-				node.$mount();
-				//Use the breakpoint widget as the gutter marker
-				marker = node.$el as HTMLElement;
-				//Push the line to the list
-				breakpoints.push(lineHandle);
-			} else {
-				//Remove the line from the list of breakpoints
-				const index = breakpoints.indexOf(lineHandle);
-				if (index >= 0) breakpoints.splice(index, 1);
-			}
-			//Add/remove the marker to/from the gutter
-			await _editor.setGutterMarker(line, "breakpoints", marker);
-		},
-		async getBreakpoints(): Promise<number[]> {
-			let r : number[] = [];
-			for (let handle of breakpoints) {
-				//Convert the line handle to a number
-				const n : number|null = await _editor.getLineNumber(handle);
-				//If the line handle is valid, convert it to 1-index and add it to the result list
-				if (n !== null) r.push(n + 1);
-			}
-			return r;
-		},
-		async getBreakpointLines(): Promise<CodeMirror.LineHandle[]> {
-			return breakpoints;
-		},
-	};
 }
 
 /**
@@ -153,7 +89,7 @@ abstract class EditorController extends EventEmitter implements EditorController
 		super();
 	}
 
-	abstract get editor() : ExtendedCodeEditorWrapper;
+	abstract get editor() : CodeMirror.Editor;
 	abstract get focusedFile() : string|undefined;
 	abstract get openFiles() : string[];
 
@@ -184,6 +120,10 @@ export default Vue.extend({
 			openFiles: [],
 			ioController: undefined,
 			docs: new Map(),
+			breakpoints: [],
+			errors: [],
+			infos: [],
+			warnings: [],
 		}
 	},
 	mounted() {
@@ -197,7 +137,7 @@ export default Vue.extend({
 		});
 		codeMirror.setSize("100%", "100%");
 		//Wrap the editor in an asynchronous wrapper
-		this.editor = wrapExtendedCodeEditor(wrapEditor(codeMirror));
+		this.editor = codeMirror;
 
 		//Pass the change event (when the content changes at all) up to the next level
 		this.editor.on("change", async () => {
@@ -215,7 +155,7 @@ export default Vue.extend({
 		//Toggle breakpoints when the gutter is clicked
 		this.editor.on("gutterClick", async (_:any, line: number|CodeMirror.LineHandle) => {
 			if (!this.editor) throw new Error("Couldn't get editor");
-			this.editor.toggleBreakpoint(line)
+			this.toggleBreakpoint(line)
 		});
 
 		//Create the editor controller object
@@ -224,8 +164,8 @@ export default Vue.extend({
 			constructor() {
 				super();
 			}
-			get editor(): ExtendedCodeEditorWrapper {
-				return that.editor!;
+			get editor(): CodeMirror.Editor {
+				return codeMirror;
 			}
 			get focusedFile(): string | undefined {
 				return that.selectedFile?.fullPath;
@@ -339,6 +279,63 @@ export default Vue.extend({
 			}
 			return -1;
 		},
+
+		addError(line: number|CodeMirror.LineHandle): CodeMirror.LineWidget {
+			return makeWidget(this.editor!, line, 'error', this.errors)
+		},
+		addInfo(line: number|CodeMirror.LineHandle): CodeMirror.LineWidget {
+			return makeWidget(this.editor!, line, 'info', this.infos)
+		},
+		addWarning(line: number|CodeMirror.LineHandle): CodeMirror.LineWidget {
+			return makeWidget(this.editor!, line, 'warning', this.warnings)
+		},
+		removeError(widget: CodeMirror.LineWidget): void {
+			this.editor!.removeLineWidget(widget)
+		},
+		removeInfo(widget: CodeMirror.LineWidget): void {
+			this.editor!.removeLineWidget(widget)
+		},
+		removeWarning(widget: CodeMirror.LineWidget): void {
+			this.editor!.removeLineWidget(widget)
+		},
+		toggleBreakpoint (line: number|CodeMirror.LineHandle, enabled?: boolean) : void {
+			//Line info
+			const lineHandle: CodeMirror.LineHandle = asLineHandle(this.editor!, line);
+			let info = this.editor!.lineInfo(line);
+
+			//Not a valid line
+			if (!info) return;
+
+			//Toggle the breakpoint if a state wasn't specified
+			if (enabled === undefined) enabled = !info.gutterMarkers;
+
+			let marker : HTMLElement|null = null;
+			if (enabled) {
+				//Make a new breakpoint marker
+				const node: Vue = new BreakpointWidget();
+				node.$mount();
+				//Use the breakpoint widget as the gutter marker
+				marker = node.$el as HTMLElement;
+				//Push the line to the list
+				this.breakpoints.push(lineHandle);
+			} else {
+				//Remove the line from the list of breakpoints
+				const index = this.breakpoints.indexOf(lineHandle);
+				if (index >= 0) this.breakpoints.splice(index, 1);
+			}
+			//Add/remove the marker to/from the gutter
+			this.editor!.setGutterMarker(line, "breakpoints", marker);
+		},
+		getBreakpoints(): number[] {
+			let r : number[] = [];
+			for (let handle of this.breakpoints) {
+				//Convert the line handle to a number
+				const n : number|null = this.editor!.getLineNumber(handle);
+				//If the line handle is valid, convert it to 1-index and add it to the result list
+				if (n !== null) r.push(n + 1);
+			}
+			return r;
+		}
 	},
 	watch: {
 		editor(new_val) {
