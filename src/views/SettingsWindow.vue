@@ -49,9 +49,7 @@
 import Vue from "vue";
 import InputGroup from "@/components/InputGroup.vue";
 import { InputElementDescriptor } from "@/components/InputElement.vue";
-import { pluginManager } from "@/utils/globals";
-import { PluginInfo } from "@/api/PluginInfo";
-import { IOController, SettingsItem } from "@whide/whide-types";
+import { IOController } from "@whide/whide-types";
 import { CustomDict } from "@/types/CustomDict";
 import InputPrompt from "@/components/InputPrompt.vue";
 
@@ -62,22 +60,6 @@ interface PageInfo {
 	description?: string;
 	//Array to build the settings page from
 	settings: InputElementDescriptor[];
-	//The plugin providing this page
-	plugin?: PluginInfo;
-}
-
-function settingToInputDescriptor(setting: SettingsItem, currSettings: CustomDict<string | undefined>) : InputElementDescriptor {
-	if (typeof setting === 'string') return setting;
-	return {
-		description: setting.description,
-		default: setting.default,
-		name: setting.name,
-		id: setting.id,
-		placeholder: setting.placeholder,
-		type: setting.type,
-		validator: setting.validator,
-		value: currSettings[setting.id || setting.name]
-	};
 }
 
 /**
@@ -103,21 +85,8 @@ export default Vue.extend({
 	},
 	computed: {
 		pages() : PageInfo[] {
-			//Filter to only plugins defined settings
-			let plugins = pluginManager.getPlugins().filter(
-				(p: PluginInfo) => p.settings && p.settings.length
-			);
-			//Convert from plugin settings to PageInfo
-			return plugins.map((p: PluginInfo) => {
-				let currSettings = p.makeSettingsObj();
-				console.log(currSettings, p.settings);
-				return {
-					name: p.name,
-					description: p.description,
-					plugin: p,
-					settings: p.settings.map(s => settingToInputDescriptor(s, currSettings)),
-				};
-			});
+			//TODO: Get the settings pages
+			return [];
 		}
 	},
 	mounted() {
@@ -128,32 +97,16 @@ export default Vue.extend({
 			if (this.settingValues) this.settingValues[id] = value;
 		},
 		btnResetClick() {
-			if (!this.current_page || !this.current_page.plugin) return;
-			this.settingValues = this.current_page.plugin.makeSettingsObj();
+			return;
 		},
 		btnSaveClick() {
 			//Do nothing if there isn't anything to save
-			if (!this.current_page || !this.current_page.plugin || !this.settingValues) return;
-			//Save the settings
-			this.current_page.plugin.saveSettingsObj(this.settingValues).then(() => {
-				console.log(`Settings saved`);
-			});
-			if (!this.ioController) {
-				console.error(`Couldn't get IO Controller`);
-				return;
-			}
-			this.ioController.showOutput({
-				title: 'Settings saved',
-				// message: JSON.stringify(this.settingValues, null, 4),
-				message: '',
-			});
+			return;
 		},
 	},
 	watch: {
-		current_page(page?: PageInfo) {
-			//Get a new settings object for the new page
-			if (!page || !page.plugin) this.settingValues = undefined;
-			else this.settingValues = page.plugin.makeSettingsObj();
+		current_page() {
+			this.settingValues = undefined;
 		}
 	}
 });

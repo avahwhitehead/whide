@@ -6,12 +6,11 @@
 		</div>
 
 		<ul v-if="isParent">
-			<MenuElement
-				v-for="(child,i) in menu.children" :item="child" :key="i"
-				:menu="child"
-				:show-popout-icon="true"
-				@run="passRunUp"
-			/>
+<!--			<MenuElement-->
+<!--				v-for="(child,i) in menu.children" :item="child" :key="i"-->
+<!--				:menu="child"-->
+<!--				:show-popout-icon="true"-->
+<!--			/>-->
 		</ul>
 	</li>
 </template>
@@ -19,7 +18,6 @@
 <script lang="ts">
 import { InternalMenu, InternalMenuItem } from "@/api/types/InternalMenus";
 import Vue, { PropType } from "vue";
-import { PluginInfo } from "@/api/PluginInfo";
 
 interface DataTypeInterface {
 
@@ -50,19 +48,8 @@ export default Vue.extend({
 		}
 	},
 	methods: {
-		passRunUp(data : { plugin: PluginInfo, command: string }) : void {
-			this.$emit("run", data);
-		},
 		async onClick() : Promise<void> {
-			//Shorthand access to the menu item
-			let item : InternalMenuItem = this.menu as InternalMenuItem;
-			//Don't do anything if the item doesn't have a command to run
-			if (item.command) {
-				this.$emit("run", {
-					plugin: item.plugin,
-					command: item.command,
-				});
-			}
+			return;
 		},
 	}
 });

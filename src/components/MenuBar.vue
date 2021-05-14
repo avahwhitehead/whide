@@ -8,7 +8,6 @@ https://csslayout.io/patterns/nested-dropdowns/
 		<MenuElement
 			v-for="(menu, i) in menus" :key="i"
 			:menu="menu"
-			@run="passRunUp"
 		/>
 	</ul>
 </template>
@@ -17,7 +16,6 @@ https://csslayout.io/patterns/nested-dropdowns/
 import Vue from "vue";
 import { InternalMenu } from "@/api/types/InternalMenus";
 import MenuElement from "./_internal/menubar/MenuElement.vue";
-import { PluginInfo } from "@/api/PluginInfo";
 
 interface DataTypeInterface {
 	selectedTab: number;
@@ -39,11 +37,6 @@ export default Vue.extend({
 			selectedTab: 0,
 		}
 	},
-	methods: {
-		passRunUp(data : { plugin: PluginInfo, command: string }) : void {
-			this.$emit("run", data);
-		}
-	}
 });
 </script>
 
