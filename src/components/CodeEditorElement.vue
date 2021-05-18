@@ -44,7 +44,6 @@ interface DataType {
 	ioController: IOController|undefined;
 	openFiles: InternalFile[];
 	docs: Map<string, Doc>,
-	breakpoints: CodeMirror.LineHandle[];
 	errors : LineWidgetType[];
 	infos : LineWidgetType[];
 	warnings : LineWidgetType[];
@@ -85,6 +84,8 @@ function makeWidget(editor : CodeMirror.Editor, line: number|CodeMirror.LineHand
  * Partially implemented EditorController object to allow controlling the editor from within plugins
  */
 abstract class EditorController extends EventEmitter implements EditorControllerInterface {
+	private breakpoints: CodeMirror.LineHandle[] = [];
+
 	protected constructor() {
 		super();
 	}
@@ -96,6 +97,46 @@ abstract class EditorController extends EventEmitter implements EditorController
 	abstract open(filePath: string) : Promise<void>;
 	abstract close(filePath: string) : Promise<void>;
 	abstract saveFiles() : Promise<void>;
+
+	toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean) : void {
+		//Line info
+		const lineHandle: CodeMirror.LineHandle = asLineHandle(this.editor, line);
+		let info = this.editor.lineInfo(line);
+
+		//Not a valid line
+		if (!info) return;
+
+		//Toggle the breakpoint if a state wasn't specified
+		if (enabled === undefined) enabled = !info.gutterMarkers;
+
+		let marker : HTMLElement|null = null;
+		if (enabled) {
+			//Make a new breakpoint marker
+			const node: Vue = new BreakpointWidget();
+			node.$mount();
+			//Use the breakpoint widget as the gutter marker
+			marker = node.$el as HTMLElement;
+			//Push the line to the list
+			this.breakpoints.push(lineHandle);
+		} else {
+			//Remove the line from the list of breakpoints
+			const index = this.breakpoints.indexOf(lineHandle);
+			if (index >= 0) this.breakpoints.splice(index, 1);
+		}
+		//Add/remove the marker to/from the gutter
+		this.editor.setGutterMarker(line, "breakpoints", marker);
+	}
+
+	getBreakpoints(): number[] {
+		let r : number[] = [];
+		for (let handle of this.breakpoints) {
+			//Convert the line handle to a number
+			const n : number|null = this.editor.getLineNumber(handle);
+			//If the line handle is valid, convert it to 1-index and add it to the result list
+			if (n !== null) r.push(n + 1);
+		}
+		return r;
+	}
 }
 
 export default Vue.extend({
@@ -120,7 +161,6 @@ export default Vue.extend({
 			openFiles: [],
 			ioController: undefined,
 			docs: new Map(),
-			breakpoints: [],
 			errors: [],
 			infos: [],
 			warnings: [],
@@ -298,43 +338,12 @@ export default Vue.extend({
 		removeWarning(widget: CodeMirror.LineWidget): void {
 			this.editor!.removeLineWidget(widget)
 		},
-		toggleBreakpoint (line: number|CodeMirror.LineHandle, enabled?: boolean) : void {
-			//Line info
-			const lineHandle: CodeMirror.LineHandle = asLineHandle(this.editor!, line);
-			let info = this.editor!.lineInfo(line);
-
-			//Not a valid line
-			if (!info) return;
-
-			//Toggle the breakpoint if a state wasn't specified
-			if (enabled === undefined) enabled = !info.gutterMarkers;
-
-			let marker : HTMLElement|null = null;
-			if (enabled) {
-				//Make a new breakpoint marker
-				const node: Vue = new BreakpointWidget();
-				node.$mount();
-				//Use the breakpoint widget as the gutter marker
-				marker = node.$el as HTMLElement;
-				//Push the line to the list
-				this.breakpoints.push(lineHandle);
-			} else {
-				//Remove the line from the list of breakpoints
-				const index = this.breakpoints.indexOf(lineHandle);
-				if (index >= 0) this.breakpoints.splice(index, 1);
-			}
-			//Add/remove the marker to/from the gutter
-			this.editor!.setGutterMarker(line, "breakpoints", marker);
+		toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean) : void {
+			this.editorController!.toggleBreakpoint(line, enabled);
 		},
 		getBreakpoints(): number[] {
-			let r : number[] = [];
-			for (let handle of this.breakpoints) {
-				//Convert the line handle to a number
-				const n : number|null = this.editor!.getLineNumber(handle);
-				//If the line handle is valid, convert it to 1-index and add it to the result list
-				if (n !== null) r.push(n + 1);
-			}
-			return r;
+			this.editorController!.getBreakpoints();
+
 		}
 	},
 	watch: {
