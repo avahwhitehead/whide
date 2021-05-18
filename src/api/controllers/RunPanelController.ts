@@ -153,6 +153,19 @@ export class RunPanelInstanceController {
 		this._variables = variables;
 	}
 
+	setVariablesFromMap(variables : Map<string, Map<string, BinaryTree>>): void {
+		//Convert to the right type
+		//TODO: Convert RunPanel to use nested BinaryTree Maps
+		let vars: {[key:string]: BinaryTree} = {};
+		//Iterate over the programs first
+		for (let [p, m] of variables) {
+			//Iterate over each program's variable, prefixing the name
+			for (let [k, v] of m) vars[`(${p}) ${k}`] = v;
+		}
+		//Save the created object
+		this.variables = vars;
+	}
+
 	get debuggerCallbackHandler(): DebuggerControllerInterface|undefined {
 		return this._debuggerCallbackHandler;
 	}

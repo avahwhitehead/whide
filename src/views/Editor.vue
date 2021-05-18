@@ -332,6 +332,9 @@ export default Vue.extend({
 								await runner.init();
 								//Run to the first breakpoint
 								await runner.run();
+								let state = await runner.run();
+								if (state && state.variables)
+									outputController.setVariablesFromMap(state.variables)
 							}
 						},
 					]

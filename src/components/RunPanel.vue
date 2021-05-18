@@ -121,15 +121,7 @@ export default Vue.extend({
 			if (newState !== undefined) {
 				//Update the variable store
 				if (newState.variables !== undefined) {
-					//Convert to the right type
-					//TODO: Convert RunPanel to use nested BinaryTree Maps
-					let vars: {[key:string]: BinaryTree} = {};
-					//Iterate over the programs first
-					for (let [p, m] of newState.variables) {
-						//Iterate over each program's variable, prefixing the name
-						for (let [k, v] of m) vars[`(${p}) ${k}`] = v;
-					}
-					this.instanceController!.variables = vars;
+					this.instanceController!.setVariablesFromMap(newState.variables);
 				}
 			}
 		}

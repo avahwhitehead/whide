@@ -59,4 +59,10 @@ export interface RunPanelInstanceController {
 	variables: CustomDict<BinaryTree>;
 	debuggerCallbackHandler?: DebuggerControllerInterface;
 	name: string;
+
+	/**
+	 * The same as doing {@code this.variables = ...} but with a nested Map instead of a CustomDict
+	 * @param variables
+	 */
+	setVariablesFromMap(variables: Map<string, Map<string, BinaryTree>>): void;
 }
