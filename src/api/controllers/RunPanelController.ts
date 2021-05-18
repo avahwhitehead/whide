@@ -6,7 +6,7 @@ import { BinaryTree } from "@whide/tree-lang";
 /**
  * Controller for the "run" panel.
  */
-export default class RunPanelController implements RunPanelControllerInterface{
+export default class RunPanelController implements RunPanelControllerInterface {
 	private readonly _controllers : RunPanelInstanceController[];
 
 	/**
@@ -36,7 +36,7 @@ export default class RunPanelController implements RunPanelControllerInterface{
 	 * Remove an instance controller
 	 * @param controller	The controller instance to remove
 	 */
-	async removeOutputStream(controller: RunPanelInstanceController) {
+	async removeOutputStream(controller: RunPanelInstanceController): Promise<void> {
 		const index = this._controllers.indexOf(controller);
 		if (index !== -1) this._controllers.splice(index, 1);
 	}

@@ -342,8 +342,7 @@ export default Vue.extend({
 			this.editorController!.toggleBreakpoint(line, enabled);
 		},
 		getBreakpoints(): number[] {
-			this.editorController!.getBreakpoints();
-
+			return this.editorController!.getBreakpoints();
 		}
 	},
 	watch: {

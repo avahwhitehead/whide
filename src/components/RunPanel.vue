@@ -39,6 +39,7 @@ import VariableTable from "@/components/_internal/runPanel/VariableTable.vue";
 import { BinaryTree } from "@whide/tree-lang";
 import OutputElement from "@/components/_internal/runPanel/OutputElement.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
+import { ProgramState } from "@/run/AbstractRunner";
 
 interface DataTypeDescriptor {
 	runPanelController?: RunPanelController;
@@ -100,7 +101,7 @@ export default Vue.extend({
 			//Remove the instance controller
 			await this.runPanelController.removeOutputStream(instanceController);
 		},
-		onIconClick(icon: string) {
+		async onIconClick(icon: string) {
 			const debuggerCallbackHandler : DebuggerControllerInterface|undefined = this.instanceController?.debuggerCallbackHandler;
 			if (!debuggerCallbackHandler) {
 				this.ioController?.prompt({
@@ -111,9 +112,26 @@ export default Vue.extend({
 				return;
 			}
 
-			if (icon === 'play') debuggerCallbackHandler.run();
-			if (icon === 'step-forward') debuggerCallbackHandler.step();
-			if (icon === 'stop') debuggerCallbackHandler.stop();
+			//Perform the command and read the resulting program state
+			let newState: ProgramState|undefined;
+			if (icon === 'play') newState = await debuggerCallbackHandler.run();
+			else if (icon === 'step-forward') newState = await debuggerCallbackHandler.step();
+			else if (icon === 'stop') debuggerCallbackHandler.stop();
+
+			if (newState !== undefined) {
+				//Update the variable store
+				if (newState.variables !== undefined) {
+					//Convert to the right type
+					//TODO: Convert RunPanel to use nested BinaryTree Maps
+					let vars: {[key:string]: BinaryTree} = {};
+					//Iterate over the programs first
+					for (let [p, m] of newState.variables) {
+						//Iterate over each program's variable, prefixing the name
+						for (let [k, v] of m) vars[`(${p}) ${k}`] = v;
+					}
+					this.instanceController!.variables = vars;
+				}
+			}
 		}
 	},
 	watch: {

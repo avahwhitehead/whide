@@ -1,4 +1,4 @@
-import { AbstractDebugger, AbstractRunner } from "@/run/AbstractRunner";
+import { AbstractDebugger, AbstractRunner, ProgramState } from "@/run/AbstractRunner";
 import path from "path";
 import { HWhileConnector, InteractiveHWhileConnector } from "@whide/hwhile-wrapper";
 import { Writable } from "stream";
@@ -105,22 +105,44 @@ export class HWhileDebugger implements AbstractDebugger {
 		}
 	}
 
-	async run(): Promise<void> {
+	async run(): Promise<ProgramState> {
 		//Run the program
 		let result = await this.hWhileConnector!.run(true);
-		//Write the variables
-		// await updateVars(this.hWhileConnector, instanceController, prog_name);
+		//Read the variable values
+		let variables = await this.hWhileConnector!.store(false);
 		//Stop the process here if the program is done
-		if (result.cause === 'done') await this.stop();
+		if (result.cause === 'done') {
+			await this.stop();
+			return {
+				variables,
+				done: true,
+			};
+		}
+		//Return the program state
+		return {
+			variables,
+			done: false,
+		};
 	}
 
-	async step(): Promise<void> {
+	async step(): Promise<ProgramState> {
 		//Step over the next line in the program
 		let result = await this.hWhileConnector!.step(true);
-		//Write the variables
-		// await updateVars(this.hWhileConnector, instanceController, prog_name);
+		//Read the variable values
+		let variables = await this.hWhileConnector!.store(false);
 		//Stop the process here if the program is done
-		if (result.cause === 'done') await this.stop();
+		if (result.cause === 'done') {
+			await this.stop();
+			return {
+				variables,
+				done: true,
+			};
+		}
+		//Return the program state
+		return {
+			variables,
+			done: false,
+		};
 	}
 
 	async stop(): Promise<void> {
