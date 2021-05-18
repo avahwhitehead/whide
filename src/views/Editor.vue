@@ -6,7 +6,6 @@
 			</div>
 			<div class="right">
 				<button @click="openTreeViewer">Tree Viewer</button>
-				<button @click="download" :disabled="!focused_file">Download File</button>
 				<font-awesome-icon
 					class="settings icon"
 					icon="cog"
@@ -57,16 +56,14 @@ import { faCog } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 library.add(faCog);
 //Other imports
-import {
-	EditorController,
-	IOController,
-	RunPanelController,
-} from "@/types";
+import { EditorController, IOController, RunPanelController } from "@/types";
 import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
 import { InternalMenu } from "@/api/types/InternalMenus";
 import { vars } from "@/utils/globals";
 import path from "path";
+import { fs } from "@/files/fs";
 import CodeMirror from "codemirror";
+import { CustomDict } from "@/types/CustomDict";
 
 /**
  * Type declaration for the data() values
@@ -103,7 +100,127 @@ export default Vue.extend({
 	},
 	computed: {
 		menus() : InternalMenu[] {
-			return [];
+			const _displayError = async (error: string) => {
+				console.error(error);
+				if (!this.ioController) {
+					console.error("Couldn't get IO Controller");
+					return;
+				}
+				await this.ioController.showOutput({
+					message: error,
+					title: "An error occurred"
+				});
+			}
+
+			return [
+				{
+					"name": "File",
+					"children": [
+						{
+							"name": "New",
+							"children": [
+								{
+									name: "New File",
+									args: [
+										{
+											name: "Parent Folder",
+											description: "Choose the folder to hold the file",
+											type: 'folder',
+										},
+										{
+											name: "File Name",
+											description: "Name of the file",
+											validator: function (name) {
+												return !!name.match(/^[a-zA-Z0-9_ \-.]+$/);
+											},
+										}
+									],
+									command({args} : { args: CustomDict<string> }) {
+										const parent = args["Parent Folder"];
+										const name = args["File Name"];
+										//Build the full file path
+										const full_path = path.join(parent, name);
+
+										try {
+											//Check the file doesn't already exist
+											if (fs.existsSync(full_path)) {
+												_displayError(`The file "${name}" already exists in "${parent}"`);
+												return;
+											}
+											//Create the file
+											fs.writeFile(full_path, "", err => {
+												if (err) _displayError(err.message);
+												else console.log(`Successfully created file "${full_path}"`);
+											});
+										} catch (e) {
+											_displayError(e);
+										}
+									}
+								},
+								{
+									name: "New Folder",
+									args: [
+										{
+											name: "Parent Folder",
+											description: "Choose the folder to hold the new folder",
+											type: 'folder',
+										},
+										{
+											name: "Folder Name",
+											description: "Name of the folder",
+											validator(name) {
+												return !!name.match(/^[a-zA-Z0-9_ \-.]+$/);
+											},
+										}
+									],
+									command({args} : { args: CustomDict<string> }) {
+										const parent = args["Parent Folder"];
+										const name = args["Folder Name"];
+										//Build the full directory path
+										const full_path = path.join(parent, name);
+
+										try {
+											//Check the folder doesn't already exist
+											if (fs.existsSync(full_path)) {
+												_displayError(`The folder "${name}" already exists in "${parent}"`);
+												return;
+											}
+											//Create the folder
+											fs.mkdir(full_path, err => {
+												if (err) _displayError(err.message);
+												else console.log(`Successfully created folder "${full_path}"`);
+											});
+										} catch (e) {
+											_displayError(e);
+										}
+									}
+								}
+							]
+						},
+						{
+							name: "Save",
+							command: () => {
+								this.editorController!.saveFiles();
+							}
+						},
+						{ "name": "Download", "command": () => {
+							if (this.focused_file) {
+								fileDownloader(this.focused_file.content || "", this.focused_file.name);
+							} else {
+								if (!this.ioController) {
+									console.error("Error: Couldn't get IO Controller");
+									return;
+								}
+								this.ioController.prompt({
+									title: 'No file to download',
+									message: 'Open a file and try again',
+									options: ['Ok']
+								});
+							}
+						}},
+					]
+				}
+			];
 		},
 	},
 	methods: {
@@ -129,32 +246,9 @@ export default Vue.extend({
 		onEditorObjectChange(editor : CodeMirror.Editor) : void {
 			this.codeEditor = editor;
 		},
-		download() : void {
-			if (this.focused_file) {
-				fileDownloader(this.focused_file.content || "", this.focused_file.name);
-			} else {
-				if (!this.ioController) {
-					console.error("Error: Couldn't get IO Controller");
-					return;
-				}
-				this.ioController.prompt({
-					title: 'No file to download',
-					message: 'Open a file and try again',
-					options: ['Ok']
-				});
-			}
-		},
 		dirChange(dir: string) {
 			//Change the working directory
 			this.cwd = dir;
-		},
-		getPaths(filePath: string) : string[] {
-			let r = [filePath];
-			while (filePath && filePath !== '/') {
-				filePath = path.dirname(filePath);
-				r.push(filePath);
-			}
-			return r;
 		},
 		handleChangeRootClick() {
 			if (!this.ioController) throw new Error("Couldn't get IO Controller");

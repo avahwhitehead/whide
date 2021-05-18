@@ -1,22 +1,23 @@
 <template>
 	<li class="menu-item">
-		<div @click="onClick">
+		<div @click="() => passRunUp(menu)">
 			<span class="name-holder" v-text="menu.name" />
 			<span class="child-indicator" v-if="isParent && showPopoutIcon">&nbsp;&gt;</span>
 		</div>
 
 		<ul v-if="isParent">
-<!--			<MenuElement-->
-<!--				v-for="(child,i) in menu.children" :item="child" :key="i"-->
-<!--				:menu="child"-->
-<!--				:show-popout-icon="true"-->
-<!--			/>-->
+			<MenuElement
+				v-for="(child,i) in menu.children" :item="child" :key="i"
+				@click="passRunUp"
+				:menu="child"
+				:show-popout-icon="true"
+			/>
 		</ul>
 	</li>
 </template>
 
 <script lang="ts">
-import { InternalMenu, InternalMenuItem } from "@/api/types/InternalMenus";
+import { Menu, MenuItem } from "@/types";
 import Vue, { PropType } from "vue";
 
 interface DataTypeInterface {
@@ -29,7 +30,7 @@ export default Vue.extend({
 	},
 	props: {
 		menu: {
-			type: Object as PropType<InternalMenu|InternalMenuItem>,
+			type: Object as PropType<Menu|MenuItem>,
 		},
 		showPopoutIcon: {
 			type: Boolean,
@@ -38,18 +39,16 @@ export default Vue.extend({
 	},
 	computed: {
 		isParent(): boolean {
-			const menu = this.menu as InternalMenu;
+			const menu = this.menu as Menu;
 			return menu.children && (menu.children.length > 0);
 		}
 	},
 	data() : DataTypeInterface {
-		return {
-
-		}
+		return {};
 	},
 	methods: {
-		async onClick() : Promise<void> {
-			return;
+		passRunUp(menu: MenuItem) : void {
+			this.$emit("click", menu);
 		},
 	}
 });
