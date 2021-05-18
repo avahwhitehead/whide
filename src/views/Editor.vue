@@ -238,7 +238,9 @@ export default Vue.extend({
 								}
 							}
 						},
-						{ "name": "Download", "command": () => {
+						{
+							"name": "Download",
+							"command": () => {
 							if (this.focused_file) {
 								fileDownloader(this.focused_file.content || "", this.focused_file.name);
 							} else {
@@ -252,7 +254,8 @@ export default Vue.extend({
 									options: ['Ok']
 								});
 							}
-						}},
+						}
+						},
 					]
 				}
 			];
