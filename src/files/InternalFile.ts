@@ -22,7 +22,15 @@ async function _readdir(dir: string, hiddenFiles: boolean = false) : Promise<Abs
 				let internalFiles : AbstractInternalFile[] = [];
 				for (let file of files) {
 					const filePath = path.join(dir, file);
-					internalFiles.push(await pathToFile(filePath));
+					try {
+						//Read the file path into an object
+						let fileObj: AbstractInternalFile = await pathToFile(filePath);
+						//Add to the list
+						internalFiles.push(fileObj);
+					} catch (e) {
+						//Skip this file if there was an error loading
+						console.error(e);
+					}
 				}
 				//Return the file list
 				resolve(internalFiles);
