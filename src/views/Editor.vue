@@ -56,14 +56,14 @@ import { faCog } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 library.add(faCog);
 //Other imports
-import { EditorController, IOController, RunPanelController } from "@/types";
+import { EditorController, IOController, Menu, RunPanelController } from "@/types";
 import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
-import { InternalMenu } from "@/api/types/InternalMenus";
 import { vars } from "@/utils/globals";
 import path from "path";
 import { fs } from "@/files/fs";
 import CodeMirror from "codemirror";
 import { CustomDict } from "@/types/CustomDict";
+import { Stats } from "fs";
 
 /**
  * Type declaration for the data() values
@@ -99,7 +99,7 @@ export default Vue.extend({
 		}
 	},
 	computed: {
-		menus() : InternalMenu[] {
+		menus() : Menu[] {
 			const _displayError = async (error: string) => {
 				console.error(error);
 				if (!this.ioController) {
@@ -109,6 +109,17 @@ export default Vue.extend({
 				await this.ioController.showOutput({
 					message: error,
 					title: "An error occurred"
+				});
+			}
+			const _displaySuccess = async (msg: string) => {
+				console.log(msg);
+				if (!this.ioController) {
+					console.error("Couldn't get IO Controller");
+					return;
+				}
+				await this.ioController.showOutput({
+					message: msg,
+					title: "Success"
 				});
 			}
 
@@ -152,6 +163,7 @@ export default Vue.extend({
 												if (err) _displayError(err.message);
 												else console.log(`Successfully created file "${full_path}"`);
 											});
+											_displaySuccess("File created successfully");
 										} catch (e) {
 											_displayError(e);
 										}
@@ -190,6 +202,7 @@ export default Vue.extend({
 												if (err) _displayError(err.message);
 												else console.log(`Successfully created folder "${full_path}"`);
 											});
+											_displaySuccess("Folder created successfully");
 										} catch (e) {
 											_displayError(e);
 										}
@@ -201,6 +214,28 @@ export default Vue.extend({
 							name: "Save",
 							command: () => {
 								this.editorController!.saveFiles();
+							}
+						},
+						{
+							name: "Delete",
+							args: [{
+								name: "Path",
+								description: "Choose the file/folder to delete",
+								type: 'path',
+							}],
+							command({args} : { args: CustomDict<string> }) {
+								const full_path = args["Path"];
+
+								try {
+									let stat: Stats = fs.statSync(full_path);
+									//Delete the file or folder at the path
+									if (stat.isDirectory()) fs.rmdirSync(full_path);
+									else fs.unlinkSync(full_path);
+
+									_displaySuccess("File deleted");
+								} catch (e) {
+									_displayError(e);
+								}
 							}
 						},
 						{ "name": "Download", "command": () => {
