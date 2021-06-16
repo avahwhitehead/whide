@@ -64,9 +64,9 @@ export class HWhileRunner implements AbstractRunner {
 		let shell = hWhileConnector.run(file_name, this._props.expression, false);
 
 		//Pass interpreter output straight to the output console
-		shell.stdout.on("data", data => this._props.output.write(data.toString()));
+		shell.stdout.on("data", (data: Buffer) => this._props.output.write(data.toString()));
 		//Handle errors/close
-		shell.on('error', error => console.log(` error: ${error.message}`));
+		shell.on('error', (error: Error) => console.log(` error: ${error.message}`));
 		shell.on("close", () => this._props.output.end());
 	}
 }
@@ -92,7 +92,7 @@ export class HWhileDebugger implements AbstractDebugger {
 		});
 
 		//Pass interpreter output straight to the output console
-		this.hWhileConnector.on("output", (data) => this._props.output.write(data.toString()));
+		this.hWhileConnector.on("output", (data: string) => this._props.output.write(data.toString()));
 
 		//Start the interpreter
 		await this.hWhileConnector.start();
@@ -109,7 +109,7 @@ export class HWhileDebugger implements AbstractDebugger {
 		//Run the program
 		let result = await this.hWhileConnector!.run(true);
 		//Read the variable values
-		let variables = await this.hWhileConnector!.store(false);
+		let variables = await this.hWhileConnector!.store(true);
 		//Stop the process here if the program is done
 		if (result.cause === 'done') {
 			await this.stop();
@@ -129,7 +129,7 @@ export class HWhileDebugger implements AbstractDebugger {
 		//Step over the next line in the program
 		let result = await this.hWhileConnector!.step(true);
 		//Read the variable values
-		let variables = await this.hWhileConnector!.store(false);
+		let variables = await this.hWhileConnector!.store(true);
 		//Stop the process here if the program is done
 		if (result.cause === 'done') {
 			await this.stop();
