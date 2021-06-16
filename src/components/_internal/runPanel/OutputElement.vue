@@ -60,8 +60,9 @@ export default Vue.extend({
 	updated() {
 		this.$nextTick(() => {
 			//Scroll to the last child element
-			if (this.$el.lastElementChild) {
-				this.$el.lastElementChild.scrollIntoView();
+			if (this.$el.lastChild) {
+				//@ts-ignore
+				this.$el.lastChild.scrollIntoView();
 			}
 		});
 	},

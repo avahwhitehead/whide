@@ -24,6 +24,7 @@ import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
 import BreakpointWidget from "./_internal/codeEditor/BreakpointWidget.vue";
 import {
 	EditorController as EditorControllerInterface,
+	IOController,
 } from "@/types";
 import { EventEmitter } from "events";
 //The code editor
@@ -34,7 +35,6 @@ import 'codemirror/lib/codemirror.css';
 import WHILE from "@/assets/whileSyntaxMode";
 import { AbstractInternalFile, InternalFile, pathToFile } from "@/files/InternalFile";
 import InputPrompt from "@/components/InputPrompt.vue";
-import { IOController } from "@/types";
 
 
 interface DataType {
