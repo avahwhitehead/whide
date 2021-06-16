@@ -12,7 +12,7 @@
 					class="icon"
 					icon="sync"
 					title="Refresh"
-					@click="refreshClick"
+					@click="runLoadChildren"
 				/>
 			</div>
 
@@ -36,7 +36,7 @@
 						:loadLevel="loadLevel - 1"
 						class="child" @change="onClick"
 						:show-controls="false"
-						v-for="(child,i) in children" v-bind:key="i"
+						v-for="(child,i) in children" :key="i"
 					/>
 				</div>
 				<div v-else class="children">
@@ -105,7 +105,7 @@ export default Vue.extend({
 		},
 	},
 	mounted() {
-		pathToFile(this.directory).then((f : AbstractInternalFile) => this.file = f);
+		this.root = this.directory;
 	},
 	methods: {
 		onClick(file : AbstractInternalFile) {
@@ -113,16 +113,13 @@ export default Vue.extend({
 		},
 		runLoadChildren() : void {
 			if (!this.file || !this.file.folder) return;
+			this.children = undefined;
 			(this.file as InternalFolder).loadChildren().then(c => {
 				this.children = c
 			});
 		},
 		toggleExpand() {
 			this.expanded = !this.expanded;
-		},
-		refreshClick() {
-			this.children = [];
-			this.runLoadChildren();
 		},
 		dirUpClick(): void {
 			//Return the same path if this is a file, or the root directory
@@ -133,26 +130,32 @@ export default Vue.extend({
 		}
 	},
 	watch: {
-		directory(dir: string) {
-			this.root = dir;
+		directory: {
+			immediate: true,
+			handler(dir: string) {
+				this.root = dir;
+			},
 		},
-		root(root: string) {
-			this.file = undefined;
-			pathToFile(root).then((f : AbstractInternalFile) => this.file = f);
-			this.$emit('dir', root);
+		root: {
+			immediate: true,
+			async handler(root: string) {
+				this.file = await pathToFile(root);
+				this.$emit('dir', root);
+			},
 		},
-		file(newFile : AbstractInternalFile) {
-			this.children = undefined;
-			if (newFile && newFile.folder && (this.loadLevel > 0)) {
-				const folder: InternalFolder = newFile as InternalFolder;
-
-				folder.loadChildren().then(() => {
-					this.children = folder.children;
-				});
-			}
+		file: {
+			immediate: true,
+			handler(newFile : AbstractInternalFile) {
+				if (!newFile || !newFile.folder) return;
+				if (this.loadLevel > 0) this.runLoadChildren();
+				this.children = [];
+			},
 		},
-		children(newChildren?: AbstractInternalFile[]) {
-			this.expanded = !!newChildren;
+		children: {
+			immediate: true,
+			handler(newChildren?: AbstractInternalFile[]) {
+				this.expanded = !!newChildren;
+			},
 		},
 		expanded(expanded: boolean) {
 			if (expanded) {

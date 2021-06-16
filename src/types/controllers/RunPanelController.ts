@@ -1,6 +1,7 @@
-import { BinaryTree } from "@whide/hwhile-wrapper";
-import { CustomDict } from "@whide/hwhile-wrapper/lib/types/CustomDict";
 import { Transform } from "stream";
+import { CustomDict } from "@/types/CustomDict";
+import { BinaryTree } from "@whide/tree-lang";
+import { ProgramState } from "@/run/AbstractRunner";
 
 /**
  * Controller for the "run" panel.
@@ -38,15 +39,15 @@ export interface DebuggerControllerInterface {
 	/**
 	 * Run to program completion, or until the next breakpoint
 	 */
-	run() : void;
+	run(): undefined|ProgramState|Promise<undefined|ProgramState>;
 	/**
 	 * Execute the next line of the program, then pause
 	 */
-	step() : void;
+	step(): undefined|ProgramState|Promise<undefined|ProgramState>;
 	/**
 	 * Stop executing the program
 	 */
-	stop() : void;
+	stop(): void|Promise<void>;
 }
 
 /**
@@ -58,4 +59,10 @@ export interface RunPanelInstanceController {
 	variables: CustomDict<BinaryTree>;
 	debuggerCallbackHandler?: DebuggerControllerInterface;
 	name: string;
+
+	/**
+	 * The same as doing {@code this.variables = ...} but with a nested Map instead of a CustomDict
+	 * @param variables
+	 */
+	setVariablesFromMap(variables: Map<string, Map<string, BinaryTree>>): void;
 }

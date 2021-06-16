@@ -16,7 +16,6 @@ const commandLineArgs = program.opts();
 let myGlobal: any = global as any;
 if (!commandLineArgs.workingDir) myGlobal.cwd = process.cwd();
 else myGlobal.cwd = path.resolve(commandLineArgs.workingDir);
-myGlobal.safe = !!commandLineArgs.safe;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([

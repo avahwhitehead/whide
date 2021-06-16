@@ -7,7 +7,7 @@
 
 		<div>
 			<div class="selected-output">
-				<span v-if="path">Selected:&nbsp;{{ path.fullPath }}</span>
+				<span v-if="selected">Selected:&nbsp;{{ selected.fullPath }}</span>
 				<span v-else>
 					Pick a
 					<span v-if="type === 'file'">file</span>
@@ -54,12 +54,12 @@
 
 <script lang="ts">
 import Vue, { PropType } from "vue";
-import { AbstractInternalFile } from "@/files/InternalFile";
+import { AbstractInternalFile, pathToFile } from "@/files/InternalFile";
 import FilePicker from "@/components/FilePicker.vue";
 import { vars } from '@/utils/globals';
 
 interface DataTypeDescriptor {
-	path?: AbstractInternalFile;
+	selected?: AbstractInternalFile;
 	open: boolean;
 	dir: string;
 	error?: string;
@@ -90,7 +90,7 @@ export default Vue.extend({
 	},
 	data(): DataTypeDescriptor {
 		return {
-			path: undefined,
+			selected: undefined,
 			open: true,
 			error: undefined,
 			dir: vars.cwd,
@@ -98,7 +98,7 @@ export default Vue.extend({
 		};
 	},
 	mounted() {
-		this._onValueChange(this.value);
+		this.dir = this.value || vars.cwd;
 	},
 	methods: {
 		onFileClick(file: AbstractInternalFile) {
@@ -107,21 +107,18 @@ export default Vue.extend({
 
 			if (this.type === "path") {
 				//Allow any existing path
-				this.path = file;
+				this.selected = file;
 			} else if (this.type === "file") {
 				//Require a file
-				if (file.file) this.path = file;
+				if (file.file) this.selected = file;
 				this.$emit("error", file.file ? '' : "You must select a file");
 			} else if (this.type === "folder") {
 				//Require a folder
-				if (file.folder) this.path = file;
+				if (file.folder) this.selected = file;
 				this.$emit("error", file.folder ? '' : "You must select a folder");
 			}
 		},
-		_onValueChange(val?: string) {
-			this.dir = val || vars.cwd;
-		},
-		onFilePickerRootChange(root: string) {
+		async onFilePickerRootChange(root: string) {
 			this.dir = root;
 		},
 		dirInputChoose() {
@@ -129,12 +126,19 @@ export default Vue.extend({
 		}
 	},
 	watch: {
-		path(val?: AbstractInternalFile) {
-			if (val) this.$emit('change', val.fullPath);
-			else this.$emit('change', undefined);
+		selected(selected?: AbstractInternalFile) {
+			this.$emit('change', selected ? selected.fullPath : undefined);
 		},
-		value(val?: string) {
-			this._onValueChange(val);
+		value(value?: string) {
+			this.dir = value || vars.cwd;
+		},
+		dir: {
+			immediate: true,
+			async handler(dir: string) {
+				if (this.type === 'folder' || this.type === 'path') {
+					this.selected = await pathToFile(dir);
+				}
+			}
 		},
 	}
 })

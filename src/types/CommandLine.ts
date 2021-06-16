@@ -4,7 +4,6 @@ import Commander, { Command } from "commander";
  * Types of the command line argument values
  */
 export interface ProgramOptions extends Commander.OptionValues {
-	safe?: boolean;
 	workingDir?: string;
 }
 

@@ -1,12 +1,12 @@
 import { Transform } from "stream";
-import { RunPanelController as RunPanelControllerInterface, DebuggerControllerInterface } from "@whide/whide-types";
+import { RunPanelController as RunPanelControllerInterface, DebuggerControllerInterface } from "@/types";
 import { CustomDict } from "@/types/CustomDict";
 import { BinaryTree } from "@whide/tree-lang";
 
 /**
  * Controller for the "run" panel.
  */
-export default class RunPanelController implements RunPanelControllerInterface{
+export default class RunPanelController implements RunPanelControllerInterface {
 	private readonly _controllers : RunPanelInstanceController[];
 
 	/**
@@ -36,7 +36,7 @@ export default class RunPanelController implements RunPanelControllerInterface{
 	 * Remove an instance controller
 	 * @param controller	The controller instance to remove
 	 */
-	async removeOutputStream(controller: RunPanelInstanceController) {
+	async removeOutputStream(controller: RunPanelInstanceController): Promise<void> {
 		const index = this._controllers.indexOf(controller);
 		if (index !== -1) this._controllers.splice(index, 1);
 	}
@@ -151,6 +151,19 @@ export class RunPanelInstanceController {
 
 	set variables(variables : CustomDict<BinaryTree>) {
 		this._variables = variables;
+	}
+
+	setVariablesFromMap(variables : Map<string, Map<string, BinaryTree>>): void {
+		//Convert to the right type
+		//TODO: Convert RunPanel to use nested BinaryTree Maps
+		let vars: {[key:string]: BinaryTree} = {};
+		//Iterate over the programs first
+		for (let [p, m] of variables) {
+			//Iterate over each program's variable, prefixing the name
+			for (let [k, v] of m) vars[`(${p}) ${k}`] = v;
+		}
+		//Save the created object
+		this.variables = vars;
 	}
 
 	get debuggerCallbackHandler(): DebuggerControllerInterface|undefined {

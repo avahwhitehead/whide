@@ -9,7 +9,7 @@
 <script lang="ts">
 import Vue from "vue";
 import InputPrompt from "@/components/InputPrompt.vue";
-import { IOController } from "@whide/whide-types";
+import { IOController } from "@/types";
 
 let ioController: IOController|undefined;
 

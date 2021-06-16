@@ -30,7 +30,7 @@
 
 <script lang="ts">
 import vue from "vue";
-import { InputPromptParams, InputPromptTypes, IOController, OutputPromptParams, PromptParams } from "@whide/whide-types";
+import { InputPromptParams, InputPromptTypes, IOController, OutputPromptParams, PromptParams } from "@/types";
 import InputElement, { InputElementDescriptor } from "@/components/InputElement.vue";
 import Modal from "@/components/_internal/inputs/Modal.vue";
 

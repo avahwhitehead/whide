@@ -7,7 +7,6 @@ import { fs } from "@/files/fs";
 import path from "path";
 import { Stats } from "fs";
 import { isElectron, vars } from "@/utils/globals";
-import load_plugins from "@/utils/load_plugins";
 
 Vue.config.productionTip = false;
 
@@ -59,7 +58,6 @@ async function _setupVarsFromCommandLineArgs() {
 		const electron = await import("electron");
 		//Get the command line argument values
 		vars.cwd = electron.remote.getGlobal("cwd") as string;
-		vars.safe = electron.remote.getGlobal("safe") as boolean;
 	}
 }
 
@@ -67,9 +65,6 @@ async function main() {
 	await _setupVarsFromCommandLineArgs();
 	//Make sure the app starts in a valid directory
 	vars.cwd = await _getStartingDir();
-
-	//Wait for the plugins to load plugins
-	await load_plugins(vars.safe);
 
 	//Mount the app
 	new Vue({

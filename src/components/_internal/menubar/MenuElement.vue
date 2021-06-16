@@ -1,6 +1,6 @@
 <template>
 	<li class="menu-item">
-		<div @click="onClick">
+		<div @click="() => passRunUp(menu)">
 			<span class="name-holder" v-text="menu.name" />
 			<span class="child-indicator" v-if="isParent && showPopoutIcon">&nbsp;&gt;</span>
 		</div>
@@ -8,18 +8,17 @@
 		<ul v-if="isParent">
 			<MenuElement
 				v-for="(child,i) in menu.children" :item="child" :key="i"
+				@click="passRunUp"
 				:menu="child"
 				:show-popout-icon="true"
-				@run="passRunUp"
 			/>
 		</ul>
 	</li>
 </template>
 
 <script lang="ts">
-import { InternalMenu, InternalMenuItem } from "@/api/types/InternalMenus";
+import { Menu, MenuItem } from "@/types";
 import Vue, { PropType } from "vue";
-import { PluginInfo } from "@/api/PluginInfo";
 
 interface DataTypeInterface {
 
@@ -31,7 +30,7 @@ export default Vue.extend({
 	},
 	props: {
 		menu: {
-			type: Object as PropType<InternalMenu|InternalMenuItem>,
+			type: Object as PropType<Menu|MenuItem>,
 		},
 		showPopoutIcon: {
 			type: Boolean,
@@ -40,29 +39,16 @@ export default Vue.extend({
 	},
 	computed: {
 		isParent(): boolean {
-			const menu = this.menu as InternalMenu;
+			const menu = this.menu as Menu;
 			return menu.children && (menu.children.length > 0);
 		}
 	},
 	data() : DataTypeInterface {
-		return {
-
-		}
+		return {};
 	},
 	methods: {
-		passRunUp(data : { plugin: PluginInfo, command: string }) : void {
-			this.$emit("run", data);
-		},
-		async onClick() : Promise<void> {
-			//Shorthand access to the menu item
-			let item : InternalMenuItem = this.menu as InternalMenuItem;
-			//Don't do anything if the item doesn't have a command to run
-			if (item.command) {
-				this.$emit("run", {
-					plugin: item.plugin,
-					command: item.command,
-				});
-			}
+		passRunUp(menu: MenuItem) : void {
+			this.$emit("click", menu);
 		},
 	}
 });

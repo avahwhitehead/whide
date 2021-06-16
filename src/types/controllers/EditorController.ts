@@ -1,11 +1,11 @@
-import { ExtendedCodeEditorWrapper } from "../";
 import { EventEmitter } from "events";
+import CodeMirror from "codemirror";
 
 export interface EditorController extends EventEmitter {
 	/**
 	 * The code editor
 	 */
-	readonly editor : ExtendedCodeEditorWrapper;
+	readonly editor : CodeMirror.Editor;
 	/**
 	 * The currently focused file in the editor
  	 */
@@ -32,4 +32,17 @@ export interface EditorController extends EventEmitter {
 	 * Save all the open files
 	 */
 	saveFiles() : Promise<void>;
+
+	/**
+	 * Toggle (or enable/disable) a breakpoint on a line in the editor
+	 * @param line		The line to enable/disable
+	 * @param enabled	{@code undefined} to toggle the line's breakpoint.
+	 * 					{@code true} or ${@code false} to enable/disable the breakpoint.
+	 */
+	toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean) : void;
+
+	/**
+	 * Get a list of all the breakpoints in the editor
+	 */
+	getBreakpoints(): number[];
 }

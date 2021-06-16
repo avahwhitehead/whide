@@ -33,12 +33,13 @@
 import Vue from "vue";
 import TabbedPanel from "@/components/TabbedPanel.vue";
 import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
-import { DebuggerControllerInterface, IOController } from "@whide/whide-types";
+import { DebuggerControllerInterface, IOController } from "@/types";
 import Container from "@/components/Container.vue";
 import VariableTable from "@/components/_internal/runPanel/VariableTable.vue";
 import { BinaryTree } from "@whide/tree-lang";
 import OutputElement from "@/components/_internal/runPanel/OutputElement.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
+import { ProgramState } from "@/run/AbstractRunner";
 
 interface DataTypeDescriptor {
 	runPanelController?: RunPanelController;
@@ -100,7 +101,7 @@ export default Vue.extend({
 			//Remove the instance controller
 			await this.runPanelController.removeOutputStream(instanceController);
 		},
-		onIconClick(icon: string) {
+		async onIconClick(icon: string) {
 			const debuggerCallbackHandler : DebuggerControllerInterface|undefined = this.instanceController?.debuggerCallbackHandler;
 			if (!debuggerCallbackHandler) {
 				this.ioController?.prompt({
@@ -111,9 +112,18 @@ export default Vue.extend({
 				return;
 			}
 
-			if (icon === 'play') debuggerCallbackHandler.run();
-			if (icon === 'step-forward') debuggerCallbackHandler.step();
-			if (icon === 'stop') debuggerCallbackHandler.stop();
+			//Perform the command and read the resulting program state
+			let newState: ProgramState|undefined;
+			if (icon === 'play') newState = await debuggerCallbackHandler.run();
+			else if (icon === 'step-forward') newState = await debuggerCallbackHandler.step();
+			else if (icon === 'stop') debuggerCallbackHandler.stop();
+
+			if (newState !== undefined) {
+				//Update the variable store
+				if (newState.variables !== undefined) {
+					this.instanceController!.setVariablesFromMap(newState.variables);
+				}
+			}
 		}
 	},
 	watch: {

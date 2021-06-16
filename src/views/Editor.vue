@@ -2,11 +2,10 @@
 	<div class="editor">
 		<div class="header filler">
 			<div class="menubar-holder">
-				<MenuBar :menus="menus" @run="runPluginFunc"/>
+				<MenuBar :menus="menus" />
 			</div>
 			<div class="right">
 				<button @click="openTreeViewer">Tree Viewer</button>
-				<button @click="download" :disabled="!focused_file">Download File</button>
 				<font-awesome-icon
 					class="settings icon"
 					icon="cog"
@@ -30,10 +29,6 @@
 					@fileFocus="onFocusedFileChange"
 				/>
 			</Container>
-
-			<Container class="right filler">
-				<PluginToggler />
-			</Container>
 		</div>
 
 		<Container class="footer">
@@ -53,7 +48,6 @@ import CodeEditorElement from "@/components/CodeEditorElement.vue";
 import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
-import PluginToggler from "@/components/PluginToggler.vue";
 import RunPanel from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 //FontAwesome
@@ -62,37 +56,26 @@ import { faCog } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 library.add(faCog);
 //Other imports
-import {
-	EditorController,
-	ExtendedCodeEditorWrapper,
-	IOController,
-	PluginFunction,
-	PluginFunctionParameters
-} from "@whide/whide-types";
+import { EditorController, IOController, Menu, RunPanelController } from "@/types";
 import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
-import { fs } from "@/files/fs";
-import { CustomDict } from "@/types/CustomDict";
-import { InternalMenu } from "@/api/types/InternalMenus";
-import { PluginInfo } from "@/api/PluginInfo";
-import { pluginManager, vars } from "@/utils/globals";
-import RunPanelController from "@/api/controllers/RunPanelController";
+import { vars } from "@/utils/globals";
 import path from "path";
+import { fs } from "@/files/fs";
+import CodeMirror from "codemirror";
+import { CustomDict } from "@/types/CustomDict";
+import { Stats } from "fs";
+import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguration";
 
 /**
  * Type declaration for the data() values
  */
 interface DataTypesDescriptor {
 	focused_file? : InternalFile;
-	codeEditor? : ExtendedCodeEditorWrapper;
+	codeEditor? : CodeMirror.Editor;
 	editorController?: EditorController;
 	ioController? : IOController;
 	runPanelController?: RunPanelController;
 	cwd: string;
-}
-
-//Run a function asynchronously
-async function _runFuncAsync(func : Function, ...args : any[]) {
-	await func(...args);
 }
 
 export default Vue.extend({
@@ -104,7 +87,6 @@ export default Vue.extend({
 		CodeEditorElement,
 		FontAwesomeIcon,
 		MenuBar,
-		PluginToggler,
 		RunPanel,
 	},
 	data() : DataTypesDescriptor {
@@ -118,8 +100,245 @@ export default Vue.extend({
 		}
 	},
 	computed: {
-		menus() : InternalMenu[] {
-			return pluginManager.menuManager.menus;
+		menus() : Menu[] {
+			const _displayError = async (error: string) => {
+				console.error(error);
+				if (!this.ioController) {
+					console.error("Couldn't get IO Controller");
+					return;
+				}
+				await this.ioController.showOutput({
+					message: error,
+					title: "An error occurred"
+				});
+			}
+			const _displaySuccess = async (msg: string) => {
+				console.log(msg);
+				if (!this.ioController) {
+					console.error("Couldn't get IO Controller");
+					return;
+				}
+				await this.ioController.showOutput({
+					message: msg,
+					title: "Success"
+				});
+			}
+
+			return [
+				{
+					"name": "File",
+					"children": [
+						{
+							"name": "New",
+							"children": [
+								{
+									name: "New File",
+									args: [
+										{
+											name: "Parent Folder",
+											description: "Choose the folder to hold the file",
+											type: 'folder',
+										},
+										{
+											name: "File Name",
+											description: "Name of the file",
+											validator: function (name) {
+												return !!name.match(/^[a-zA-Z0-9_ \-.]+$/);
+											},
+										}
+									],
+									command({args} : { args: CustomDict<string> }) {
+										const parent = args["Parent Folder"];
+										const name = args["File Name"];
+										//Build the full file path
+										const full_path = path.join(parent, name);
+
+										try {
+											//Check the file doesn't already exist
+											if (fs.existsSync(full_path)) {
+												_displayError(`The file "${name}" already exists in "${parent}"`);
+												return;
+											}
+											//Create the file
+											fs.writeFile(full_path, "", err => {
+												if (err) _displayError(err.message);
+												else console.log(`Successfully created file "${full_path}"`);
+											});
+											_displaySuccess("File created successfully");
+										} catch (e) {
+											_displayError(e);
+										}
+									}
+								},
+								{
+									name: "New Folder",
+									args: [
+										{
+											name: "Parent Folder",
+											description: "Choose the folder to hold the new folder",
+											type: 'folder',
+										},
+										{
+											name: "Folder Name",
+											description: "Name of the folder",
+											validator(name) {
+												return !!name.match(/^[a-zA-Z0-9_ \-.]+$/);
+											},
+										}
+									],
+									command({args} : { args: CustomDict<string> }) {
+										const parent = args["Parent Folder"];
+										const name = args["Folder Name"];
+										//Build the full directory path
+										const full_path = path.join(parent, name);
+
+										try {
+											//Check the folder doesn't already exist
+											if (fs.existsSync(full_path)) {
+												_displayError(`The folder "${name}" already exists in "${parent}"`);
+												return;
+											}
+											//Create the folder
+											fs.mkdir(full_path, err => {
+												if (err) _displayError(err.message);
+												else console.log(`Successfully created folder "${full_path}"`);
+											});
+											_displaySuccess("Folder created successfully");
+										} catch (e) {
+											_displayError(e);
+										}
+									}
+								}
+							]
+						},
+						{
+							name: "Save",
+							command: () => {
+								this.editorController!.saveFiles();
+							}
+						},
+						{
+							name: "Delete",
+							args: [{
+								name: "Path",
+								description: "Choose the file/folder to delete",
+								type: 'path',
+							}],
+							command({args} : { args: CustomDict<string> }) {
+								const full_path = args["Path"];
+
+								try {
+									let stat: Stats = fs.statSync(full_path);
+									//Delete the file or folder at the path
+									if (stat.isDirectory()) fs.rmdirSync(full_path);
+									else fs.unlinkSync(full_path);
+
+									_displaySuccess("File deleted");
+								} catch (e) {
+									_displayError(e);
+								}
+							}
+						},
+						{
+							"name": "Download",
+							"command": () => {
+							if (this.focused_file) {
+								fileDownloader(this.focused_file.content || "", this.focused_file.name);
+							} else {
+								if (!this.ioController) {
+									console.error("Error: Couldn't get IO Controller");
+									return;
+								}
+								this.ioController.prompt({
+									title: 'No file to download',
+									message: 'Open a file and try again',
+									options: ['Ok']
+								});
+							}
+						}
+						},
+					]
+				},
+				{
+					name: "Run",
+					children: [
+						{
+							name: "Run",
+							args: [{
+								name: "Input Expression",
+								description: "Expression to pass as input to the program",
+								type: "tree",
+							}],
+							command: async ({ args }) => {
+								if (!this.ioController) throw new Error("Couldn't get IO Controller");
+								if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
+								if (!this.focused_file) {
+									this.ioController.prompt({
+										title: 'No file to run',
+										message: 'Open a file and try again'
+									});
+									return;
+								}
+								//Open a new tab in the run panel
+								const outputController = await this.runPanelController!.addOutputStream(
+									`${this.focused_file!.name} ${args['Input Expression']}`
+								);
+								//Create a runner for the program
+								const runner = new HWhileRunner({
+									expression: args['Input Expression'],
+									file: this.focused_file ? this.focused_file.fullPath : 'none',
+									hwhile: 'hwhile',
+									output: outputController.stream,
+								});
+								//Perform setup
+								await runner.init();
+								//Run the program
+								await runner.run();
+							}
+						},
+						{
+							name: "Debug",
+							args: [{
+								name: "Input Expression",
+								description: "Expression to pass as input to the program",
+								type: "tree",
+							}],
+							command: async ({ args }) => {
+								if (!this.ioController) throw new Error("Couldn't get IO Controller");
+								if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
+								if (!this.editorController) throw new Error("Couldn't get Editor Controller");
+								if (!this.focused_file) {
+									this.ioController.prompt({
+										title: 'No file to run',
+										message: 'Open a file and try again'
+									});
+									return;
+								}
+								//Open a new tab in the run panel
+								const outputController = await this.runPanelController.addOutputStream(
+									`${this.focused_file.name} ${args['Input Expression']}`
+								);
+								//Start a debugger
+								const runner = new HWhileDebugger({
+									expression: args['Input Expression'],
+									file: this.focused_file.fullPath,
+									hwhile: 'hwhile',
+									output: outputController.stream,
+									breakpoints: this.editorController.getBreakpoints(),
+								});
+								//Set up user control for the debugger
+								outputController.debuggerCallbackHandler = runner;
+								//Setup
+								await runner.init();
+								//Run to the first breakpoint
+								let state = await runner.run();
+								if (state && state.variables)
+									outputController.setVariablesFromMap(state.variables);
+							}
+						},
+					]
+				},
+			];
 		},
 	},
 	methods: {
@@ -142,35 +361,12 @@ export default Vue.extend({
 		onEditorControllerChange(editorController : EditorController) : void {
 			this.editorController = editorController;
 		},
-		onEditorObjectChange(editor : ExtendedCodeEditorWrapper) : void {
+		onEditorObjectChange(editor : CodeMirror.Editor) : void {
 			this.codeEditor = editor;
-		},
-		download() : void {
-			if (this.focused_file) {
-				fileDownloader(this.focused_file.content || "", this.focused_file.name);
-			} else {
-				if (!this.ioController) {
-					console.error("Error: Couldn't get IO Controller");
-					return;
-				}
-				this.ioController.prompt({
-					title: 'No file to download',
-					message: 'Open a file and try again',
-					options: ['Ok']
-				});
-			}
 		},
 		dirChange(dir: string) {
 			//Change the working directory
 			this.cwd = dir;
-		},
-		getPaths(filePath: string) : string[] {
-			let r = [filePath];
-			while (filePath && filePath !== '/') {
-				filePath = path.dirname(filePath);
-				r.push(filePath);
-			}
-			return r;
 		},
 		handleChangeRootClick() {
 			if (!this.ioController) throw new Error("Couldn't get IO Controller");
@@ -182,59 +378,6 @@ export default Vue.extend({
 				if (!folder) return;
 				this.cwd = folder;
 			})
-		},
-
-		async runPluginFunc(data : { plugin: PluginInfo, command: string }) : Promise<void> {
-			//Get the function linked to the menu item
-			let pluginFunction: PluginFunction|undefined = await data.plugin.getFunc(data.command);
-			if (!pluginFunction) throw new Error(`Couldn't find function ${(data.command)} in plugin ${data.plugin.name}`);
-
-			//Make sure the IO controller exists
-			if (!this.ioController) throw new Error("Couldn't get IO controller");
-
-			let args: CustomDict<string> = {};
-			for (let arg of (pluginFunction.args || [])) {
-				//Default the validator to allowing anything
-				let validator: (v: string) => (boolean | Promise<boolean>);
-				validator = arg.validator || (() => true);
-				//Prompt the user for the argument input
-				let val = await this.ioController.getInput({
-					title: arg.name,
-					message: arg.description || "",
-					type: arg.type || 'string',
-					//Allow empty optional arguments, or validate the input
-					validator: async (s: string) => arg.optional && !s || await validator(s),
-				});
-				//End here if the user presses cancel
-				if (val === undefined) return;
-				//Otherwise store the value
-				args[arg.name] = val;
-			}
-
-			//Make sure the code editor and controller are defined (these should never happen)
-			if (!this.codeEditor) throw new Error("Couldn't get code editor instance");
-			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
-			if (!this.runPanelController) throw new Error("Couldn't get run panel controller instance");
-
-			//Run the function
-			const funcParameters : PluginFunctionParameters = {
-				args: args,
-				editorController: this.editorController,
-				ioController: this.ioController,
-				runPanelController: this.runPanelController,
-				fs: fs,
-				config: data.plugin.makeSettingsObj(),
-			};
-			_runFuncAsync(pluginFunction.run, funcParameters).catch((e) => {
-				//Handle errors produced in the plugin function
-				console.error(e);
-				if (this.ioController) {
-					this.ioController.showOutput({
-						message: e.toString(),
-						title: `Error in plugin function '${data.plugin.name}.${pluginFunction!.name}'`,
-					});
-				}
-			});
 		},
 	},
 	watch: {

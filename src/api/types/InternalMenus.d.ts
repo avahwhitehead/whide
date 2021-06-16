@@ -1,11 +1,10 @@
-import { MenuItem } from "@whide/whide-types";
-import { PluginInfo } from "@/api/PluginInfo";
+import { Menu, MenuItem } from "@/types";
 
-export type InternalMenu = {
-	name: string,
-	children: (InternalMenu|InternalMenuItem)[],
-}
-
-export type InternalMenuItem = MenuItem & {
-	plugin: PluginInfo,
-};
+/**
+ * @deprecated	Use {@link Menu} instead
+ */
+export type InternalMenu = Menu;
+/**
+ * @deprecated	Use {@link MenuItem} instead
+ */
+export type InternalMenuItem = MenuItem;

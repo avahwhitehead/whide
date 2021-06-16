@@ -1,4 +1,4 @@
-import { InputPromptTypes } from "../";
+import { InputPromptTypes } from "../index";
 
 /**
  * Describes an individual item in settings.

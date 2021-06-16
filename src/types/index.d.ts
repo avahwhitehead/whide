@@ -5,14 +5,14 @@ export {
 	Menu,
 	MenuItem,
 	SettingsItem,
-} from "./types/";
+} from "./types";
 
 export {
 	Argument,
 	PluginFunction,
 	PluginFunctionParameters,
 	PluginModule
-} from "./plugins/";
+} from "./index";
 
 export {
 	InputPromptTypes,
@@ -24,12 +24,4 @@ export {
 	RunPanelController,
 	RunPanelInstanceController,
 	DebuggerControllerInterface,
-} from "./controllers/";
-
-export {
-	CodeMirrorDocWrapper,
-	CodeEditorWrapper,
-	CodeMirrorEditorWrapper,
-	ExtendedCodeEditorWrapper,
-	LineWidgetType
-} from "./codeEditor/"
+} from "./controllers";
