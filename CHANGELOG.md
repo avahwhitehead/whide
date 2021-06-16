@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/sonrad10/Whide/compare/v1.8.1...v2.0.0) (2021-06-16)
+
+
+### Features
+
+* improved run panel behind-the-scenes to support better debugging in the future ([516098e](https://github.com/sonrad10/Whide/commit/516098e75c947b9465adcea2312311fb0492ca49))
+* refactored running/debugging process ([c4db0a0](https://github.com/sonrad10/Whide/commit/c4db0a09c4ff757966c9711360578df54cba9520))
+
+
+### Bug Fixes
+
+* error where no files would show if there was an error reading one ([e1a4a22](https://github.com/sonrad10/Whide/commit/e1a4a2288fd676c877a13fd7ba56cc1db3de5322))
+* opening a tree in the viewer from the debug panel also transfers the conversion string ([1ada496](https://github.com/sonrad10/Whide/commit/1ada496f0a750d1214300ec873bb3e35fa25bbe6))
+
 ### [1.8.1](https://github.com/sonrad10/Whide/compare/v1.8.0...v1.8.1) (2021-05-10)
 
 
