@@ -39,6 +39,7 @@
     "vue": "^2.6.11",
     "vue-router": "^3.5.1",
     "vuedraggable": "^2.24.3",
+    "whilejs": "^1.2.4",
     "xdg-basedir": "^4.0.0"
   },
   "devDependencies": {
@@ -83,7 +84,8 @@
       "@vue/typescript"
     ],
     "parserOptions": {
-      "parser": "@typescript-eslint/parser"
+      "parser": "@typescript-eslint/parser",
+      "sourceType": "module"
     },
     "plugins": [
       "@typescript-eslint"
