@@ -28,16 +28,11 @@ import {
 } from "@/types";
 import { EventEmitter } from "events";
 //The code editor
-import CodeMirror, { Annotation, Doc, LineWidget, LintStateOptions, } from "codemirror";
-//CodeMirror addons
-import 'codemirror/addon/lint/lint';
+import CodeMirror, { Doc, LineWidget } from "codemirror";
 //CodeMirror styling
 import 'codemirror/lib/codemirror.css';
-import 'codemirror/addon/lint/lint.css';
 //While language syntax definition
 import WHILE from "@/assets/whileSyntaxMode";
-//WHILE linter
-import { ErrorType as WhileError, lexer as whileLexer, parser as whileParser } from "whilejs";
 import { AbstractInternalFile, InternalFile, pathToFile } from "@/files/InternalFile";
 import InputPrompt from "@/components/InputPrompt.vue";
 
@@ -172,21 +167,13 @@ export default Vue.extend({
 		}
 	},
 	mounted() {
-		let lintOptions: LintStateOptions = {
-			async: false,
-			delay: 0,
-			getAnnotations: this.lintCode,
-			hasGutters: true,
-			lintOnChange: true,
-		};
 		//Create the code editor in the div
 		let codeMirror : CodeMirror.Editor = CodeMirror(this.$refs.codeHolder as HTMLElement, {
 			lineNumbers: true,
-			gutters: ["CodeMirror-linenumbers", "CodeMirror-lint-markers", "breakpoints"],
+			gutters: ["CodeMirror-linenumbers", "breakpoints"],
 			tabSize: 4,
 			value: "",
 			mode: WHILE,
-			lint: lintOptions,
 		});
 		codeMirror.setSize("100%", "100%");
 		//Wrap the editor in an asynchronous wrapper
@@ -314,27 +301,6 @@ export default Vue.extend({
 			//Close the tab
 			this.openFiles.splice(index, 1);
 			this.docs.delete(file.fullPath);
-		},
-
-		// lintCode(content: string, options: LintStateOptions | any, codeMirror: CodeMirror.Editor): Annotation[]|Promise<Annotation[]> {
-		lintCode(content: string): Annotation[]|Promise<Annotation[]> {
-			if (!content) return [];
-
-			let [, errors] : [unknown, WhileError[]] = whileParser(whileLexer(content));
-
-			let errVals = errors.map((err: WhileError): Annotation => {
-				return {
-					from: {
-						ch: err.position.col,
-						line: err.position.row,
-					},
-					message: err.message,
-					severity: 'error',
-					// to: Position,
-				}
-			});
-			console.log(errors, errVals);
-			return errVals;
 		},
 
 		/**
