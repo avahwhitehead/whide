@@ -25,7 +25,7 @@
 				<div>
 					<input ref="pureWhileToggle" type="checkbox" v-model="extendedWhile" />
 					<label :for="$refs.pureWhileToggle">
-						{{ extendedWhile ? 'extended' : 'pure' }} WHILE
+						Use Extended WHILE
 					</label>
 				</div>
 				<div>
