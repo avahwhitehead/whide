@@ -22,12 +22,21 @@
 			</Container>
 
 			<Container class="middle code-editor no-scroll">
-				<CodeEditorElement
-					:focused="focused_file"
-					@controller="onEditorControllerChange"
-					@editorChange="onEditorObjectChange"
-					@fileFocus="onFocusedFileChange"
-				/>
+				<div>
+					<input ref="pureWhileToggle" type="checkbox" v-model="extendedWhile" />
+					<label :for="$refs.pureWhileToggle">
+						{{ extendedWhile ? 'extended' : 'pure' }} WHILE
+					</label>
+				</div>
+				<div>
+					<CodeEditorElement
+						:focused="focused_file"
+						:allow-extended="extendedWhile"
+						@controller="onEditorControllerChange"
+						@editorChange="onEditorObjectChange"
+						@fileFocus="onFocusedFileChange"
+					/>
+				</div>
 			</Container>
 		</div>
 
@@ -76,6 +85,7 @@ interface DataTypesDescriptor {
 	ioController? : IOController;
 	runPanelController?: RunPanelController;
 	cwd: string;
+	extendedWhile: boolean;
 }
 
 export default Vue.extend({
@@ -97,6 +107,7 @@ export default Vue.extend({
 			ioController: undefined,
 			runPanelController: undefined,
 			cwd: vars.cwd,
+			extendedWhile: true,
 		}
 	},
 	computed: {

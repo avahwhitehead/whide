@@ -37,7 +37,7 @@ import 'codemirror/addon/lint/lint.css';
 //While language syntax definition
 import WHILE from "@/assets/whileSyntaxMode";
 //WHILE linter
-import { ErrorType as WhileError, lexer as whileLexer, parser as whileParser } from "whilejs";
+import { ErrorType, ErrorType as WhileError, linter as whileLinter } from "whilejs";
 import { AbstractInternalFile, InternalFile, pathToFile } from "@/files/InternalFile";
 import InputPrompt from "@/components/InputPrompt.vue";
 
@@ -155,6 +155,10 @@ export default Vue.extend({
 			type: Object as PropType<InternalFile>,
 			default: undefined,
 		},
+		allowExtended: {
+			type: Boolean,
+			default: false,
+		}
 	},
 	data() : DataType {
 		return {
@@ -172,13 +176,6 @@ export default Vue.extend({
 		}
 	},
 	mounted() {
-		let lintOptions: LintStateOptions = {
-			async: false,
-			delay: 0,
-			getAnnotations: this.lintCode,
-			hasGutters: true,
-			lintOnChange: true,
-		};
 		//Create the code editor in the div
 		let codeMirror : CodeMirror.Editor = CodeMirror(this.$refs.codeHolder as HTMLElement, {
 			lineNumbers: true,
@@ -186,7 +183,7 @@ export default Vue.extend({
 			tabSize: 4,
 			value: "",
 			mode: WHILE,
-			lint: lintOptions,
+			lint: this.lintOptions,
 		});
 		codeMirror.setSize("100%", "100%");
 		//Wrap the editor in an asynchronous wrapper
@@ -271,6 +268,15 @@ export default Vue.extend({
 		focusedName() : string|undefined {
 			return this.selectedFile ? this.selectedFile.name : undefined;
 		},
+		lintOptions(): LintStateOptions {
+			return {
+				async: false,
+				delay: 0,
+				getAnnotations: this.lintCode,
+				hasGutters: true,
+				lintOnChange: true,
+			};
+		}
 	},
 	methods: {
 		/**
@@ -316,25 +322,30 @@ export default Vue.extend({
 			this.docs.delete(file.fullPath);
 		},
 
-		// lintCode(content: string, options: LintStateOptions | any, codeMirror: CodeMirror.Editor): Annotation[]|Promise<Annotation[]> {
 		lintCode(content: string): Annotation[]|Promise<Annotation[]> {
 			if (!content) return [];
 
-			let [, errors] : [unknown, WhileError[]] = whileParser(whileLexer(content));
+			//Run the linter on the code
+			let errors: ErrorType[] = whileLinter(content, { pureOnly: !this.allowExtended });
 
-			let errVals = errors.map((err: WhileError): Annotation => {
-				return {
+			//Convert the linter's error type to the CodeMirror type
+			return errors.map((err: WhileError): Annotation => {
+				let res: Annotation = {
 					from: {
 						ch: err.position.col,
 						line: err.position.row,
 					},
 					message: err.message,
 					severity: 'error',
-					// to: Position,
+				};
+				if (err.endPos) {
+					res.to = {
+						ch: err.endPos.col,
+						line: err.endPos.row,
+					}
 				}
+				return res;
 			});
-			console.log(errors, errVals);
-			return errVals;
 		},
 
 		/**
@@ -418,6 +429,11 @@ export default Vue.extend({
 		openFiles(newOpenFiles: InternalFile[]) {
 			this.$emit('filesChange', newOpenFiles);
 		},
+		allowExtended() {
+			//Toggle linter off and on again to force an update with the new setting
+			this.editor!.setOption("lint", false);
+			this.editor!.setOption("lint", this.lintOptions);
+		}
 	}
 });
 </script>
