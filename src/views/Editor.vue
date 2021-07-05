@@ -28,15 +28,14 @@
 						Use Extended WHILE
 					</label>
 				</div>
-				<div>
-					<CodeEditorElement
-						:focused="focused_file"
-						:allow-extended="extendedWhile"
-						@controller="onEditorControllerChange"
-						@editorChange="onEditorObjectChange"
-						@fileFocus="onFocusedFileChange"
-					/>
-				</div>
+
+				<CodeEditorElement
+					:focused="focused_file"
+					:allow-extended="extendedWhile"
+					@controller="onEditorControllerChange"
+					@editorChange="onEditorObjectChange"
+					@fileFocus="onFocusedFileChange"
+				/>
 			</Container>
 		</div>
 

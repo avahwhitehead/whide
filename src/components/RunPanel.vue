@@ -1,30 +1,32 @@
 <template>
 	<div class="root">
-		<Container
-			:left="['play', 'step-forward', 'stop']"
-			@iconClick="onIconClick"
-		>
-			<div class="DebuggerPanel">
-				<div class="tabs-holder">
-					<TabbedPanel
-						:names="tabNames"
-						:selected-tab="selectedTab"
-						@change="onTabChange"
-						@close="onTabClose"
-					/>
+		<div class="tabs-holder">
+			<TabbedPanel
+				:names="tabNames"
+				:selected-tab="selectedTab"
+				@change="onTabChange"
+				@close="onTabClose"
+			/>
+		</div>
+
+		<div class="DebuggerPanel">
+			<div class="debugger-controls">
+				<font-awesome-icon class="button icon" icon="play" @click="() => onIconClick('play')"/>
+				<font-awesome-icon class="button icon" icon="step-forward" @click="() => onIconClick('step-forward')"/>
+				<font-awesome-icon class="button icon" icon="stop" @click="() => onIconClick('stop')"/>
+			</div>
+
+			<div class="run-panel-body">
+				<div class="output-holder">
+					<OutputElement v-if="instanceController" :value="instanceController.output" />
 				</div>
 
-				<div class="run-panel-body">
-					<div class="output-holder">
-						<OutputElement v-if="instanceController" :value="instanceController.output" />
-					</div>
-
-					<div class="variable-viewer" v-if="variables.length">
-						<VariableTable :variables="variables" />
-					</div>
+				<div class="variable-viewer" v-if="variables.length">
+					<VariableTable :variables="variables" />
 				</div>
 			</div>
-		</Container>
+		</div>
+
 		<InputPrompt @controller="(controller) => this.ioController = controller" />
 	</div>
 </template>
@@ -34,12 +36,15 @@ import Vue from "vue";
 import TabbedPanel from "@/components/TabbedPanel.vue";
 import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
 import { DebuggerControllerInterface, IOController } from "@/types";
-import Container from "@/components/Container.vue";
 import VariableTable from "@/components/_internal/runPanel/VariableTable.vue";
 import { BinaryTree } from "@whide/tree-lang";
 import OutputElement from "@/components/_internal/runPanel/OutputElement.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 import { ProgramState } from "@/run/AbstractRunner";
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { faPlay, faStop, faStepForward } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+library.add(faPlay, faStop, faStepForward);
 
 interface DataTypeDescriptor {
 	runPanelController?: RunPanelController;
@@ -51,9 +56,9 @@ interface DataTypeDescriptor {
 export default Vue.extend({
 	name: 'RunPanel',
 	components: {
+		FontAwesomeIcon,
 		InputPrompt,
 		OutputElement,
-		Container,
 		TabbedPanel,
 		VariableTable,
 	},
@@ -146,18 +151,16 @@ export default Vue.extend({
 
 
 <style scoped>
-.root {
+.DebuggerPanel {
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
 	flex: 1;
 	overflow: hidden;
 }
 
-.DebuggerPanel {
-	display: flex;
-	flex-direction: column;
-	flex: 1;
-	overflow: hidden;
+.debugger-controls {
+	width: 1em;
+	padding: 0 .5em;
 }
 
 .run-panel-body {
@@ -165,10 +168,6 @@ export default Vue.extend({
 	flex-direction: row;
 	flex: 1;
 	overflow-y: auto;
-}
-
-.tabs-holder {
-
 }
 
 .output-holder {
