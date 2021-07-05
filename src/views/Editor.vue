@@ -23,9 +23,9 @@
 
 			<Container class="middle code-editor no-scroll">
 				<div>
-					<input ref="pureWhileToggle" type="checkbox" v-model="extendedWhile" />
+					<ToggleSwitch :value="extendedWhile" @change="v => this.extendedWhile = v" />
 					<label :for="$refs.pureWhileToggle">
-						Use Extended WHILE
+						{{ extendedWhile ? 'Extended' : 'Pure' }} WHILE
 					</label>
 				</div>
 
@@ -74,6 +74,7 @@ import { CustomDict } from "@/types/CustomDict";
 import { Stats } from "fs";
 import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguration";
 import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
+import ToggleSwitch from "@/components/ToggleSwitch.vue";
 
 /**
  * Type declaration for the data() values
@@ -91,6 +92,7 @@ interface DataTypesDescriptor {
 export default Vue.extend({
 	name: 'Editor',
 	components: {
+		ToggleSwitch,
 		InputPrompt,
 		FilePicker,
 		Container,
