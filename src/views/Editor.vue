@@ -11,6 +11,7 @@
 					icon="cog"
 					title="Open Settings"
 					@click="openSettings"
+					style="display: none"
 				/>
 			</div>
 		</div>
@@ -450,6 +451,9 @@ export default Vue.extend({
 	height: 100%;
 }
 
+.header {
+	border-bottom: 1px solid grey;
+}
 .menubar-holder {
 	display: inline-block;
 	float: left;
@@ -490,6 +494,7 @@ export default Vue.extend({
 .footer {
 	height: fit-content;
 	max-height: 30%;
+	border-top: 1px solid grey;
 }
 
 /*
