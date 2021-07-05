@@ -495,11 +495,9 @@ Fillers
 */
 
 .filler {
-	background: #999;
 }
 
 .header.filler, .footer .filler {
-	background: #CCC;
 	height: fit-content;
 }
 
@@ -508,6 +506,5 @@ Fillers
 }
 
 .footer .filler {
-	background: #CCC;
 }
 </style>

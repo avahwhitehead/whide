@@ -48,17 +48,21 @@ export default Vue.extend({
 <style scoped>
 .tabButton {
 	display: inline-block;
-	background-color: #999999;
+	background-color: #EEEEEE;
 	margin: 3px;
+	padding: 2px;
+	border-radius: 5px 5px 0 0;
+	border: 1px solid #808080;
+	border-bottom: none;
 }
 
 /*noinspection CssUnusedSymbol*/
 .tabButton.active {
-	background-color: #C0C0C0;
+	background-color: #FFFFFF;
 }
 
 .title {
-	display: inline;
+	display: inline-block;
 	margin: 0;
 	padding: 2px;
 	vertical-align: middle;
