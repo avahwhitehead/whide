@@ -56,10 +56,6 @@ export default Vue.extend({
 
 <!--suppress CssUnusedSymbol -->
 <style scoped>
-.name-holder {
-
-}
-
 .child-indicator {
 	text-align: right;
 	float: right;
@@ -70,8 +66,6 @@ export default Vue.extend({
 
 /*Submenu styling*/
 ul {
-	width: 100px;
-
 	display: none;
 	border: 1px solid black;
 
@@ -80,6 +74,8 @@ ul {
 	top: 100%;
 	margin: 0;
 	padding: 0;
+
+	width: max-content;
 
 	/*Hide bullets*/
 	list-style-type: none;

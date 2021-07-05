@@ -74,6 +74,7 @@ import CodeMirror from "codemirror";
 import { CustomDict } from "@/types/CustomDict";
 import { Stats } from "fs";
 import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguration";
+import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
 
 /**
  * Type declaration for the data() values
@@ -345,6 +346,39 @@ export default Vue.extend({
 								let state = await runner.run();
 								if (state && state.variables)
 									outputController.setVariablesFromMap(state.variables);
+							}
+						},
+						{
+							name: "Run (While.js)",
+							args: [{
+								name: "Input Expression",
+								description: "Expression to pass as input to the program",
+								type: "tree",
+							}],
+							command: async ({ args }) => {
+								if (!this.ioController) throw new Error("Couldn't get IO Controller");
+								if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
+								if (!this.focused_file) {
+									this.ioController.prompt({
+										title: 'No file to run',
+										message: 'Open a file and try again'
+									});
+									return;
+								}
+								//Open a new tab in the run panel
+								const outputController = await this.runPanelController!.addOutputStream(
+									`${this.focused_file!.name} ${args['Input Expression']}`
+								);
+								//Create a runner for the program
+								const runner = new WhileJsRunner({
+									expression: args['Input Expression'],
+									file: this.focused_file ? this.focused_file.fullPath : 'none',
+									output: outputController.stream,
+								});
+								//Perform setup
+								await runner.init();
+								//Run the program
+								await runner.run();
 							}
 						},
 					]
