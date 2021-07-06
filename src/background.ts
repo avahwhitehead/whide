@@ -1,9 +1,9 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron';
+import { app, protocol, BrowserWindow, ipcMain } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
-import { ExtendedCommand, makeCommandLineParser } from "@/types/CommandLine";
+import { ExtendedCommand, makeCommandLineParser, ProgramOptions } from "@/types/CommandLine";
 const isDevelopment = process.env.NODE_ENV !== 'production';
 import path from "path";
 
@@ -11,11 +11,11 @@ import path from "path";
 const program : ExtendedCommand = makeCommandLineParser();
 program.parse();
 //Store the values in the global variable
-const commandLineArgs = program.opts();
+const commandLineArgs: ProgramOptions = program.opts();
 
-let myGlobal: any = global as any;
-if (!commandLineArgs.workingDir) myGlobal.cwd = process.cwd();
-else myGlobal.cwd = path.resolve(commandLineArgs.workingDir);
+ipcMain.handle('get-cmd-args', (): ProgramOptions => {
+	return commandLineArgs;
+})
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([

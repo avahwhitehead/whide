@@ -6,40 +6,56 @@ import App from "@/views/App.vue";
 import { fs } from "@/files/fs";
 import path from "path";
 import { Stats } from "fs";
-import { isElectron, vars } from "@/utils/globals";
+import { vars } from "@/utils/globals";
+import { ProgramOptions } from "@/types/CommandLine";
 
 Vue.config.productionTip = false;
 
-async function _getStartingDir() : Promise<string> {
-	//Fallback directory if the path is completely invalid
-	const FALLBACK_DIR : string = isElectron ? process.cwd() : '/';
+/**
+ * Get the command line arguments object from Electron if possible.
+ * Otherwise return an empty object (i.e. use all default values).
+ */
+async function _getCommandLineArgs(): Promise<ProgramOptions> {
+	let electron: any;
+	//Credit for this from https://stackoverflow.com/a/39942902/2966288
+	//Attempt to import the electron renderer module
+	if (window['require'] !== undefined) {
+		electron = window['require']("electron");
+	} else {
+		//Not running electron - return the default values
+		return {};
+	}
+	//Request the command line arguments object from the Electron main process
+	return await electron.ipcRenderer.invoke('get-cmd-args');
+}
 
-	//No directory specified - use the default
-	if (!vars.cwd) return FALLBACK_DIR;
+/**
+ * Choose the application's starting directory from the user's requested working dir, the app's working dir, and a virtual fallback root.
+ * @param userDir	The user's requested starting directory
+ * @returns	string	The best path to use as CWD when starting the app
+ */
+async function _getStartingDir(userDir: string) : Promise<string> {
+	//Application's working directory
+	let currDir = process.cwd() || '/';
 
 	//Convert the directory to absolute path
-	const userDir = path.resolve(vars.cwd);
+	userDir = path.resolve(userDir);
 
 	let stats: Stats;
 	try {
-		//Make sure the path exists
-		stats = await new Promise<Stats>((resolve, reject) => {
-			fs.stat(userDir, ((err:any, s:Stats) => {
-				if (err) reject(err);
-				else resolve(s);
-			}));
-		});
+		//Check if the user's requested path exists
+		stats = fs.statSync(userDir);
 	} catch (e) {
 		//See if the error is "file not found"
 		if (e == 'ENOENT' || e.code === 'ENOENT') {
+			//The user's requested directory wasn't found - use the current process root
 			console.error("Target directory doesn't exist; using default");
-			return FALLBACK_DIR;
+			return currDir;
 		} else {
 			throw e;
 		}
 	}
-
-	//If the path is a file, use the parent
+	//If the path is a file, use the parent directory
 	if (!stats.isDirectory()) {
 		console.error("Target directory is a file; using parent");
 		return path.resolve(userDir, '..');
@@ -48,23 +64,14 @@ async function _getStartingDir() : Promise<string> {
 	return userDir;
 }
 
-/**
- * Update the global `var` object with values from the command line arguments provided to electron.
- * If the app is not running in electron, leave them as they are.
- */
-async function _setupVarsFromCommandLineArgs() {
-	if (isElectron) {
-		//Import electron
-		const electron = await import("electron");
-		//Get the command line argument values
-		vars.cwd = electron.remote.getGlobal("cwd") as string;
-	}
-}
-
 async function main() {
-	await _setupVarsFromCommandLineArgs();
-	//Make sure the app starts in a valid directory
-	vars.cwd = await _getStartingDir();
+	//Get the user-provided command line arguments
+	let commandLineArgs: ProgramOptions = await _getCommandLineArgs();
+
+	//Configure the global `vars` object
+
+	//Start the app in a valid directory
+	vars.cwd = await _getStartingDir(commandLineArgs.workingDir || process.cwd());
 
 	//Mount the app
 	new Vue({

@@ -4,7 +4,6 @@ import { RouteConfig } from "vue-router/types/router";
 //Views
 import EditorWindow from "@/views/Editor.vue";
 import TreeWindow from "@/views/TreeWindow.vue";
-import { isElectron } from "@/utils/globals";
 import SettingsWindow from "@/views/SettingsWindow.vue";
 
 //Use the router
@@ -20,7 +19,7 @@ const routes : RouteConfig[] = [
 //Create the router
 const router : VueRouter = new VueRouter({
 	//Use '/path' in the browser. Use hash ('/#/path') in electron
-	mode: isElectron ? 'hash' : 'history',
+	mode: 'hash',
 	routes,
 });
 //Export the router
