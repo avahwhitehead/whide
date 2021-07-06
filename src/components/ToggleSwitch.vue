@@ -19,7 +19,7 @@ export default Vue.extend({
 	},
 	data(): DataDescriptor {
 		return {
-			currentState: false
+			currentState: this.value
 		}
 	},
 	watch: {
