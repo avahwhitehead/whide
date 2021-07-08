@@ -22,10 +22,7 @@ import Vue, { PropType } from "vue";
 import TabbedPanel from "@/components/TabbedPanel.vue";
 import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
 import BreakpointWidget from "./_internal/codeEditor/BreakpointWidget.vue";
-import {
-	EditorController as EditorControllerInterface,
-	IOController,
-} from "@/types";
+import { EditorController as EditorControllerInterface, IOController, } from "@/types";
 import { EventEmitter } from "events";
 //The code editor
 import CodeMirror, { Annotation, Doc, LineWidget, LintStateOptions, } from "codemirror";
@@ -33,6 +30,7 @@ import CodeMirror, { Annotation, Doc, LineWidget, LintStateOptions, } from "code
 import 'codemirror/addon/lint/lint';
 //CodeMirror styling
 import 'codemirror/lib/codemirror.css';
+import 'codemirror/theme/ayu-mirage.css';
 import 'codemirror/addon/lint/lint.css';
 //While language syntax definition
 import WHILE from "@/assets/whileSyntaxMode";
@@ -41,6 +39,8 @@ import { ErrorType, ErrorType as WhileError, linter as whileLinter } from "while
 import { AbstractInternalFile, InternalFile, pathToFile } from "@/files/InternalFile";
 import InputPrompt from "@/components/InputPrompt.vue";
 
+const DARK_THEME = 'ayu-mirage';
+const LIGHT_THEME = 'default';
 
 interface DataType {
 	selectedFile: InternalFile|undefined;
@@ -276,7 +276,10 @@ export default Vue.extend({
 				hasGutters: true,
 				lintOnChange: true,
 			};
-		}
+		},
+		isDarkTheme(): boolean {
+			return this.$vuetify.theme.dark;
+		},
 	},
 	methods: {
 		/**
@@ -433,7 +436,12 @@ export default Vue.extend({
 			//Toggle linter off and on again to force an update with the new setting
 			this.editor!.setOption("lint", false);
 			this.editor!.setOption("lint", this.lintOptions);
-		}
+		},
+		isDarkTheme(isDark: boolean) {
+			if (this.editor) {
+				this.editor.setOption("theme", isDark ? DARK_THEME : LIGHT_THEME);
+			}
+		},
 	}
 });
 </script>
@@ -453,25 +461,15 @@ export default Vue.extend({
 
 <style scoped>
 .editorHolder {
-	display: flex;
-	flex: 1;
-	flex-direction: column;
-	overflow: hidden;
+	height: 100%;
 }
 
 .codeHolder-container {
-	overflow-y: auto;
-	display: flex;
-	flex: 1;
+	height: 100%;
 }
 
 .codeHolder {
 	text-align: left;
-	flex: 1;
-}
-
-.editor-tabs {
-	height: 2em;
-	text-align: left;
+	height: 100%;
 }
 </style>

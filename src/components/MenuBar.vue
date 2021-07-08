@@ -83,27 +83,8 @@ export default Vue.extend({
 
 <style scoped>
 .MenuBar {
-	display: flex;
-
 	border: 1px solid black;
 	margin: 0;
 	padding: 0;
-
-	/*Hide bullets*/
-	list-style-type: none;
-}
-</style>
-
-<style>
-/* Show dropdowns above everything else */
-.MenuBar li, .MenuBar ul {
-	z-index: 100;
-}
-
-/* Display nested dropdowns next to their parent */
-.MenuBar ul ul {
-	left: 100%;
-	position: absolute;
-	top: 0;
 }
 </style>

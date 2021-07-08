@@ -7,19 +7,11 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { library } from '@fortawesome/fontawesome-svg-core';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-
-library.add(faTimes);
 
 interface DataTypeInterface { }
 
 export default Vue.extend({
 	name: 'TabButton',
-	components: {
-		FontAwesomeIcon
-	},
 	props: {
 		title: {
 			type: String,

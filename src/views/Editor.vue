@@ -1,48 +1,47 @@
 <template>
-	<div class="editor">
-		<div class="header filler">
+	<div class="full-height">
+		<v-app-bar app dense flat class="header">
 			<div class="menubar-holder">
 				<MenuBar :menus="menus" />
 			</div>
-			<div class="right">
-				<button @click="openTreeViewer">Tree Viewer</button>
+
+			<v-spacer></v-spacer>
+
+			<v-btn @click="toggleTheme">
 				<font-awesome-icon
-					class="settings icon"
-					icon="cog"
-					title="Open Settings"
-					@click="openSettings"
-					style="display: none"
+					:icon="isDarkTheme?'sun':'moon'"
+					:title="`switch to ${isDarkTheme?'light':'dark'} theme`"
 				/>
-			</div>
-		</div>
+			</v-btn>
 
-		<div class="body">
-			<Container class="left filler">
-				<button @click="handleChangeRootClick">Change Root</button>
-				<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)" @dir="dirChange"/>
-			</Container>
+			<v-spacer></v-spacer>
 
-			<Container class="middle code-editor no-scroll">
-				<div>
-					<ToggleSwitch :value="extendedWhile" @change="v => this.extendedWhile = v" />
-					<label :for="$refs.pureWhileToggle">
-						{{ extendedWhile ? 'Extended' : 'Pure' }} WHILE
-					</label>
-				</div>
+			<v-btn right @click="openTreeViewer">Tree Viewer</v-btn>
+		</v-app-bar>
 
-				<CodeEditorElement
-					:focused="focused_file"
-					:allow-extended="extendedWhile"
-					@controller="onEditorControllerChange"
-					@editorChange="onEditorObjectChange"
-					@fileFocus="onFocusedFileChange"
-				/>
-			</Container>
-		</div>
+		<v-navigation-drawer app>
+			<v-btn @click="handleChangeRootClick">Change Root</v-btn>
+			<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)" @dir="dirChange"/>
+		</v-navigation-drawer>
 
-		<Container class="footer">
+		<v-main class="pa-0 full-height">
+			<CodeEditorElement
+				:focused="focused_file"
+				:allow-extended="extendedWhile"
+				@controller="onEditorControllerChange"
+				@editorChange="onEditorObjectChange"
+				@fileFocus="onFocusedFileChange"
+			/>
+		</v-main>
+
+		<v-navigation-drawer app right>
+			Options:
+			<v-switch ref="pureWhileToggle" v-model="extendedWhile" :label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`" />
+		</v-navigation-drawer>
+
+		<v-app-bar app bottom>
 			<run-panel @controller="c => this.runPanelController = c" />
-		</Container>
+		</v-app-bar>
 
 		<InputPrompt @controller="c => this.ioController = c" />
 	</div>
@@ -54,16 +53,10 @@ import Vue from "vue";
 import fileDownloader from "js-file-download";
 //Components
 import CodeEditorElement from "@/components/CodeEditorElement.vue";
-import Container from "@/components/Container.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import RunPanel from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
-//FontAwesome
-import { library } from "@fortawesome/fontawesome-svg-core";
-import { faCog } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-library.add(faCog);
 //Other imports
 import { EditorController, IOController, Menu, RunPanelController } from "@/types";
 import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
@@ -75,7 +68,6 @@ import { CustomDict } from "@/types/CustomDict";
 import { Stats } from "fs";
 import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguration";
 import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
-import ToggleSwitch from "@/components/ToggleSwitch.vue";
 
 /**
  * Type declaration for the data() values
@@ -93,12 +85,9 @@ interface DataTypesDescriptor {
 export default Vue.extend({
 	name: 'Editor',
 	components: {
-		ToggleSwitch,
 		InputPrompt,
 		FilePicker,
-		Container,
 		CodeEditorElement,
-		FontAwesomeIcon,
 		MenuBar,
 		RunPanel,
 	},
@@ -114,6 +103,14 @@ export default Vue.extend({
 		}
 	},
 	computed: {
+		isDarkTheme: {
+			get(): boolean {
+				return this.$vuetify.theme.dark;
+			},
+			set(val: boolean): void {
+				this.$vuetify.theme.dark = val;
+			}
+		},
 		menus() : Menu[] {
 			const _displayError = async (error: string) => {
 				console.error(error);
@@ -140,11 +137,11 @@ export default Vue.extend({
 
 			return [
 				{
-					"name": "File",
-					"children": [
+					name: "File",
+					children: [
 						{
-							"name": "New",
-							"children": [
+							name: "New",
+							children: [
 								{
 									name: "New File",
 									args: [
@@ -254,8 +251,8 @@ export default Vue.extend({
 							}
 						},
 						{
-							"name": "Download",
-							"command": () => {
+							name: "Download",
+							command: () => {
 							if (this.focused_file) {
 								fileDownloader(this.focused_file.content || "", this.focused_file.name);
 							} else {
@@ -426,6 +423,9 @@ export default Vue.extend({
 				this.cwd = folder;
 			})
 		},
+		toggleTheme() {
+			this.isDarkTheme = !this.isDarkTheme;
+		}
 	},
 	watch: {
 		cwd(cwd: string): void {
@@ -435,83 +435,8 @@ export default Vue.extend({
 });
 </script>
 
-<style>
-.code-editor {
-	outline: 1px solid #AAA;
-	width: 70%;
-	display: inline-block;
-}
-</style>
-
 <style scoped>
-.editor {
-	display: flex;
-	flex-direction: column;
-	width: 100%;
+.full-height {
 	height: 100%;
-}
-
-.header {
-	border-bottom: 1px solid grey;
-}
-.menubar-holder {
-	display: inline-block;
-	float: left;
-}
-.header .right {
-	float: right;
-}
-
-.no-scroll {
-	overflow: hidden;
-}
-
-.settings.icon:hover {
-	cursor: pointer;
-	color: #555555;
-}
-
-.body {
-	flex: 1;
-	display: flex;
-	min-height: 0;
-	height: 100%;
-}
-.body .left {
-	min-width: 10em;
-	width: 10%;
-}
-.body .right {
-	min-width: 10em;
-	width: 15%;
-}
-.body .middle {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-}
-
-.footer {
-	height: fit-content;
-	max-height: 30%;
-	border-top: 1px solid grey;
-}
-
-/*
-Fillers
-*/
-
-.filler {
-}
-
-.header.filler, .footer .filler {
-	height: fit-content;
-}
-
-.header.filler {
-	padding: 4px;
-}
-
-.footer .filler {
 }
 </style>

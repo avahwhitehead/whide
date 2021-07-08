@@ -1,19 +1,34 @@
 <template>
-	<li class="menu-item">
-		<div @click="() => passRunUp(menu)">
-			<span class="name-holder" v-text="menu.name" />
-			<span class="child-indicator" v-if="isParent && showPopoutIcon">&nbsp;&gt;</span>
-		</div>
+		<v-menu :offset-x='isOffsetX' :offset-y='isOffsetY' :open-on-hover='isOpenOnHover' :transition='transition'>
+			<template v-slot:activator="{ on }">
+				<!--suppress JSCheckFunctionSignatures -->
+				<v-list-item v-if='isSubMenu' class='d-flex justify-space-between' v-on="on" @click="passRunUp(menu)">
+					{{ menu.name }}
+					<FontAwesomeIcon v-if="hasChildren" icon="chevron-right" />
+				</v-list-item>
 
-		<ul v-if="isParent">
-			<MenuElement
-				v-for="(child,i) in menu.children" :item="child" :key="i"
-				@click="passRunUp"
-				:menu="child"
-				:show-popout-icon="true"
-			/>
-		</ul>
-	</li>
+				<v-btn v-else v-on="on"
+					text tile
+					v-text="menu.name"
+				/>
+			</template>
+
+			<template v-if="hasChildren">
+				<v-list>
+					<MenuElement
+						v-for="(child, index) in childElements"
+						:key='index'
+
+						@click='m => passRunUp(m)'
+						:menu="child"
+						:is-open-on-hover='true'
+						:is-offset-x='true'
+						:is-offset-y='false'
+						:is-sub-menu='true'
+					/>
+				</v-list>
+			</template>
+		</v-menu>
 </template>
 
 <script lang="ts">
@@ -26,22 +41,21 @@ interface DataTypeInterface {
 
 export default Vue.extend({
 	name: 'MenuElement',
-	components: {
-	},
 	props: {
-		menu: {
-			type: Object as PropType<Menu|MenuItem>,
-		},
-		showPopoutIcon: {
-			type: Boolean,
-			default: false,
-		}
+		menu: Object as PropType<Menu|MenuItem>,
+		isOffsetX: { type: Boolean, default: false },
+		isOffsetY: { type: Boolean, default: true },
+		isOpenOnHover: { type: Boolean, default: false },
+		isSubMenu: { type: Boolean, default: false },
+		transition: { type: String, default: 'scale-transition' }
 	},
 	computed: {
-		isParent(): boolean {
-			const menu = this.menu as Menu;
-			return menu.children && (menu.children.length > 0);
-		}
+		childElements(): (Menu|MenuItem)[] {
+			return (this.menu as Menu).children || [];
+		},
+		hasChildren(): boolean {
+			return this.childElements.length > 0;
+		},
 	},
 	data() : DataTypeInterface {
 		return {};

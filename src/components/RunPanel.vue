@@ -41,10 +41,6 @@ import { BinaryTree } from "@whide/tree-lang";
 import OutputElement from "@/components/_internal/runPanel/OutputElement.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 import { ProgramState } from "@/run/AbstractRunner";
-import { library } from '@fortawesome/fontawesome-svg-core';
-import { faPlay, faStop, faStepForward } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-library.add(faPlay, faStop, faStepForward);
 
 interface DataTypeDescriptor {
 	runPanelController?: RunPanelController;
@@ -56,7 +52,6 @@ interface DataTypeDescriptor {
 export default Vue.extend({
 	name: 'RunPanel',
 	components: {
-		FontAwesomeIcon,
 		InputPrompt,
 		OutputElement,
 		TabbedPanel,
