@@ -1,33 +1,53 @@
 <template>
-	<div class="tree-window">
-		<div class="panel left" v-if="!focusRight">
-			<div class="caption-holder">
-				<span class="maximize-button left" @click="focusLeft = !focusLeft">({{focusLeft ? 'half-screen' : 'maximise' }})</span>
-				<span class="caption">Original:</span>
-			</div>
+	<v-container fluid class="tree-window">
+		<v-row class="tree-viewer-row pb-0">
+			<v-col cols="1">
+				<v-btn v-if="!focusRight" @click="focusLeft=!focusLeft" style="float: left">
+					<FontAwesomeIcon :icon="focusLeft?'columns':'expand-arrows-alt'"></FontAwesomeIcon>
+				</v-btn>
+			</v-col>
+			<v-col>
+				<span class="text-h5" style="text-align: center">Binary Tree:</span>
+			</v-col>
 
-			<label class="input-label">
-				<input type="text" v-model="tree_input" placeholder="<nil.<nil.nil>>" @keypress.enter="onConvertClick" />
-				<button @click="onConvertClick">Convert</button>
-			</label>
-			<p v-if="treeError" v-text="treeError" class="error" />
-			<VariableTreeViewer class="tree-viewer" :tree="binaryTree" />
-		</div>
+			<v-col class="pb-0" cols="2" />
 
-		<div class="panel right" v-if="!focusLeft">
-			<div class="caption-holder">
-				<span class="caption">Converted:</span>
-				<span class="maximize-button right" @click="focusRight = !focusRight">({{focusRight ? 'half-screen' : 'maximise' }})</span>
-			</div>
+			<v-col>
+				<span class="text-h5" style="text-align: center">Conversion Type:</span>
+			</v-col>
+			<v-col cols="1">
+				<v-btn v-if="!focusLeft" @click="focusRight=!focusRight" style="float: right">
+					<FontAwesomeIcon :icon="focusRight?'columns':'expand-arrows-alt'"></FontAwesomeIcon>
+				</v-btn>
+			</v-col>
+		</v-row>
 
-			<label class="input-label">
-				<input type="text" v-model="converter_model" placeholder="<any.nil>>" @keypress.enter="onConvertClick" />
-				<button @click="onConvertClick">Convert</button>
-			</label>
-			<p v-if="converterError" v-text="converterError" class="error" />
-			<VariableTreeViewer class="tree-viewer" :tree="convertedTree" />
-		</div>
-	</div>
+		<v-row class="tree-viewer-row mt-0">
+			<v-col class="pt-0 pb-0">
+				<v-text-field class="input-box pa-0" type="text" v-model="tree_input" placeholder="<nil.<nil.nil>>" @keypress.enter="onConvertClick" />
+				<p v-if="treeError" v-text="treeError" class="error" />
+			</v-col>
+
+			<v-col class="pa-0" cols="2">
+				<v-btn @click="onConvertClick">Display</v-btn>
+			</v-col>
+
+			<v-col class="pt-0 pb-0">
+				<v-text-field class="input-box pa-0" type="text" v-model="converter_model" placeholder="<any.nil>>" @keypress.enter="onConvertClick" />
+				<p v-if="converterError" v-text="converterError" class="error" />
+			</v-col>
+		</v-row>
+
+		<v-row class="tree-viewer-row viewer-row mt-0">
+			<v-col v-if="!focusRight" class="panel">
+				<VariableTreeViewer class="tree-viewer" :tree="binaryTree" />
+			</v-col>
+
+			<v-col v-if="!focusLeft" class="panel">
+				<VariableTreeViewer class="tree-viewer" :tree="convertedTree" />
+			</v-col>
+		</v-row>
+	</v-container>
 </template>
 
 
@@ -142,65 +162,40 @@ export default Vue.extend({
 .tree-window {
 	max-width: 100vw;
 	max-height: 100vh;
-	display: flex;
-	flex-direction: row;
-	flex: 1;
-}
-
-.panel.left, .panel.right {
-	flex: 1;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
-	margin: 0 20px;
-	max-height: 100%;
-}
-
-.caption-holder {
-	display: flex;
-	flex-direction: row;
-	width: 100%;
-	margin-top: 5px;
-	margin-bottom: 5px;
-}
-.caption {
-	text-align: center;
 	flex: 1;
 }
 
-.maximize-button {
-	color: blue;
-	display: inline;
-	flex: 0;
-	min-width: fit-content;
-	user-select: none;
+.tree-viewer-row {
+	flex-grow: 0;
 }
+
+.tree-viewer-row.viewer-row {
+	display: flex;
+	flex-direction: row;
+	min-height: 0;
+	flex: 1;
+}
+
+.panel {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	flex: 1;
+	height: 100%;
+}
+
+.tree-viewer {
+	height: 100%;
+	flex: 1;
+}
+
 .maximize-button.right {
 	text-align: right;
 }
 .maximize-button.left {
 	text-align: left;
-}
-.maximize-button:hover {
-	text-decoration: underline;
-}
-
-.input-label {
-	display: flex;
-	flex-direction: row;
-	margin-bottom: 5px;
-}
-
-.input-label input[type="text"] {
-	flex: 1;
-}
-
-.tree-viewer {
-	flex: 1;
-	max-height: 100%;
-	margin-bottom: 10px;
-}
-
-.error {
-	color: red;
 }
 </style>

@@ -10,9 +10,9 @@
 			</g>
 		</svg>
 		<div class="controls">
-			<input type="button" class="button" @click="() => _zoom(1)" value="+" />
-			<input type="button" class="button" @click="() => _zoom(-1)" value="-" />
-			<input type="button" class="button" @click="focus" value="Focus" />
+			<v-btn class="button pa-0 mb-1" @click="() => _zoom(1)">+</v-btn>
+			<v-btn class="button pa-0 mb-1" @click="() => _zoom(-1)">-</v-btn>
+			<v-btn class="button pa-0 mb-1" @click="focus">Focus</v-btn>
 		</div>
 	</div>
 </template>
@@ -200,6 +200,7 @@ export default Vue.extend({
 	position: relative;
 	display: flex;
 	flex-direction: column;
+	height: 100%;
 }
 
 svg.treeViewer {
@@ -214,8 +215,8 @@ svg.treeViewer {
 	position: absolute;
 	top: 5px;
 	right: 5px;
-	/*Display buttons as a stack*/
-	width: 50px;
+	/*Display buttons in a column*/
+	width: min-content;
 }
 
 .controls .button {
@@ -224,7 +225,6 @@ svg.treeViewer {
 
 	/*Positioning*/
 	width: 100%;
-	margin-bottom: 5px;
 
 	/*Formatting*/
 	padding: 0;
