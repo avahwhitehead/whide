@@ -1,12 +1,17 @@
 <template>
 	<div class="editorHolder">
-		<TabbedPanel
-			class="editor-tabs"
-			:names="fileNames"
-			:selected-tab="focusedName"
-			@change="onTabChange"
-			@close="onTabClose"
-		/>
+		<v-tabs
+			v-model="currentTab"
+			ref="sortableTable"
+			:hide-slider="true"
+			@change="currentTabChange"
+		>
+			<v-tab v-for="(tab,i) in fileNames" :key="i">
+				<span class="tab-name">{{tab}}</span>
+				<FontAwesomeIcon icon="times" class="tab-close" @click="() => onTabClose(tab)" />
+			</v-tab>
+		</v-tabs>
+
 		<div class="codeHolder-container">
 			<!-- This div will hold the code editor -->
 			<div ref="codeHolder" class="codeHolder"></div>
@@ -19,11 +24,11 @@
 
 <script lang="ts">
 import Vue, { PropType } from "vue";
-import TabbedPanel from "@/components/TabbedPanel.vue";
 import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
 import BreakpointWidget from "./_internal/codeEditor/BreakpointWidget.vue";
 import { EditorController as EditorControllerInterface, IOController, } from "@/types";
 import { EventEmitter } from "events";
+import Sortable, { SortableEvent } from 'sortablejs';
 //The code editor
 import CodeMirror, { Annotation, Doc, LineWidget, LintStateOptions, } from "codemirror";
 //CodeMirror addons
@@ -52,6 +57,7 @@ interface DataType {
 	errors : LineWidgetType[];
 	infos : LineWidgetType[];
 	warnings : LineWidgetType[];
+	currentTab: number;
 }
 
 function addWidget(editor: CodeMirror.Editor, line: number|CodeMirror.LineHandle, element: HTMLElement) : CodeMirror.LineWidget {
@@ -148,7 +154,6 @@ export default Vue.extend({
 	name: 'CodeEditorContainer',
 	components: {
 		InputPrompt,
-		TabbedPanel,
 	},
 	props: {
 		focused: {
@@ -163,8 +168,7 @@ export default Vue.extend({
 	data() : DataType {
 		return {
 			selectedFile: undefined,
-			//The code editor object.
-			//Is undefined until the object is created in `mounted`
+			//The code editor object - undefined until the object is created in `mounted`
 			editor: undefined,
 			editorController: undefined,
 			openFiles: [],
@@ -173,9 +177,18 @@ export default Vue.extend({
 			errors: [],
 			infos: [],
 			warnings: [],
+			currentTab: 0,
 		}
 	},
 	mounted() {
+		//HTML element containing the tab elements
+		let tabsHolder = (this.$refs.sortableTable! as Vue).$el.getElementsByClassName('v-slide-group__content')[0];
+		//Allow dragging to reorder the tabs
+		new Sortable(
+			tabsHolder as HTMLElement,
+			{onEnd: this.onTabDragEnd}
+		);
+
 		//Create the code editor in the div
 		let codeMirror : CodeMirror.Editor = CodeMirror(this.$refs.codeHolder as HTMLElement, {
 			lineNumbers: true,
@@ -184,6 +197,7 @@ export default Vue.extend({
 			value: "",
 			mode: WHILE,
 			lint: this.lintOptions,
+			theme: this.isDarkTheme ? DARK_THEME : LIGHT_THEME
 		});
 		codeMirror.setSize("100%", "100%");
 		//Wrap the editor in an asynchronous wrapper
@@ -257,8 +271,7 @@ export default Vue.extend({
 			this.onTabClose(this.fileNames[file]);
 		});
 		this.editorController.on('tab-focus', (filePath: string) => {
-			const file = this._indexFromFilePath(filePath);
-			this.onTabChange(this.fileNames[file]);
+			this.currentTab = this._indexFromFilePath(filePath);
 		});
 	},
 	computed: {
@@ -282,17 +295,11 @@ export default Vue.extend({
 		},
 	},
 	methods: {
-		/**
-		 * Handle the active tab changing
-		 * @param fileName		The new active tab
-		 */
-		onTabChange(fileName : string|undefined) : void {
-			//Update the selected file
-			if (fileName) this.selectedFile = this.openFiles[this._indexFromFileName(fileName)];
-			else this.selectedFile = undefined;
-			//Alert the external listeners
-			this.$emit("fileFocus", this.selectedFile);
+		onTabDragEnd(event: SortableEvent): any {
+			const movedItem: string = this.fileNames.splice(event.oldIndex! - 1, 1)[0];
+			this.fileNames.splice(event.newIndex!, 0, movedItem);
 		},
+
 		/**
 		 * Handle a tab closing
 		 * @param fileName		The tab which has closed
@@ -349,6 +356,13 @@ export default Vue.extend({
 				}
 				return res;
 			});
+		},
+
+		currentTabChange(tabIndex: number): void {
+			let fileName = this.fileNames[tabIndex];
+			//Update the selected file
+			if (fileName) this.selectedFile = this.openFiles[this._indexFromFileName(fileName)];
+			else this.selectedFile = undefined;
 		},
 
 		/**
@@ -408,6 +422,8 @@ export default Vue.extend({
 		 */
 		async selectedFile(newFile: InternalFile|undefined, oldFile: InternalFile|undefined) {
 			if (!this.editor) throw new Error("Couldn't get code editor");
+
+			this.$emit('fileFocus', newFile);
 
 			//Use the path to the file to save the document state
 			//Support using the editor without an open file by using the empty string
