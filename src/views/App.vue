@@ -25,6 +25,16 @@ export default Vue.extend({
 			ioController = controller;
 		}
 	},
+	created() {
+		//Check whether the user's browser requests dark theme
+		let darkThemeCheckQuery = window.matchMedia('(prefers-color-scheme: dark)');
+		//Start the app with dark theme
+		this.$vuetify.theme.dark = darkThemeCheckQuery.matches;
+		//Toggle the theme if the user's preference changes
+		darkThemeCheckQuery.addEventListener('change', (event: MediaQueryListEvent) => {
+			this.$vuetify.theme.dark = event.matches;
+		})
+	}
 });
 
 Vue.config.errorHandler = function (err, _, info) {
