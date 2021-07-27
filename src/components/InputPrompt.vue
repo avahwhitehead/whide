@@ -1,31 +1,36 @@
 <template>
-	<div class="InputPrompt" v-if="controls.visible">
-		<Modal :visible="controls.visible">
-			<div slot="header" v-if="!expectingInput">
-				<h3 v-text="controls.title" />
-			</div>
+	<v-dialog
+		v-model="controls.visible"
+		width="600"
+		max-width="50%"
+	>
+		<v-card class="ma-0">
+			<v-card-title class="text-h5 grey lighten-2">
+				{{ controls.title }}
+			</v-card-title>
 
-			<div slot="body" class="content">
+			<v-card-text class="">
 				<p v-text="controls.message" />
 
-				<div class="inputHolder">
-					<InputElement
-						:descriptor="descriptor"
-						@change="onInputChange"
-					/>
-				</div>
-			</div>
-
-			<div slot="footer">
-				<input
-					type="button"
-					@click="onButtonClick(name)"
-					:value="name"
-					v-for="(name, i) of buttons" :key="i"
+				<InputElement
+					:descriptor="descriptor"
+					@change="onInputChange"
 				/>
-			</div>
-		</Modal>
-	</div>
+			</v-card-text>
+
+			<v-divider />
+
+			<v-card-actions>
+				<v-spacer />
+				<v-btn
+					@click="onButtonClick(name)"
+					text
+					v-for="(name, i) of buttons" :key="i"
+					v-text="name"
+				/>
+			</v-card-actions>
+		</v-card>
+	</v-dialog>
 </template>
 
 <script lang="ts">

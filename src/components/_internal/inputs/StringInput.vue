@@ -1,8 +1,5 @@
 <template>
-	<label class="StringInput">
-		<span v-if="name" class="input-name" v-text="name" />
-		<input type="text" v-model="model" :placeholder="placeholder" />
-	</label>
+
 </template>
 
 <script lang="ts">

@@ -2,7 +2,7 @@
 	<div class="TreeInputElement">
 		<div class="viewer-body">
 			<label class="input-label">
-				<input type="text" class="input" v-model="tree_input" placeholder="<nil.<nil.nil>>" />
+				<v-text-field class="pa-0 ma-0" v-model="tree_input" placeholder="<nil.<nil.nil>>" />
 			</label>
 
 			<div class="output" v-if="treeString"><b>Result:</b> {{ treeString }}</div>
@@ -11,7 +11,7 @@
 			<div class="error" v-if="converterError" v-text="converterError" />
 
 			<label class="input-label">
-				<input type="text" class="input" v-model="converter_model" placeholder="<any.nil>" />
+				<v-text-field class="pa-0 ma-0" v-model="converter_model" placeholder="<any.nil>" />
 			</label>
 		</div>
 
@@ -130,30 +130,9 @@ export default Vue.extend({
 </script>
 
 
-<!--suppress CssUnusedSymbol -->
 <style scoped>
-.TreeInputElement {
-	display: flex;
-	flex-direction: column;
-}
-
-.viewer-body {
-	display: flex;
-	flex-direction: column;
-	flex: 1;
-}
-
-.viewer-body .input {
-	flex: 1;
-}
-
 .input-label {
-	display: flex;
-	flex-direction: row;
 	margin-bottom: 5px;
-}
-.input-label input[type="text"] {
-	flex: 1;
 }
 
 .output, .error {
@@ -170,15 +149,7 @@ export default Vue.extend({
 }
 
 .tree-viewer {
-	overflow-y: auto;
-	padding: 5px;
 
-	display: flex;
-	flex-direction: column;
-	flex: 1;
-	/*Only show top/bottom borders*/
-	border: solid black;
-	border-width: 1px 0;
 }
 
 .tree-viewer, .fade-enter-active, .fade-leave-active {

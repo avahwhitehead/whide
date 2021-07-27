@@ -1,7 +1,7 @@
 <template>
 	<label class="NumberInput">
 		<span v-if="name" class="input-name" v-text="name" />
-		<input type="number" v-model="model" :placeholder="placeholder" />
+		<v-text-field type="number" v-model="model" :placeholder="placeholder" />
 	</label>
 </template>
 

@@ -19,7 +19,7 @@
 			<v-btn right @click="openTreeViewer">Tree Viewer</v-btn>
 		</v-app-bar>
 
-		<v-navigation-drawer app>
+		<v-navigation-drawer app permanent>
 			<v-btn @click="handleChangeRootClick">Change Root</v-btn>
 			<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)" @dir="dirChange"/>
 		</v-navigation-drawer>

@@ -1,35 +1,31 @@
 <template>
 	<div class="InputElement">
-		<div v-if="type === 'label' || type === 'string' || type === 'number'">
-			<p
+		<div class="input-el-holder" v-if="type === 'label' || type === 'string' || type === 'number'">
+			<span
 				v-if="type === 'label'"
 				v-text="descriptor"
 			/>
 
-			<StringInputElement
+			<v-text-field
+				class="input-element mt-0 pt-0"
 				v-else-if="type === 'string'"
-				:name="descriptor.name"
+				v-model="inputs.string"
 				:placeholder="descriptor.placeholder"
-				:value="descriptor.value || descriptor.default"
-				@change="handleChange"
-				@error="handleError"
 			/>
 
-			<NumberInputElement
+			<v-text-field
+				class="input-element mt-0 pt-0"
 				v-else-if="type === 'number'"
-				:name="descriptor.name"
+				v-model="inputs.number"
 				:placeholder="descriptor.placeholder"
-				:value="descriptor.value || descriptor.default"
-				@change="handleChange"
-				@error="handleError"
 			/>
 
-			<span
+			<FontAwesomeIcon
+				icon="question"
 				class="help-button"
 				v-if="descriptor.description"
 				id="help-button"
 				v-tooltip="helpTooltip"
-				v-text="'?'"
 			/>
 		</div>
 
@@ -68,8 +64,6 @@
 import Vue from "vue";
 import { AbstractInternalFile } from "@/files/InternalFile";
 import { vars } from '@/utils/globals';
-import StringInputElement from "@/components/_internal/inputs/StringInput.vue";
-import NumberInputElement from "@/components/_internal/inputs/NumberInput.vue";
 import FileInputElement from "@/components/_internal/inputs/FileInput.vue";
 import TreeInputElement from "@/components/_internal/inputs/TreeInput.vue";
 import { InputPromptTypes } from "@/types";
@@ -103,8 +97,6 @@ export default Vue.extend({
 	components: {
 		TreeInputElement,
 		FileInputElement,
-		NumberInputElement,
-		StringInputElement,
 	},
 	props: {
 		descriptor: {
@@ -156,13 +148,21 @@ export default Vue.extend({
 
 <!--suppress CssUnusedSymbol -->
 <style scoped>
-span.help-button {
-	display: inline-block;
-	text-align: center;
-	background-color: lightgrey;
+.input-el-holder {
+	display: flex;
+	flex-direction: row;
+}
+
+.input-element {
+	flex: 1;
+}
+
+.help-button {
+	flex-grow: 0;
+	background-color: lightgray;
 	border-radius: 1em;
-	width: 1em;
-	height: 1em;
+	width: 2em;
+	height: 2em;
 	padding: 5px;
 	margin-left: .5em;
 }

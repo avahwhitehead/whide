@@ -6,15 +6,13 @@
 		</p>
 
 		<div>
-			<div class="selected-output">
-				<span v-if="selected">Selected:&nbsp;{{ selected.fullPath }}</span>
-				<span v-else>
-					Pick a
-					<span v-if="type === 'file'">file</span>
-					<span v-else-if="type === 'folder'">folder</span>
-					<span v-else>file or folder</span>:
-				</span>
-			</div>
+			<span v-if="selected">Selected:&nbsp;{{ selected.fullPath }}</span>
+			<span v-else>
+				Pick a
+				<span v-if="type === 'file'">file</span>
+				<span v-else-if="type === 'folder'">folder</span>
+				<span v-else>file or folder</span>:
+			</span>
 
 			<div
 				class="expand-button"
@@ -24,17 +22,25 @@
 		</div>
 
 		<div class="path-input-holder">
-			<label>
-				<input
-					class="path-input"
-					v-model="dirModel"
-					placeholder="File path"
-					@keydown.enter="dirInputChoose"
-				/>
-				<button @click="dirInputChoose">Choose</button>
-			</label>
-			<div class="error" v-text="error" v-if="error" />
+			<v-text-field
+				class="path-input pt-0 pr-2"
+				v-model="dirModel"
+				placeholder="File path"
+				@keydown.enter="dirInputChoose"
+			/>
+
+			<v-btn
+				@click="dirInputChoose"
+				class="choose-dir-button"
+				depressed
+			>
+				Choose
+			</v-btn>
 		</div>
+
+		<div class="error" v-text="error" v-if="error" />
+
+		<v-divider />
 
 		<transition name="fade">
 			<div
@@ -145,10 +151,13 @@ export default Vue.extend({
 </script>
 
 
-<!--suppress CssUnusedSymbol -->
 <style scoped>
+.FileInputElement {
+	text-align: left;
+}
+
 .description-holder {
-	margin: 5px 0;
+	/*margin: 5px 0;*/
 }
 .description-holder .name {
 	font-weight: bold;
@@ -159,30 +168,37 @@ export default Vue.extend({
 }
 
 .selected-output {
-	float: left;
-	text-align: left;
+	/*float: left;*/
+	/*text-align: left;*/
 }
 
 .expand-button {
-	text-align: right;
+	float: right;
 	color: blue;
-	text-decoration: underline
+	text-decoration: underline;
 }
 
-.path-input-holder, .path-input-holder label {
+.path-input-holder {
 	display: flex;
-	width: 100%;
-	flex: 1;
+	/*width: 100%;*/
+	/*flex: 1;*/
 	flex-direction: row;
 }
 
 .path-input {
 	flex: 1;
+	vertical-align: bottom;
+}
+
+.choose-path-btn {
+	/*flex-grow: 0;*/
+	flex-grow: 0;
+	vertical-align: bottom;
 }
 
 .file-picker-container {
-	overflow-y: auto;
-	padding: 5px;
+	/*overflow-y: auto;*/
+	/*padding: 5px;*/
 	/*Only show top/bottom borders*/
 	border: solid black;
 	border-width: 1px 0;
