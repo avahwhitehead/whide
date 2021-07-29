@@ -26,14 +26,18 @@ export default Vue.extend({
 		}
 	},
 	created() {
-		//Check whether the user's browser requests dark theme
+		//Check whether the user's browser explicitly requests light or dark theme
 		let darkThemeCheckQuery = window.matchMedia('(prefers-color-scheme: dark)');
-		//Start the app with dark theme
-		this.$vuetify.theme.dark = darkThemeCheckQuery.matches;
-		//Toggle the theme if the user's preference changes
+		let lightThemeCheckQuery = window.matchMedia('(prefers-color-scheme: light)');
+		//Start the app with dark theme if requested
+		this.$vuetify.theme.dark = darkThemeCheckQuery.matches || !lightThemeCheckQuery.matches;
+		//Automatically switch between themes if the requested theme changes
 		darkThemeCheckQuery.addEventListener('change', (event: MediaQueryListEvent) => {
 			this.$vuetify.theme.dark = event.matches;
-		})
+		});
+		lightThemeCheckQuery.addEventListener('change', (event: MediaQueryListEvent) => {
+			this.$vuetify.theme.dark = !event.matches;
+		});
 	}
 });
 
