@@ -34,52 +34,60 @@
 					</v-card-title>
 
 					<v-container>
-						<v-row class="mt-0">
-							<v-text-field
-								v-model="nameModel"
-								label="Configuration name*"
-								class="mb-0 mt-0 pb-0 pt-0"
-								required
-							/>
-						</v-row>
+						<v-form>
+							<v-row class="mt-0">
+								<v-text-field
+									v-model="nameModel"
+									label="Configuration name*"
+									class="mb-0 mt-0 pb-0 pt-0"
+									required
+									:rules="nameInputRules"
+								/>
+							</v-row>
 
-						<v-row class="">
-							<v-select
-								v-model="interpreterModel"
-								:items="interpreterList"
-								label="WHILE Interpreter"
-								class="dropdown"
-								item-text="name"
-								return-object
-								outlined
-								dense
-							/>
-						</v-row>
+							<v-row class="">
+								<v-select
+									v-model="interpreterModel"
+									:items="interpreterList"
+									label="WHILE Interpreter"
+									class="dropdown"
+									item-text="name"
+									return-object
+									outlined
+									dense
+									required
+									:rules="interpreterInputRules"
+								/>
+							</v-row>
 
-						<v-row class="">
-							<v-text-field
-								v-model="fileModel"
-								label="File*"
-								class="mb-0 mt-0 pb-0 pt-0"
-								required
-							/>
-						</v-row>
-						<v-row class="">
-							<v-text-field
-								v-model="inputModel"
-								label="Input tree*"
-								class="mb-0 mt-0 pb-0 pt-0"
-								required
-							/>
-						</v-row>
-						<v-row class="">
-							<v-text-field
-								v-model="formatModel"
-								label="Tree Display Format*"
-								class="mb-0 mt-0 pb-0 pt-0"
-								required
-							/>
-						</v-row>
+							<v-row class="">
+								<v-text-field
+									v-model="fileModel"
+									label="File*"
+									class="mb-0 mt-0 pb-0 pt-0"
+									required
+									:rules="fileInputRules"
+								/>
+							</v-row>
+							<v-row class="">
+								<v-text-field
+									v-model="inputModel"
+									label="Input tree*"
+									class="mb-0 mt-0 pb-0 pt-0"
+									required
+									:rules="treeInputRules"
+								/>
+							</v-row>
+							<v-row class="">
+								<v-text-field
+									v-model="formatModel"
+									label="Tree Display Format*"
+									class="mb-0 mt-0 pb-0 pt-0"
+									required
+									:rules="treeFormatInputRules"
+								/>
+							</v-row>
+						</v-form>
 					</v-container>
 
 					<small>*indicates required field</small>
@@ -149,7 +157,7 @@ export default Vue.extend({
 			fileModel: '',
 			inputModel: '',
 			interpreterVal: INTERPRETERS.WHILE_JS,
-			configIndex: 0,
+			configIndex: -1,
 		}
 	},
 	computed: {
@@ -180,35 +188,41 @@ export default Vue.extend({
 				if (val === undefined) this.configIndex = -1;
 				else this.configIndex = this.runConfigs.indexOf(val);
 			}
-		}
+		},
+		nameInputRules(): ((v: string) => boolean|string)[] {
+			return [
+				this.rule_requireNonEmpty,
+				(v: string) => {
+					if (this.runConfigs.find((c: RunConfiguration) => c !== this.currentOpenConfig && c.name === v) === undefined)
+						return true;
+					return "That name already exists";
+				}
+			];
+		},
+		interpreterInputRules(): ((v: string) => boolean|string)[] {
+			return [];
+		},
+		fileInputRules(): ((v: string) => boolean|string)[] {
+			return [
+				this.rule_requireNonEmpty,
+			];
+		},
+		treeInputRules(): ((v: string) => boolean|string)[] {
+			return [
+				this.rule_requireNonEmpty,
+			];
+		},
+		treeFormatInputRules(): ((v: string) => boolean|string)[] {
+			return [
+				this.rule_requireNonEmpty,
+			];
+		},
 	},
 	mounted() {
 		this.currentOpenConfig = this.runConfigs[0] || undefined;
 	},
 	methods: {
 		saveConfig() {
-			//TODO: Feedback errors here
-			if (!this.nameModel || !this.nameModel.replace(/\s+/, '')) {
-				console.error(`invalid name: `, this.nameModel);
-				return;
-			}
-			if (!this.formatModel || !this.formatModel.replace(/\s+/, '')) {
-				console.error(`invalid outputFormat: `, this.formatModel);
-				return;
-			}
-			if (!this.fileModel || !this.fileModel.replace(/\s+/, '')) {
-				console.error(`invalid file: `, this.fileModel);
-				return;
-			}
-			if (!this.inputModel || !this.inputModel.replace(/\s+/, '')) {
-				console.error(`invalid input: `, this.inputModel);
-				return;
-			}
-			if (this.interpreterModel === null || this.interpreterModel === undefined) {
-				console.error(`invalid program: `, this.interpreterModel);
-				return;
-			}
-
 			let newConfig: RunConfiguration = {
 				file: this.fileModel,
 				input: this.inputModel,
@@ -226,14 +240,22 @@ export default Vue.extend({
 		createConfig() {
 			this.currentOpenConfig = undefined;
 		},
+
+		rule_requireNonEmpty(val: string): boolean|string {
+			return val.replaceAll(/\s+/g, '') !== '' || "Enter a value";
+		}
 	},
 	watch: {
 		runnerProg(prog: InterpreterType) {
 			this.interpreterVal = prog.interpreter;
 		},
+		showDialog(val: boolean) {
+			//Load the first run configuration on open
+			if (val) this.configIndex = 0;
+			//Clear the values on close
+			else this.configIndex = -1;
+		},
 		currentOpenConfig(config: RunConfiguration|undefined) {
-			//TODO: This is a number when opening from the list
-			console.log('open', this.currentOpenConfig)
 			if (config === undefined) {
 				this.nameModel = 'Unnamed';
 				this.interpreterVal = INTERPRETERS.WHILE_JS;

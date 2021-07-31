@@ -18,32 +18,34 @@
 
 			<v-spacer />
 
-			<v-row>
-				<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
-					<FontAwesomeIcon icon="cog" />
-				</v-btn>
+			<v-col cols="3">
+				<v-row>
+					<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
+						<FontAwesomeIcon icon="cog" />
+					</v-btn>
 
-				<v-select
-					v-model="chosenRunConfig"
-					:items="runConfigs"
-					item-text="name"
-					item-value="abbr"
-					placeholder="Run Configuration"
-					class="dropdown"
-					return-object
-					dense
-					outlined
-					hide-details
-				/>
+					<v-select
+						v-model="chosenRunConfig"
+						:items="runConfigs"
+						item-text="name"
+						item-value="abbr"
+						placeholder="Run Configuration"
+						class="dropdown"
+						return-object
+						dense
+						outlined
+						hide-details
+					/>
 
-				<v-btn class="pa-2 program-button run" depressed @click="runProgramClick" >
-					<FontAwesomeIcon icon="play" />
-				</v-btn>
+					<v-btn class="pa-2 program-button run" depressed @click="runProgramClick" >
+						<FontAwesomeIcon icon="play" />
+					</v-btn>
 
-				<v-btn class="pa-2 program-button debug" depressed @click="debugProgramClick" >
-					<FontAwesomeIcon icon="bug" />
-				</v-btn>
-			</v-row>
+					<v-btn class="pa-2 program-button debug" depressed @click="debugProgramClick" >
+						<FontAwesomeIcon icon="bug" />
+					</v-btn>
+				</v-row>
+			</v-col>
 		</v-app-bar>
 
 		<v-navigation-drawer app permanent>
@@ -351,7 +353,6 @@ export default Vue.extend({
 
 			let runner: AbstractRunner;
 
-			console.log(config.interpreter);
 			if (config.interpreter === INTERPRETERS.WHILE_JS) {
 				//Create a While.js runner for the program
 				runner = new WhileJsRunner({
@@ -453,12 +454,6 @@ export default Vue.extend({
 		cwd(cwd: string): void {
 			vars.cwd = cwd;
 		},
-		runProgramModel(prog: any) {
-			console.log(prog)
-		},
-		chosenRunConfig(prog: any) {
-			console.log('run: ', prog);
-		},
 		runConfigs: {
 			deep: true,
 			handler(val: RunConfiguration[]) {
@@ -479,11 +474,11 @@ Fix for dropdown width. See:
 https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 */
 .v-select__selections input {
-	display: none;
+	width: 0 !important;
+	max-width: 0 !important;
 }
 .v-select__selections .v-select__selection {
 	max-width: none;
-	flex: 1;
 }
 </style>
 
@@ -495,11 +490,6 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 .dropdown {
 	/*Display next to the button, filling the available space*/
 	flex: 1;
-	/* See https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939 */
-	min-width: 0;
-	max-width: 100%;
-	/*Space*/
-	margin-right: 5px;
 }
 .program-button {
 	min-width: 1em !important;
