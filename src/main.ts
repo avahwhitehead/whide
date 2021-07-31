@@ -2,6 +2,7 @@
 import Vue from 'vue';
 import router from "@/router";
 import vuetify from '@/plugins/vuetify'
+import store from '@/plugins/vuex'
 import App from "@/views/App.vue";
 //FontAwesome
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -87,6 +88,7 @@ async function main() {
 	new Vue({
 		router,
 		vuetify,
+		store,
 		el: '#app',
 		render: h => h(App),
 		components: { App },

@@ -5,7 +5,9 @@
 				<MenuBar :menus="menus" />
 			</div>
 
-			<v-spacer></v-spacer>
+			<v-col cols="3" />
+
+			<v-spacer />
 
 			<v-btn @click="toggleTheme">
 				<font-awesome-icon
@@ -14,9 +16,34 @@
 				/>
 			</v-btn>
 
-			<v-spacer></v-spacer>
+			<v-spacer />
 
-			<v-btn right @click="openTreeViewer">Tree Viewer</v-btn>
+			<v-row>
+				<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
+					<FontAwesomeIcon icon="cog" />
+				</v-btn>
+
+				<v-select
+					v-model="chosenRunConfig"
+					:items="runConfigs"
+					item-text="name"
+					item-value="abbr"
+					placeholder="Run Configuration"
+					class="dropdown"
+					return-object
+					dense
+					outlined
+					hide-details
+				/>
+
+				<v-btn class="pa-2 program-button run" depressed @click="runProgramClick" >
+					<FontAwesomeIcon icon="play" />
+				</v-btn>
+
+				<v-btn class="pa-2 program-button debug" depressed @click="debugProgramClick" >
+					<FontAwesomeIcon icon="bug" />
+				</v-btn>
+			</v-row>
 		</v-app-bar>
 
 		<v-navigation-drawer app permanent>
@@ -35,8 +62,10 @@
 		</v-main>
 
 		<v-navigation-drawer app right>
-			Options:
-			<v-switch ref="pureWhileToggle" v-model="extendedWhile" :label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`" />
+			<v-btn right @click="openTreeViewer">Tree Viewer</v-btn>
+
+			<div class="title pt-2 pb-0">Options</div>
+			<v-switch class="mt-0" ref="pureWhileToggle" v-model="extendedWhile" :label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`" />
 		</v-navigation-drawer>
 
 		<v-app-bar app bottom>
@@ -44,6 +73,8 @@
 		</v-app-bar>
 
 		<InputPrompt @controller="c => this.ioController = c" />
+
+		<RunConfigPopup v-model="showRunConfigPopup" />
 	</div>
 </template>
 
@@ -57,6 +88,7 @@ import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import RunPanel from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
+import RunConfigPopup from "@/components/RunConfigPopup.vue";
 //Other imports
 import { EditorController, IOController, Menu, RunPanelController } from "@/types";
 import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
@@ -68,6 +100,8 @@ import { CustomDict } from "@/types/CustomDict";
 import { Stats } from "fs";
 import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguration";
 import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
+import { AbstractRunner } from "@/run/AbstractRunner";
+import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
 
 /**
  * Type declaration for the data() values
@@ -80,11 +114,13 @@ interface DataTypesDescriptor {
 	runPanelController?: RunPanelController;
 	cwd: string;
 	extendedWhile: boolean;
+	showRunConfigPopup: boolean;
 }
 
 export default Vue.extend({
 	name: 'Editor',
 	components: {
+		RunConfigPopup,
 		InputPrompt,
 		FilePicker,
 		CodeEditorElement,
@@ -100,6 +136,7 @@ export default Vue.extend({
 			runPanelController: undefined,
 			cwd: vars.cwd,
 			extendedWhile: true,
+			showRunConfigPopup: false,
 		}
 	},
 	computed: {
@@ -109,6 +146,19 @@ export default Vue.extend({
 			},
 			set(val: boolean): void {
 				this.$vuetify.theme.dark = val;
+			}
+		},
+		chosenRunConfig: {
+			get(): RunConfiguration|undefined {
+				return this.$store.state.chosenRunConfig;
+			},
+			set(val: RunConfiguration|undefined): void {
+				this.$store.commit('setChosenRunConfig', val);
+			}
+		},
+		runConfigs: {
+			get(): RunConfiguration[] {
+				return this.$store.state.runConfigurations;
 			}
 		},
 		menus() : Menu[] {
@@ -270,118 +320,6 @@ export default Vue.extend({
 						},
 					]
 				},
-				{
-					name: "Run",
-					children: [
-						{
-							name: "Run",
-							args: [{
-								name: "Input Expression",
-								description: "Expression to pass as input to the program",
-								type: "tree",
-							}],
-							command: async ({ args }) => {
-								if (!this.ioController) throw new Error("Couldn't get IO Controller");
-								if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
-								if (!this.focused_file) {
-									this.ioController.prompt({
-										title: 'No file to run',
-										message: 'Open a file and try again'
-									});
-									return;
-								}
-								//Open a new tab in the run panel
-								const outputController = await this.runPanelController!.addOutputStream(
-									`${this.focused_file!.name} ${args['Input Expression']}`
-								);
-								//Create a runner for the program
-								const runner = new HWhileRunner({
-									expression: args['Input Expression'],
-									file: this.focused_file ? this.focused_file.fullPath : 'none',
-									hwhile: 'hwhile',
-									output: outputController.stream,
-								});
-								//Perform setup
-								await runner.init();
-								//Run the program
-								await runner.run();
-							}
-						},
-						{
-							name: "Debug",
-							args: [{
-								name: "Input Expression",
-								description: "Expression to pass as input to the program",
-								type: "tree",
-							}],
-							command: async ({ args }) => {
-								if (!this.ioController) throw new Error("Couldn't get IO Controller");
-								if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
-								if (!this.editorController) throw new Error("Couldn't get Editor Controller");
-								if (!this.focused_file) {
-									this.ioController.prompt({
-										title: 'No file to run',
-										message: 'Open a file and try again'
-									});
-									return;
-								}
-								//Open a new tab in the run panel
-								const outputController = await this.runPanelController.addOutputStream(
-									`${this.focused_file.name} ${args['Input Expression']}`
-								);
-								//Start a debugger
-								const runner = new HWhileDebugger({
-									expression: args['Input Expression'],
-									file: this.focused_file.fullPath,
-									hwhile: 'hwhile',
-									output: outputController.stream,
-									breakpoints: this.editorController.getBreakpoints(),
-								});
-								//Set up user control for the debugger
-								outputController.debuggerCallbackHandler = runner;
-								//Setup
-								await runner.init();
-								//Run to the first breakpoint
-								let state = await runner.run();
-								if (state && state.variables)
-									outputController.setVariablesFromMap(state.variables);
-							}
-						},
-						{
-							name: "Run (While.js)",
-							args: [{
-								name: "Input Expression",
-								description: "Expression to pass as input to the program",
-								type: "tree",
-							}],
-							command: async ({ args }) => {
-								if (!this.ioController) throw new Error("Couldn't get IO Controller");
-								if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
-								if (!this.focused_file) {
-									this.ioController.prompt({
-										title: 'No file to run',
-										message: 'Open a file and try again'
-									});
-									return;
-								}
-								//Open a new tab in the run panel
-								const outputController = await this.runPanelController!.addOutputStream(
-									`${this.focused_file!.name} ${args['Input Expression']}`
-								);
-								//Create a runner for the program
-								const runner = new WhileJsRunner({
-									expression: args['Input Expression'],
-									file: this.focused_file ? this.focused_file.fullPath : 'none',
-									output: outputController.stream,
-								});
-								//Perform setup
-								await runner.init();
-								//Run the program
-								await runner.run();
-							}
-						},
-					]
-				},
 			];
 		},
 	},
@@ -398,6 +336,90 @@ export default Vue.extend({
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
 			this.editorController.open(abstractFile.fullPath);
 		},
+
+		async runProgramClick() {
+			if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
+			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
+
+			let config = this.chosenRunConfig;
+			let inputExpression = config.input;
+
+			//Open a new tab in the run panel
+			const outputController = await this.runPanelController!.addOutputStream(
+				`${config.file} ${inputExpression}`
+			);
+
+			let runner: AbstractRunner;
+
+			console.log(config.interpreter);
+			if (config.interpreter === INTERPRETERS.WHILE_JS) {
+				//Create a While.js runner for the program
+				runner = new WhileJsRunner({
+					expression: inputExpression,
+					file: config.file,
+					output: outputController.stream,
+				});
+			} else {
+				//Create an HWhile runner for the program
+				runner = new HWhileRunner({
+					expression: inputExpression,
+					file: config.file,
+					hwhile: 'hwhile',
+					output: outputController.stream,
+				});
+			}
+			//Perform setup
+			await runner.init();
+			//Run the program
+			await runner.run();
+		},
+
+		async debugProgramClick() {
+			if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
+			if (!this.editorController) throw new Error("Couldn't get Editor Controller");
+			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
+
+			let config = this.chosenRunConfig;
+			let inputExpression = config.input;
+
+			//Open a new tab in the run panel
+			const outputController = await this.runPanelController!.addOutputStream(
+				`${config.file} ${inputExpression}`
+			);
+
+			let runner: AbstractRunner;
+
+			if (config.interpreter === INTERPRETERS.WHILE_JS) {
+				throw new Error("Can't debug with While.js");
+			} else {
+				//Create an HWhile runner for the program
+				runner = new HWhileDebugger({
+					expression: inputExpression,
+					file: config.file,
+					hwhile: 'hwhile',
+					output: outputController.stream,
+					//TODO: Add back support for breakpoints
+					// breakpoints: this.editorController.getBreakpoints(),
+				});
+				//Set up user control for the debugger
+				outputController.debuggerCallbackHandler = runner as HWhileDebugger;
+				//Setup
+				await runner.init();
+				//Run to the first breakpoint
+				let state = await runner.run();
+				if (state && state.variables)
+					outputController.setVariablesFromMap(state.variables);
+			}
+			//Perform setup
+			await runner.init();
+			//Run the program
+			await runner.run();
+		},
+
+		openRunConfigPopup() {
+			this.showRunConfigPopup = true;
+		},
+
 		onFocusedFileChange(fileData : InternalFile|undefined) : void {
 			//Keep track of the currently focused file
 			this.focused_file = fileData || undefined;
@@ -430,13 +452,65 @@ export default Vue.extend({
 	watch: {
 		cwd(cwd: string): void {
 			vars.cwd = cwd;
+		},
+		runProgramModel(prog: any) {
+			console.log(prog)
+		},
+		chosenRunConfig(prog: any) {
+			console.log('run: ', prog);
+		},
+		runConfigs: {
+			deep: true,
+			handler(val: RunConfiguration[]) {
+				if (val.length > 0)
+					this.$store.chosenRunConfig = val[0];
+				else
+					this.$store.chosenRunConfig = undefined;
+			}
 		}
 	}
 });
 </script>
 
+<!--suppress CssUnusedSymbol -->
+<style>
+/*
+Fix for dropdown width. See:
+https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
+*/
+.v-select__selections input {
+	display: none;
+}
+.v-select__selections .v-select__selection {
+	max-width: none;
+	flex: 1;
+}
+</style>
+
 <style scoped>
 .full-height {
 	height: 100%;
+}
+
+.dropdown {
+	/*Display next to the button, filling the available space*/
+	flex: 1;
+	/* See https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939 */
+	min-width: 0;
+	max-width: 100%;
+	/*Space*/
+	margin-right: 5px;
+}
+.program-button {
+	min-width: 1em !important;
+	/*padding: 5px !important;*/
+	margin-top: 2px;
+	text-align: center;
+}
+.program-button.run {
+
+}
+.program-button.debug {
+
 }
 </style>

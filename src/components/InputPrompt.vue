@@ -5,7 +5,7 @@
 		max-width="50%"
 	>
 		<v-card class="ma-0">
-			<v-card-title class="text-h5 grey lighten-2">
+			<v-card-title class="text-h5">
 				{{ controls.title }}
 			</v-card-title>
 
