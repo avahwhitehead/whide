@@ -12,8 +12,13 @@
 import Vue from "vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 import { IOController } from "@/types";
+import { APP_THEME } from "@/plugins/vuex";
 
 let ioController: IOController|undefined;
+
+//Check whether the user's browser explicitly requests light or dark theme
+let darkThemeCheckQuery = window.matchMedia('(prefers-color-scheme: dark)');
+let lightThemeCheckQuery = window.matchMedia('(prefers-color-scheme: light)');
 
 export default Vue.extend({
 	name: 'app',
@@ -23,21 +28,49 @@ export default Vue.extend({
 	methods: {
 		ioControllerChange(controller?: IOController) {
 			ioController = controller;
-		}
+		},
+		updateTheme(theme: APP_THEME): void {
+			if (theme === APP_THEME.AUTO) {
+				//Listen for updates in requested theme
+				darkThemeCheckQuery.addEventListener('change', this.darkThemeQueryHandler);
+				lightThemeCheckQuery.addEventListener('change', this.lightThemeQueryHandler);
+
+				if (darkThemeCheckQuery.matches) {
+					//Dark theme requested
+					this.$vuetify.theme.dark = true;
+				} else if (lightThemeCheckQuery.matches) {
+					//Light theme requested
+					this.$vuetify.theme.dark = false;
+				}
+				//Otherwise stick with current theme
+			} else {
+				//Stop listening for theme updates
+				darkThemeCheckQuery.removeEventListener('change', this.darkThemeQueryHandler);
+				lightThemeCheckQuery.removeEventListener('change', this.lightThemeQueryHandler);
+				//Switch to either light or dark theme
+				this.$vuetify.theme.dark = (theme === APP_THEME.DARK);
+			}
+		},
+		lightThemeQueryHandler(event: MediaQueryListEvent) {
+			this.$vuetify.theme.dark = !event.matches;
+		},
+		darkThemeQueryHandler(event: MediaQueryListEvent) {
+			this.$vuetify.theme.dark = event.matches;
+		},
 	},
 	created() {
-		//Check whether the user's browser explicitly requests light or dark theme
-		let darkThemeCheckQuery = window.matchMedia('(prefers-color-scheme: dark)');
-		let lightThemeCheckQuery = window.matchMedia('(prefers-color-scheme: light)');
-		//Start the app with dark theme if requested
-		this.$vuetify.theme.dark = darkThemeCheckQuery.matches || !lightThemeCheckQuery.matches;
-		//Automatically switch between themes if the requested theme changes
-		darkThemeCheckQuery.addEventListener('change', (event: MediaQueryListEvent) => {
-			this.$vuetify.theme.dark = event.matches;
-		});
-		lightThemeCheckQuery.addEventListener('change', (event: MediaQueryListEvent) => {
-			this.$vuetify.theme.dark = !event.matches;
-		});
+		//Start the app in the requested theme
+		this.updateTheme(this.$store.state.settings.appearance.theme);
+	},
+	computed: {
+		currentTheme(): APP_THEME {
+			return this.$store.state.settings.appearance.theme;
+		}
+	},
+	watch: {
+		currentTheme(theme: APP_THEME) {
+			this.updateTheme(theme);
+		}
 	}
 });
 

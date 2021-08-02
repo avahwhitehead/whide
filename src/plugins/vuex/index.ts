@@ -7,11 +7,47 @@ import VuexPersistence from "vuex-persist";
 Vue.use(Vuex);
 
 /**
+ * The possible values for the application theme.
+ * "Auto" uses the browser default theme (as defined in the MediaQuery).
+ */
+export enum APP_THEME {
+	AUTO,
+	LIGHT,
+	DARK,
+}
+
+/**
  * Type definitions for the VueX store
  */
 export interface RootState {
 	runConfigurations: RunConfiguration[];
 	chosenRunConfig: RunConfiguration|undefined;
+	settings: SettingsState;
+}
+
+/**
+ * Root state object for application settings
+ */
+export interface SettingsState {
+	general: SettingsGeneralState;
+	appearance: SettingsAppearanceState;
+}
+
+/**
+ * State object for general application settings
+ */
+export interface SettingsGeneralState {
+
+}
+
+/**
+ * State object for application appearance settings
+ */
+export interface SettingsAppearanceState {
+	/**
+	 * Current application theme
+	 */
+	theme: APP_THEME;
 }
 
 //Automatically save the VueX store in the browser localstorage
@@ -24,6 +60,12 @@ const store = new Vuex.Store<RootState>({
 	state: {
 		runConfigurations: [],
 		chosenRunConfig: undefined,
+		settings: {
+			general: {},
+			appearance: {
+				theme: APP_THEME.AUTO,
+			}
+		}
 	},
 	mutations: {
 		/**
@@ -55,7 +97,6 @@ const store = new Vuex.Store<RootState>({
 				state.chosenRunConfig = state.runConfigurations[index];
 			}
 		},
-		// overwriteRunConfig(state: RootState, oldConfig: RunConfiguration, newConfig: RunConfiguration): void {
 		overwriteRunConfig(state: RootState, [oldConfig, newConfig]: [RunConfiguration, RunConfiguration]): void {
 			let index = state.runConfigurations.indexOf(oldConfig);
 			console.log('overwrite ', oldConfig, newConfig, index);
@@ -66,6 +107,15 @@ const store = new Vuex.Store<RootState>({
 		setChosenRunConfig(state: RootState, config: RunConfiguration) {
 			state.chosenRunConfig = config;
 		},
+
+		/**
+		 * Change the app's global theme
+		 * @param state	VueX state object
+		 * @param theme	New theme to apply
+		 */
+		setAppTheme(state: RootState, theme: APP_THEME) {
+			state.settings.appearance.theme = theme;
+		}
 	},
 	plugins: [
 		//Enable persistence

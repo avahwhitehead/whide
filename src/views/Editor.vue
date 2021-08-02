@@ -1,24 +1,20 @@
 <template>
 	<div class="full-height">
 		<v-app-bar app dense flat class="header">
-			<div class="menubar-holder">
-				<MenuBar :menus="menus" />
-			</div>
-
-			<v-col cols="3" />
+			<v-col md="3" sm="5">
+				<MenuBar :menus="menus" style="max-width: max-content" />
+			</v-col>
 
 			<v-spacer />
 
-			<v-btn @click="toggleTheme">
-				<font-awesome-icon
-					:icon="isDarkTheme?'sun':'moon'"
-					:title="`switch to ${isDarkTheme?'light':'dark'} theme`"
-				/>
+			<v-btn right @click="openTreeViewer">
+				Open Tree Viewer
+<!--				<FontAwesomeIcon icon="project-diagram" />-->
 			</v-btn>
 
 			<v-spacer />
 
-			<v-col cols="3">
+			<v-col md="3" sm="5" >
 				<v-row>
 					<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
 						<FontAwesomeIcon icon="cog" />
@@ -64,7 +60,7 @@
 		</v-main>
 
 		<v-navigation-drawer app right>
-			<v-btn right @click="openTreeViewer">Tree Viewer</v-btn>
+			<v-btn right @click="showSettingsPopup = !showSettingsPopup">Global Settings</v-btn>
 
 			<div class="title pt-2 pb-0">Options</div>
 			<v-switch class="mt-0" ref="pureWhileToggle" v-model="extendedWhile" :label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`" />
@@ -77,6 +73,8 @@
 		<InputPrompt @controller="c => this.ioController = c" />
 
 		<RunConfigPopup v-model="showRunConfigPopup" />
+
+		<SettingsPopup v-model="showSettingsPopup" />
 	</div>
 </template>
 
@@ -104,6 +102,7 @@ import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguratio
 import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
 import { AbstractRunner } from "@/run/AbstractRunner";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
+import SettingsPopup from "@/components/SettingsPopup.vue";
 
 /**
  * Type declaration for the data() values
@@ -117,11 +116,13 @@ interface DataTypesDescriptor {
 	cwd: string;
 	extendedWhile: boolean;
 	showRunConfigPopup: boolean;
+	showSettingsPopup: boolean;
 }
 
 export default Vue.extend({
 	name: 'Editor',
 	components: {
+		SettingsPopup,
 		RunConfigPopup,
 		InputPrompt,
 		FilePicker,
@@ -139,6 +140,7 @@ export default Vue.extend({
 			cwd: vars.cwd,
 			extendedWhile: true,
 			showRunConfigPopup: false,
+			showSettingsPopup: false,
 		}
 	},
 	computed: {
@@ -328,10 +330,6 @@ export default Vue.extend({
 	methods: {
 		openTreeViewer() {
 			let routeData = this.$router.resolve({ path: '/trees' });
-			window.open(routeData.href, '_blank');
-		},
-		openSettings() {
-			let routeData = this.$router.resolve({ path: '/settings' });
 			window.open(routeData.href, '_blank');
 		},
 		async openFile(abstractFile: AbstractInternalFile) : Promise<void> {
