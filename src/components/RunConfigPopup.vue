@@ -8,8 +8,7 @@
 			<v-row class="ma-0">
 				<v-col
 					cols="2"
-					style="border-right: 1px solid grey;"
-					class="text-body-2 pa-0"
+					class="sidebar text-body-2 pa-0"
 				>
 					<div class="pa-0">
 						<v-btn depressed @click="createConfig" >
@@ -18,7 +17,7 @@
 					</div>
 
 					<v-list dense>
-						<v-list-item-group v-model="configIndex">
+						<v-list-item-group v-model="configIndex" mandatory>
 							<v-list-item v-for="(config, i) in runConfigs" :key="i">
 								<v-list-item-content>
 									<v-list-item-title v-text="config.name" />
@@ -34,7 +33,7 @@
 					</v-card-title>
 
 					<v-container>
-						<v-form>
+						<v-form ref="form">
 							<v-row class="mt-0">
 								<v-text-field
 									v-model="nameModel"
@@ -238,7 +237,15 @@ export default Vue.extend({
 			this.$store.commit('overwriteRunConfig', [this.currentOpenConfig, newConfig]);
 		},
 		createConfig() {
-			this.currentOpenConfig = undefined;
+			let newConfig: RunConfiguration = {
+				name: 'Unnamed',
+				file: '',
+				input: 'nil',
+				outputFormat: 'any',
+				interpreter: INTERPRETERS.HWHILE,
+			}
+			this.$store.commit('addRunConfig', newConfig);
+			this.configIndex = this.runConfigs.indexOf(newConfig);
 		},
 
 		rule_requireNonEmpty(val: string): boolean|string {
@@ -269,6 +276,13 @@ export default Vue.extend({
 				this.inputModel = config.input;
 				this.formatModel = config.outputFormat;
 			}
+		},
+		runConfigs: {
+			deep: true,
+			handler() {
+				//Automatically refresh the form validations if the run configurations list updates
+				(this.$refs.form! as Vue & { validate: () => void }).validate();
+			}
 		}
 	},
 });
@@ -278,5 +292,9 @@ export default Vue.extend({
 <style scoped>
 .actions-container {
 	border-top: 1px solid grey;
+}
+
+.sidebar {
+	border-right: 1px solid grey;
 }
 </style>
