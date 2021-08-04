@@ -6,9 +6,12 @@
 			:hide-slider="true"
 			@change="currentTabChange"
 		>
-			<v-tab v-for="(tab,i) in fileNames" :key="i">
+			<v-tab
+				v-for="(tab,i) in fileNames" :key="i"
+				@click.middle="onTabClose(tab)"
+			>
 				<span class="tab-name">{{tab}}</span>
-				<FontAwesomeIcon icon="times" class="tab-close" @click="() => onTabClose(tab)" />
+				<FontAwesomeIcon icon="times" class="tab-close" @click="onTabClose(tab)" />
 			</v-tab>
 		</v-tabs>
 

@@ -106,7 +106,7 @@
 				<v-btn
 					color="blue darken-1"
 					text
-					@click="() => {saveConfig(); this.showDialog = false}"
+					@click="saveConfig()"
 					v-text="'save'"
 				/>
 			</v-card-actions>
