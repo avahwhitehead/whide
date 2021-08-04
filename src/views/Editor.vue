@@ -1,6 +1,6 @@
 <template>
 	<div class="full-height">
-		<v-app-bar app dense flat class="header">
+		<v-app-bar app dense flat clipped-left clipped-right class="header">
 			<v-col md="3" sm="5">
 				<MenuBar :menus="menus" style="max-width: max-content" />
 			</v-col>
@@ -33,18 +33,26 @@
 						hide-details
 					/>
 
-					<v-btn class="pa-2 program-button run" depressed @click="runProgramClick" >
+					<v-btn
+						class="pa-2 program-button run"
+						:disabled="!allowRunning"
+						depressed @click="runProgramClick"
+					>
 						<FontAwesomeIcon icon="play" />
 					</v-btn>
 
-					<v-btn class="pa-2 program-button debug" depressed @click="debugProgramClick" >
+					<v-btn
+						class="pa-2 program-button debug"
+						:disabled="!allowDebugging"
+						depressed @click="debugProgramClick"
+					>
 						<FontAwesomeIcon icon="bug" />
 					</v-btn>
 				</v-row>
 			</v-col>
 		</v-app-bar>
 
-		<v-navigation-drawer app permanent>
+		<v-navigation-drawer app permanent clipped>
 			<v-btn @click="handleChangeRootClick">Change Root</v-btn>
 			<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)" @dir="dirChange"/>
 		</v-navigation-drawer>
@@ -59,7 +67,7 @@
 			/>
 		</v-main>
 
-		<v-navigation-drawer app right>
+		<v-navigation-drawer app right clipped>
 			<v-btn right @click="showSettingsPopup = !showSettingsPopup">Global Settings</v-btn>
 
 			<div class="title pt-2 pb-0">Options</div>
@@ -164,6 +172,12 @@ export default Vue.extend({
 			get(): RunConfiguration[] {
 				return this.$store.state.runConfigurations;
 			}
+		},
+		allowDebugging(): boolean {
+			return !!this.chosenRunConfig && this.chosenRunConfig.interpreter !== INTERPRETERS.WHILE_JS;
+		},
+		allowRunning(): boolean {
+			return !!this.chosenRunConfig;
 		},
 		menus() : Menu[] {
 			const _displayError = async (error: string) => {
