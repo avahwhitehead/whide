@@ -37,7 +37,7 @@ export interface SettingsState {
  * State object for general application settings
  */
 export interface SettingsGeneralState {
-
+	hwhilePath: string;
 }
 
 /**
@@ -61,7 +61,9 @@ const store = new Vuex.Store<RootState>({
 		runConfigurations: [],
 		chosenRunConfig: undefined,
 		settings: {
-			general: {},
+			general: {
+				hwhilePath: '',
+			},
 			appearance: {
 				theme: APP_THEME.AUTO,
 			}
@@ -99,9 +101,13 @@ const store = new Vuex.Store<RootState>({
 		},
 		overwriteRunConfig(state: RootState, [oldConfig, newConfig]: [RunConfiguration, RunConfiguration]): void {
 			let index = state.runConfigurations.indexOf(oldConfig);
-			console.log('overwrite ', oldConfig, newConfig, index);
 			if (index === -1) return;
+			//Replace the old run config with the new one
 			state.runConfigurations.splice(index, 1, newConfig);
+			//Update the chosen run config if that is the overwritten one
+			if (oldConfig === state.chosenRunConfig) {
+				state.chosenRunConfig = newConfig;
+			}
 		},
 
 		setChosenRunConfig(state: RootState, config: RunConfiguration) {
@@ -115,7 +121,16 @@ const store = new Vuex.Store<RootState>({
 		 */
 		setAppTheme(state: RootState, theme: APP_THEME) {
 			state.settings.appearance.theme = theme;
-		}
+		},
+
+		/**
+		 * Change the saved path to the HWhile executable
+		 * @param state			VueX state object
+		 * @param hwhilePath	New path to HWhile
+		 */
+		setHWhilePath(state: RootState, hwhilePath: string) {
+			state.settings.general.hwhilePath = hwhilePath;
+		},
 	},
 	plugins: [
 		//Enable persistence

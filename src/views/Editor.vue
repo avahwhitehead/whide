@@ -345,9 +345,7 @@ export default Vue.extend({
 			let inputExpression = config.input;
 
 			//Open a new tab in the run panel
-			const outputController = await this.runPanelController!.addOutputStream(
-				`${config.file} ${inputExpression}`
-			);
+			const outputController = await this.runPanelController!.addOutputStream(config.name);
 
 			let runner: AbstractRunner;
 
@@ -363,7 +361,7 @@ export default Vue.extend({
 				runner = new HWhileRunner({
 					expression: inputExpression,
 					file: config.file,
-					hwhile: 'hwhile',
+					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
 					output: outputController.stream,
 				});
 			}
@@ -382,9 +380,7 @@ export default Vue.extend({
 			let inputExpression = config.input;
 
 			//Open a new tab in the run panel
-			const outputController = await this.runPanelController!.addOutputStream(
-				`${config.file} ${inputExpression}`
-			);
+			const outputController = await this.runPanelController!.addOutputStream(config.name);
 
 			let runner: AbstractRunner;
 
@@ -395,7 +391,7 @@ export default Vue.extend({
 				runner = new HWhileDebugger({
 					expression: inputExpression,
 					file: config.file,
-					hwhile: 'hwhile',
+					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
 					output: outputController.stream,
 					//TODO: Add back support for breakpoints
 					// breakpoints: this.editorController.getBreakpoints(),

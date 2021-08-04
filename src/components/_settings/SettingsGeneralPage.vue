@@ -6,7 +6,12 @@
 
 		<v-container>
 			<v-form>
-
+				<v-text-field
+					v-model="hwhilePath"
+					label="Path to HWhile"
+					class="ma-0 pa-0"
+					required
+				/>
 			</v-form>
 		</v-container>
 	</v-col>
@@ -33,16 +38,14 @@ export default Vue.extend({
 		}
 	},
 	computed: {
-
-	},
-	mounted() {
-
-	},
-	methods: {
-
-	},
-	watch: {
-
+		hwhilePath: {
+			get(): string {
+				return this.$store.state.settings.general.hwhilePath;
+			},
+			set(hwhilePath: string): void {
+				this.$store.commit('setHWhilePath', hwhilePath);
+			}
+		}
 	},
 });
 </script>
