@@ -4,7 +4,6 @@ import { RouteConfig } from "vue-router/types/router";
 //Views
 import EditorWindow from "@/views/Editor.vue";
 import TreeWindow from "@/views/TreeWindow.vue";
-import SettingsWindow from "@/views/SettingsWindow.vue";
 
 //Use the router
 Vue.use(VueRouter);
@@ -13,7 +12,6 @@ Vue.use(VueRouter);
 const routes : RouteConfig[] = [
 	{ path: '/', component: EditorWindow },
 	{ path: '/trees', component: TreeWindow },
-	{ path: '/settings', component: SettingsWindow },
 ];
 
 //Create the router
