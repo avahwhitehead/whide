@@ -1,4 +1,4 @@
-import { BinaryTree, ConvertedBinaryTree } from "@whide/tree-lang";
+import treeConverter, { BinaryTree, ConversionResultType, ConvertedBinaryTree, stringify } from "@whide/tree-lang";
 import { TreeType } from "@/components/VariableTreeViewer.vue";
 
 /**
@@ -59,4 +59,18 @@ export function convertedTreeToDisplayable(conv: ConvertedBinaryTree, error = fa
 		error: isErrored,
 		children,
 	};
+}
+
+/**
+ * Directly convert a {@link BinaryTree} to a human-readable string.
+ * Defaults to displaying the tree as 'any' (a tree of only {@code nil}s)
+ * @param tree		The tree to convert
+ * @param converter	The string to use to display the tree
+ */
+export function stringifyTree(tree: BinaryTree, converter: string = 'any'): string {
+	let res: ConversionResultType;
+	//Attempt to run the conversion
+	res = treeConverter(tree, converter);
+	//Convert to a string
+	return stringify(res.tree);
 }

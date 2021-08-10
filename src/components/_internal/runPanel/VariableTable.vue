@@ -1,52 +1,124 @@
 <template>
 	<div class="VariableTable">
-		<table>
-			<tr>
-				<th>Name</th>
-				<th>Value</th>
-				<th>Type</th>
-				<th></th>
-			</tr>
-			<VariableTableRow
-				:name="v.name" :value="v.value"
-				v-for="(v,i) of variables" :key="i"
-			/>
-		</table>
+		<v-data-table
+			:headers="headers"
+			:items="variables"
+			hide-default-footer
+			dense
+			disable-filtering
+			:items-per-page="30"
+			no-data-text="No variables to show"
+			@dblclick:row="onRowDblClick"
+		>
+			<template v-slot:item.actions="{ item }">
+				<FontAwesomeIcon
+					icon="pencil-alt"
+					@click="onEditClick(item)"
+					class="ml-2 mr-2 action-icon"
+					title="Edit"
+				/>
+				<FontAwesomeIcon
+					icon="eye"
+					@click="openTree(item)"
+					class="ml-2 mr-2 action-icon"
+					title="Open in tree viewer"
+				/>
+			</template>
+		</v-data-table>
+
+		<VariableEditorPopup
+			v-model="showVariableEditor"
+			:name="editVariable.name"
+			:tree="editVariable.tree"
+			:format="editVariable.type"
+			@change="onVariableEdit"
+		/>
 	</div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import VariableTableRow from "@/components/_internal/runPanel/VariableTableRow.vue";
-import { BinaryTree } from "@whide/tree-lang";
+import VariableEditorPopup from "@/components/VariableEditorPopup.vue";
+import { BinaryTree } from "whilejs";
+import { DataTableHeader, DataTableItemProps } from "vuetify";
+
+export interface VariableDisplayType {
+	name: string;
+	value: string;
+	type: string;
+	tree: BinaryTree;
+}
 
 interface DataTypeDescriptor {
-
+	headers: DataTableHeader[];
+	showVariableEditor: boolean;
+	editVariable: VariableDisplayType;
 }
+
+type DataTableItemEvent = DataTableItemProps & { item: VariableDisplayType };
 
 export default Vue.extend({
 	name: 'VariableTable',
 	components: {
-		VariableTableRow,
+		VariableEditorPopup,
 	},
 	props: {
 		variables: {
-			type: Array as () => Array<{ name: string, value: BinaryTree }>,
+			type: Array as () => Array<VariableDisplayType>,
 			required: true,
 		}
 	},
 	data(): DataTypeDescriptor {
-		return {};
+		return {
+			showVariableEditor: false,
+			editVariable: {
+				name: '',
+				type: '',
+				value: '',
+				tree: null,
+			},
+			headers: [
+				{ text: 'Name', value: 'name' },
+				{ text: 'Value', value: 'value', sortable: false },
+				{ text: 'Type', value: 'type', sortable: false },
+				{ text: 'Actions', value: 'actions', sortable: false },
+			],
+		};
+	},
+	methods: {
+		onEditClick(variable: VariableDisplayType): void {
+			this.showVariableEditor = true;
+			this.editVariable = { ...variable };
+		},
+		openTree(variable: VariableDisplayType): void {
+			let routeData = this.$router.resolve({
+				path: '/trees',
+				params: {
+					t: variable.value,
+					c: variable.type,
+				}
+			});
+			window.open(routeData.href, '_blank');
+		},
+		onRowDblClick(event: MouseEvent, info: DataTableItemEvent) {
+			this.onEditClick(info.item);
+		},
+		/**
+		 * Handle the user saving a new variable value
+		 * @param tree              The new value of the variable
+		 * @param conversionString  The new conversion string
+		 */
+		onVariableEdit(tree: BinaryTree, conversionString: string) {
+			//Pass the event up the stack so it can be accessed
+			this.$emit('change', this.editVariable.name, tree, conversionString);
+		},
 	},
 })
 </script>
 
 
 <style scoped>
-.VariableTable {
-	float: right;
-}
-.VariableTable th {
-	text-align: center;
+.action-icon:hover {
+	cursor: pointer;
 }
 </style>

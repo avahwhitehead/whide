@@ -2,7 +2,7 @@
 	<div class="editorHolder">
 		<v-tabs
 			v-model="currentTab"
-			ref="sortableTable"
+			ref="sortableTabs"
 			:hide-slider="true"
 			@change="currentTabChange"
 		>
@@ -185,7 +185,7 @@ export default Vue.extend({
 	},
 	mounted() {
 		//HTML element containing the tab elements
-		let tabsHolder = (this.$refs.sortableTable! as Vue).$el.getElementsByClassName('v-slide-group__content')[0];
+		let tabsHolder = (this.$refs.sortableTabs! as Vue).$el.getElementsByClassName('v-slide-group__content')[0];
 		//Allow dragging to reorder the tabs
 		new Sortable(
 			tabsHolder as HTMLElement,

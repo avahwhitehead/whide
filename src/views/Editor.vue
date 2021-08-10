@@ -57,14 +57,22 @@
 			<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)" @dir="dirChange"/>
 		</v-navigation-drawer>
 
-		<v-main class="pa-0 full-height">
-			<CodeEditorElement
-				:focused="focused_file"
-				:allow-extended="extendedWhile"
-				@controller="onEditorControllerChange"
-				@editorChange="onEditorObjectChange"
-				@fileFocus="onFocusedFileChange"
-			/>
+		<v-main class="pa-0 fill-height">
+			<v-container fluid class="fill-height ma-0 pa-0 main-container">
+				<div class="code-editor-container">
+					<CodeEditorElement
+						:focused="focused_file"
+						:allow-extended="extendedWhile"
+						@controller="onEditorControllerChange"
+						@editorChange="onEditorObjectChange"
+						@fileFocus="onFocusedFileChange"
+					/>
+				</div>
+
+				<v-container class="mt-12 pa-0 run-panel-container">
+					<run-panel @controller="c => this.runPanelController = c" />
+				</v-container>
+			</v-container>
 		</v-main>
 
 		<v-navigation-drawer app right clipped>
@@ -74,14 +82,8 @@
 			<v-switch class="mt-0" ref="pureWhileToggle" v-model="extendedWhile" :label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`" />
 		</v-navigation-drawer>
 
-		<v-app-bar app bottom>
-			<run-panel @controller="c => this.runPanelController = c" />
-		</v-app-bar>
-
 		<InputPrompt @controller="c => this.ioController = c" />
-
 		<RunConfigPopup v-model="showRunConfigPopup" />
-
 		<SettingsPopup v-model="showSettingsPopup" />
 	</div>
 </template>
@@ -505,10 +507,19 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 	margin-top: 2px;
 	text-align: center;
 }
-.program-button.run {
 
+.main-container {
+	display: flex;
+	flex-direction: column;
 }
-.program-button.debug {
 
+.code-editor-container {
+	flex-grow: 1;
+	width: 100%;
+}
+
+.run-panel-container {
+	max-height: 33%;
+	overflow-y: auto;
 }
 </style>
