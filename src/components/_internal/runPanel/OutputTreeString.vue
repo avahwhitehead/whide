@@ -52,6 +52,7 @@ interface DataTypeDescriptor {
 	show_popup: boolean;
 	showConverted: boolean;
 	converted: string;
+	conversionString: string;
 	displayText: string;
 }
 
@@ -77,6 +78,7 @@ export default Vue.extend({
 			displayText: this.segment.content,
 			showConverted: false,
 			converted: '',
+			conversionString: '',
 		};
 	},
 	computed: {
@@ -94,13 +96,14 @@ export default Vue.extend({
 				path: '/trees',
 				query: {
 					t: this.segment.content,
-					// c: this.converter
+					c: this.conversionString
 				}
 			});
 			window.open(routeData.href, '_blank');
 		},
-		onChange(converted: string/*, converter: string*/) {
+		onChange(converted: string, conversionString: string) {
 			this.converted = converted;
+			this.conversionString = conversionString;
 			this.showConverted = true;
 		},
 		onRevertClick(): void {
