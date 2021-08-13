@@ -30,6 +30,12 @@
 				<v-col>
 					<v-card-title class="pa-0">
 						<span class="text-h5">Run Configuration</span>
+						<v-spacer />
+						<FontAwesomeIcon
+							icon="trash"
+							title="Delete"
+							@click="deleteConfig()"
+						/>
 					</v-card-title>
 
 					<v-container>
@@ -246,6 +252,9 @@ export default Vue.extend({
 			}
 			this.$store.commit('addRunConfig', newConfig);
 			this.configIndex = this.runConfigs.indexOf(newConfig);
+		},
+		deleteConfig() {
+			this.$store.commit('removeRunConfig', this.currentOpenConfig);
 		},
 
 		rule_requireNonEmpty(val: string): boolean|string {
