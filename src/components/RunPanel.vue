@@ -1,5 +1,5 @@
 <template>
-	<v-container class="pa-0 ma-0">
+	<v-card class="pa-0 ma-0 run-panel-holder">
 		<v-tabs
 			v-model="selectedTab"
 			ref="sortableTabs"
@@ -22,7 +22,7 @@
 				<RunInterface :instance-controller="tab" style="text-align: left" />
 			</v-tab-item>
 		</v-tabs-items>
-	</v-container>
+	</v-card>
 </template>
 
 <script lang="ts">
@@ -94,39 +94,7 @@ export default Vue.extend({
 
 
 <style scoped>
-/*.DebuggerPanel {*/
-/*	display: flex;*/
-/*	flex-direction: row;*/
-/*	flex: 1;*/
-/*	overflow: hidden;*/
-/*}*/
-
-/*.debugger-controls {*/
-/*	width: 1em;*/
-/*	padding: 0 .5em;*/
-/*}*/
-
-/*.run-panel-body {*/
-/*	display: flex;*/
-/*	flex-direction: row;*/
-/*	flex: 1;*/
-/*	overflow-y: auto;*/
-/*}*/
-
-/*.output-holder {*/
-/*	text-align: left;*/
-/*	overflow-wrap: anywhere;*/
-/*	flex: 1;*/
-/*	margin-left: 10px;*/
-/*}*/
-
-/*.variable-viewer {*/
-/*	float: right;*/
-/*	min-width: 30em;*/
-/*	max-width: 50%;*/
-/*}*/
-
-/*.output-holder, .variable-viewer {*/
-/*	overflow-y: auto;*/
-/*}*/
+.run-panel-holder {
+	width: 100%;
+}
 </style>

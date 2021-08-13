@@ -1,41 +1,64 @@
 <template>
-	<div class="TreeString">
-		<div ref="popup-el" class="tree-popover-container" :class="{'hidden': !show_popup}">
+	<span>
+		<v-menu
+			v-if="segment.isTree"
+			v-model="show_popup"
+			:close-on-content-click="false"
+			offset-x
+			offset-y
+		>
+			<template v-slot:activator="{ on, attrs }">
+				<span>
+					<span
+						class="tree-text"
+						v-bind="attrs"
+						v-on="on"
+						v-text="text"
+						:title="segment.content"
+						@click.middle="openTreeInViewer"
+						@dblclick="openTreeInViewer"
+					/>
+					<FontAwesomeIcon
+						v-if="showConverted"
+						icon="undo"
+						class="revert-icon"
+						title="Revert"
+						@click="onRevertClick"
+					/>
+				</span>
+			</template>
+
 			<PopupTreeViewerBody
-				:tree="text"
-				class="tooltip-content"
-				@viewerReq="openTreeInViewer"
-				@closeReq="show_popup=false"
-				@converter="onConverterChange"
+				v-model="show_popup"
+				:tree="segment.content"
+				ref="popup-viewer"
+				class="popup-card"
 				@change="onChange"
 			/>
-
-			<div class="arrow" />
-		</div>
+		</v-menu>
 
 		<span
-			ref="popup-target"
-			class="highlight"
-			v-text="displayText || text"
-			:title="text"
-			@click="show_popup = !show_popup"
-			@click.middle="openTreeInViewer"
-			@dblclick="openTreeInViewer"
+			v-else
+			v-text="segment.content"
 		/>
-	</div>
+	</span>
 </template>
 
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
 import PopupTreeViewerBody from "@/components/TreePopupBody.vue";
-import { createPopper } from '@popperjs/core';
 
 interface DataTypeDescriptor {
 	show_popup: boolean;
-	converter: string;
+	showConverted: boolean;
 	converted: string;
 	displayText: string;
 }
+
+type Segment = {
+	content: string,
+	isTree: boolean,
+};
 
 export default Vue.extend({
 	name: 'OutputTreeString',
@@ -43,113 +66,69 @@ export default Vue.extend({
 		PopupTreeViewerBody,
 	},
 	props: {
-		text: String,
+		segment: {
+			type: Object as PropType<Segment>,
+			required: true,
+		},
 	},
 	data(): DataTypeDescriptor {
 		return {
 			show_popup: false,
+			displayText: this.segment.content,
+			showConverted: false,
 			converted: '',
-			converter: '',
-			displayText: this.text,
 		};
 	},
-	mounted() {
-		//Link the popup and the tree text
-		createPopper(this.$refs["popup-target"] as HTMLElement, this.$refs["popup-el"] as HTMLElement, {
-			placement: 'top-start',
-			modifiers: [
-				{
-					name: 'offset',
-					options: {
-						offset: [0, 8],
-					},
-				},
-			],
-		});
+	computed: {
+		text(): string {
+			if (this.showConverted) {
+				return this.converted;
+			}
+			return this.segment.content;
+		}
 	},
 	methods: {
 		openTreeInViewer(): void {
 			//Open the tree in a tree viewer in a new window
-			let routeData = this.$router.resolve({ path: '/trees', query: { t: this.text, c: this.converter } });
+			let routeData = this.$router.resolve({
+				path: '/trees',
+				query: {
+					t: this.segment.content,
+					// c: this.converter
+				}
+			});
 			window.open(routeData.href, '_blank');
 		},
-		onConverterChange(converter: string) {
-			this.converter = converter;
-		},
-		onChange(converted: string) {
+		onChange(converted: string/*, converter: string*/) {
 			this.converted = converted;
+			this.showConverted = true;
+		},
+		onRevertClick(): void {
+			this.showConverted = false;
 		},
 	},
-	watch: {
-		show_popup(visible: boolean) {
-			if (!visible) this.displayText = this.converted;
-		}
-	}
 })
 </script>
 
 
 <style scoped>
-.TreeString {
-	display: inline-block;
-}
-
-.highlight {
+.tree-text {
 	font-weight: bold;
 }
-.highlight:hover {
+.tree-text:hover {
 	text-decoration: underline;
+}
+
+.popup-card {
+	width: 32em;
+	height: auto;
+}
+
+.revert-icon {
+	height: .8em;
+	vertical-align: middle;
+}
+.revert-icon:hover {
 	cursor: pointer;
-}
-
-.hidden {
-	display: none;
-}
-
-/*
-Popover CSS adapted from the Popper.js tutorial:
-https://popper.js.org/docs/v2/tutorial/
-*/
-
-.tree-popover-container {
-	z-index: 9000;
-	background: #F5F5F5;
-	padding: 5px 5px 15px;
-	border-radius: 5px;
-	width: 450px;
-}
-
-.arrow, .arrow::before {
-	position: absolute;
-	bottom: -5px;
-	width: 20px;
-	height: 20px;
-	background: inherit;
-}
-
-.arrow {
-	visibility: hidden;
-}
-
-.arrow::before {
-	visibility: visible;
-	content: '';
-	transform: rotate(45deg);
-}
-
-.tree-popover-container[data-popper-placement^='top'] > .arrow {
-	bottom: -4px;
-}
-
-.tree-popover-container[data-popper-placement^='bottom'] > .arrow {
-	top: -4px;
-}
-
-.tree-popover-container[data-popper-placement^='left'] > .arrow {
-	right: -4px;
-}
-
-.tree-popover-container[data-popper-placement^='right'] > .arrow {
-	left: -4px;
 }
 </style>

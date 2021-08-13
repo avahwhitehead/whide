@@ -105,8 +105,6 @@ export default Vue.extend({
 			let v: VariableDisplayType|undefined = this.variables.find(e => e.name === name);
 			if (v === undefined) return;
 
-			//TODO: Allow setting variable value
-			// v.tree = tree;
 			v.type = conversionString;
 			v.value = stringifyTree(tree, conversionString);
 		}

@@ -58,8 +58,8 @@
 		</v-navigation-drawer>
 
 		<v-main class="pa-0 fill-height">
-			<v-container fluid class="fill-height ma-0 pa-0 main-container">
-				<div class="code-editor-container">
+			<v-col class="fill-height main-col">
+				<v-row class="editor-row">
 					<CodeEditorElement
 						:focused="focused_file"
 						:allow-extended="extendedWhile"
@@ -67,12 +67,12 @@
 						@editorChange="onEditorObjectChange"
 						@fileFocus="onFocusedFileChange"
 					/>
-				</div>
+				</v-row>
 
-				<v-container class="mt-12 pa-0 run-panel-container">
+				<v-row class="run-panel-row">
 					<run-panel @controller="c => this.runPanelController = c" />
-				</v-container>
-			</v-container>
+				</v-row>
+			</v-col>
 		</v-main>
 
 		<v-navigation-drawer app right clipped>
@@ -508,18 +508,14 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 	text-align: center;
 }
 
-.main-container {
+.main-col {
 	display: flex;
 	flex-direction: column;
 }
-
-.code-editor-container {
-	flex-grow: 1;
-	width: 100%;
+.editor-row {
+	flex: 1;
 }
-
-.run-panel-container {
-	max-height: 33%;
-	overflow-y: auto;
+.run-panel-row {
+	flex: .3;
 }
 </style>

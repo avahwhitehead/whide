@@ -1,8 +1,7 @@
 <template>
 	<code class="OutputElement">
 		<span v-for="(segment, i) of splitContent" :key="i">
-			<OutputTreeString v-if="segment.isTree" :text="segment.content" />
-			<span v-else v-text="segment.content" />
+			<OutputTreeString :segment="segment" />
 		</span>
 	</code>
 </template>
@@ -17,7 +16,7 @@ type Segment = {
 };
 
 interface DataTypeDescriptor {
-
+	showViewer: boolean;
 }
 
 function getTreeSegments(str: string) : Segment[] {
@@ -50,7 +49,9 @@ export default Vue.extend({
 		value: String,
 	},
 	data(): DataTypeDescriptor {
-		return {}
+		return {
+			showViewer: false
+		}
 	},
 	computed: {
 		splitContent() : Segment[] {

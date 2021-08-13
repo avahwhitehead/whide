@@ -3,6 +3,7 @@
 		<v-tabs
 			v-model="currentTab"
 			ref="sortableTabs"
+			class="tabs"
 			:hide-slider="true"
 			@change="currentTabChange"
 		>
@@ -15,10 +16,7 @@
 			</v-tab>
 		</v-tabs>
 
-		<div class="codeHolder-container">
-			<!-- This div will hold the code editor -->
-			<div ref="codeHolder" class="codeHolder"></div>
-		</div>
+		<div ref="codeHolder" class="codeHolder"></div>
 
 		<InputPrompt @controller="ioControllerChange"/>
 	</div>
@@ -480,15 +478,22 @@ export default Vue.extend({
 
 <style scoped>
 .editorHolder {
-	height: 100%;
+	/*Allow the code editor to fill the space without overflowing*/
+	display: flex;
+	flex-direction: column;
+	/*Fill the available width*/
+	width: 100%;
 }
 
-.codeHolder-container {
-	height: 100%;
+.tabs {
+	/*By default v-tabs grows with flex 1*/
+	flex: 0;
 }
 
 .codeHolder {
 	text-align: left;
-	height: 100%;
+	/*Fill the available space*/
+	flex: 1;
+	width: 100%;
 }
 </style>
