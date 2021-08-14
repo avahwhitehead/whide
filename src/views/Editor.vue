@@ -60,11 +60,9 @@
 		<v-main class="pa-0 fill-height overflow-hidden">
 			<CodeEditorElement
 				class="top"
-				:focused="focused_file"
+				v-model="focused_file"
 				:allow-extended="extendedWhile"
 				@controller="onEditorControllerChange"
-				@editorChange="onEditorObjectChange"
-				@fileFocus="onFocusedFileChange"
 			/>
 
 			<div class="bottom">
@@ -99,7 +97,7 @@ import InputPrompt from "@/components/InputPrompt.vue";
 import RunConfigPopup from "@/components/RunConfigPopup.vue";
 //Other imports
 import { EditorController, IOController, Menu, RunPanelController } from "@/types";
-import { AbstractInternalFile, InternalFile } from "@/files/InternalFile";
+import { AbstractInternalFile } from "@/files/InternalFile";
 import { vars } from "@/utils/globals";
 import path from "path";
 import { fs } from "@/files/fs";
@@ -116,7 +114,7 @@ import SettingsPopup from "@/components/SettingsPopup.vue";
  * Type declaration for the data() values
  */
 interface DataTypesDescriptor {
-	focused_file? : InternalFile;
+	focused_file? : string;
 	codeEditor? : CodeMirror.Editor;
 	editorController?: EditorController;
 	ioController? : IOController;
@@ -141,7 +139,6 @@ export default Vue.extend({
 	data() : DataTypesDescriptor {
 		return {
 			focused_file: undefined,
-			codeEditor: undefined,
 			editorController: undefined,
 			ioController: undefined,
 			runPanelController: undefined,
@@ -322,7 +319,8 @@ export default Vue.extend({
 							name: "Download",
 							command: () => {
 							if (this.focused_file) {
-								fileDownloader(this.focused_file.content || "", this.focused_file.name);
+								let content = this.editorController!.editor.getValue();
+								fileDownloader(content, this.focused_file);
 							} else {
 								if (!this.ioController) {
 									console.error("Error: Couldn't get IO Controller");
@@ -429,15 +427,8 @@ export default Vue.extend({
 			this.showRunConfigPopup = true;
 		},
 
-		onFocusedFileChange(fileData : InternalFile|undefined) : void {
-			//Keep track of the currently focused file
-			this.focused_file = fileData || undefined;
-		},
 		onEditorControllerChange(editorController : EditorController) : void {
 			this.editorController = editorController;
-		},
-		onEditorObjectChange(editor : CodeMirror.Editor) : void {
-			this.codeEditor = editor;
 		},
 		dirChange(dir: string) {
 			//Change the working directory

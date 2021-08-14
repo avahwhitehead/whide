@@ -5,14 +5,13 @@
 			ref="sortableTabs"
 			class="tabs"
 			:hide-slider="true"
-			@change="currentTabChange"
 		>
 			<v-tab
-				v-for="(tab,i) in fileNames" :key="i"
-				@click.middle="onTabClose(tab)"
+				v-for="(tab,i) in openFiles" :key="i"
+				@click.middle="_closeTab(tab)"
 			>
-				<span class="tab-name">{{tab}}</span>
-				<FontAwesomeIcon icon="times" class="tab-close" @click="onTabClose(tab)" />
+				<span class="tab-name">{{ tab.name }}<span v-if="tab.modified">*</span></span>
+				<FontAwesomeIcon icon="times" class="tab-close" @click="_closeTab(tab)" />
 			</v-tab>
 		</v-tabs>
 
@@ -24,14 +23,18 @@
 
 
 <script lang="ts">
-import Vue, { PropType } from "vue";
+import Vue from "vue";
 import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
 import BreakpointWidget from "./_internal/codeEditor/BreakpointWidget.vue";
 import { EditorController as EditorControllerInterface, IOController, } from "@/types";
 import { EventEmitter } from "events";
 import Sortable, { SortableEvent } from 'sortablejs';
+//File imports
+import { fs } from "@/files/fs";
+import path from "path";
+import { ENCODING_UTF8 } from "memfs/lib/encoding";
 //The code editor
-import CodeMirror, { Annotation, Doc, LineWidget, LintStateOptions, } from "codemirror";
+import CodeMirror, { Annotation, LineWidget, LintStateOptions, } from "codemirror";
 //CodeMirror addons
 import 'codemirror/addon/lint/lint';
 //CodeMirror styling
@@ -42,23 +45,19 @@ import 'codemirror/addon/lint/lint.css';
 import WHILE from "@/assets/whileSyntaxMode";
 //WHILE linter
 import { ErrorType, ErrorType as WhileError, linter as whileLinter } from "whilejs";
-import { AbstractInternalFile, InternalFile, pathToFile } from "@/files/InternalFile";
 import InputPrompt from "@/components/InputPrompt.vue";
 
 const DARK_THEME = 'ayu-mirage';
 const LIGHT_THEME = 'default';
 
 interface DataType {
-	selectedFile: InternalFile|undefined;
 	editor: CodeMirror.Editor|undefined;
 	editorController: EditorControllerInterface|undefined;
 	ioController: IOController|undefined;
-	openFiles: InternalFile[];
-	docs: Map<string, Doc>,
-	errors : LineWidgetType[];
-	infos : LineWidgetType[];
-	warnings : LineWidgetType[];
-	currentTab: number;
+	openFiles: TabInfo[];
+	errors: LineWidgetType[];
+	infos: LineWidgetType[];
+	warnings: LineWidgetType[];
 }
 
 function addWidget(editor: CodeMirror.Editor, line: number|CodeMirror.LineHandle, element: HTMLElement) : CodeMirror.LineWidget {
@@ -151,15 +150,23 @@ abstract class EditorController extends EventEmitter implements EditorController
 	}
 }
 
+interface TabInfo {
+	path: string;
+	name: string;
+	modified: boolean;
+	doc: CodeMirror.Doc;
+}
+
+
 export default Vue.extend({
 	name: 'CodeEditorContainer',
 	components: {
 		InputPrompt,
 	},
 	props: {
-		focused: {
-			type: Object as PropType<InternalFile>,
-			default: undefined,
+		value: {
+			type: String,
+			required: false,
 		},
 		allowExtended: {
 			type: Boolean,
@@ -168,17 +175,14 @@ export default Vue.extend({
 	},
 	data() : DataType {
 		return {
-			selectedFile: undefined,
 			//The code editor object - undefined until the object is created in `mounted`
 			editor: undefined,
 			editorController: undefined,
-			openFiles: [],
 			ioController: undefined,
-			docs: new Map(),
+			openFiles: [],
 			errors: [],
 			infos: [],
 			warnings: [],
-			currentTab: 0,
 		}
 	},
 	mounted() {
@@ -204,19 +208,6 @@ export default Vue.extend({
 		//Wrap the editor in an asynchronous wrapper
 		this.editor = codeMirror;
 
-		//Pass the change event (when the content changes at all) up to the next level
-		this.editor.on("change", async () => {
-			if (!this.editor) throw new Error("Couldn't get editor");
-
-			let code = await this.editor.getValue();
-			//Update the code in the open file, if available
-			if (this.selectedFile) {
-				this.selectedFile.content = code;
-			} else {
-				//TODO: Handle code change with no open files
-			}
-		});
-
 		//Toggle breakpoints when the gutter is clicked
 		this.editor.on("gutterClick", async (_:any, line: number|CodeMirror.LineHandle) => {
 			if (!this.editor) throw new Error("Couldn't get editor");
@@ -232,56 +223,32 @@ export default Vue.extend({
 			get editor(): CodeMirror.Editor {
 				return codeMirror;
 			}
-			get focusedFile(): string | undefined {
-				return that.selectedFile?.fullPath;
+			get focusedFile(): string|undefined {
+				if (that.currentTab === undefined) return undefined;
+				return that.openFiles[that.currentTab].path;
 			}
 			get openFiles() : string[] {
-				return Object.values(that.openFiles).map(f => f.fullPath);
+				return that.openFiles.map(t => t.path);
 			}
 			async close(filePath: string): Promise<void> {
-				this.emit('tab-close', filePath);
+				let file: TabInfo|undefined = that.openFiles.find(f => f.path === filePath);
+				if (!file) {
+					console.error(`File "${filePath}" is not open`);
+					return;
+				}
+				await that._closeTab(file);
 			}
 			async open(filePath: string): Promise<void> {
-				//Get the internal representation from the path
-				const abstractFile : AbstractInternalFile = await pathToFile(filePath);
-				//Don't edit folders
-				if (abstractFile.folder) return;
-				//Cast to a file
-				let file : InternalFile = abstractFile as InternalFile;
-				//Don't open the same file twice
-				if (!this._isOpen(file.fullPath)) {
-					//Read the file
-					await file.read();
-					//Open the file in the editor
-					that.openFiles.push(file);
-				}
-				//Focus on this file
-				that.selectedFile = file;
-				this.emit('tab-focus', filePath);
+				await that._openFile(filePath);
 			}
 			async saveFiles(): Promise<void> {
-				for (const file of that.openFiles) await file.write();
-			}
-			private _isOpen(filePath: string) : boolean{
-				return !!that.openFiles.find(f => f.fullPath === filePath);
+				that.openFiles.forEach(t => {
+					that._saveFile(t);
+				})
 			}
 		})();
-
-		this.editorController.on('tab-close', (filePath: string) => {
-			const file = this._indexFromFilePath(filePath);
-			this.onTabClose(this.fileNames[file]);
-		});
-		this.editorController.on('tab-focus', (filePath: string) => {
-			this.currentTab = this._indexFromFilePath(filePath);
-		});
 	},
 	computed: {
-		fileNames() : string[] {
-			return this.openFiles.map(file => file.name);
-		},
-		focusedName() : string|undefined {
-			return this.selectedFile ? this.selectedFile.name : undefined;
-		},
 		lintOptions(): LintStateOptions {
 			return {
 				async: false,
@@ -294,43 +261,23 @@ export default Vue.extend({
 		isDarkTheme(): boolean {
 			return this.$vuetify.theme.dark;
 		},
+
+		currentTab: {
+			get(): number {
+				if (this.value !== undefined) {
+					return this.openFiles.findIndex(f => f.path === this.value);
+				}
+				return -1;
+			},
+			set(val: number): void {
+				this.$emit('input', val === -1 ? undefined : this.openFiles[val].path);
+			},
+		},
 	},
 	methods: {
 		onTabDragEnd(event: SortableEvent): any {
-			const movedItem: string = this.fileNames.splice(event.oldIndex! - 1, 1)[0];
-			this.fileNames.splice(event.newIndex!, 0, movedItem);
-		},
-
-		/**
-		 * Handle a tab closing
-		 * @param fileName		The tab which has closed
-		 */
-		async onTabClose(fileName: string) : Promise<void> {
-			const index: number = this._indexFromFileName(fileName);
-			const file: InternalFile = this.openFiles[index];
-
-			if (file.modified) {
-				if (!this.ioController) {
-					console.error("Couldn't get IO controller");
-					return;
-				}
-
-				let res: string = await this.ioController.prompt({
-					title: 'Unsaved changes',
-					message: 'Do you want to save the file before closing?',
-					options: ['Cancel', `Don't Save`, 'Save'],
-				});
-
-				//Stop here if the user presses cancel
-				if (res === 'Cancel') return;
-
-				//Save the file
-				if (res === 'Save') await file.write();
-			}
-
-			//Close the tab
-			this.openFiles.splice(index, 1);
-			this.docs.delete(file.fullPath);
+			const movedItem: TabInfo = this.openFiles.splice(event.oldIndex! - 1, 1)[0];
+			this.openFiles.splice(event.newIndex!, 0, movedItem);
 		},
 
 		lintCode(content: string): Annotation[]|Promise<Annotation[]> {
@@ -359,28 +306,11 @@ export default Vue.extend({
 			});
 		},
 
-		currentTabChange(tabIndex: number): void {
-			let fileName = this.fileNames[tabIndex];
-			//Update the selected file
-			if (fileName) this.selectedFile = this.openFiles[this._indexFromFileName(fileName)];
-			else this.selectedFile = undefined;
-		},
-
 		/**
 		 * Handle the IO controller updating
 		 */
 		ioControllerChange(controller: IOController) {
 			this.ioController = controller;
-		},
-
-		_indexFromFileName(fileName: string) : number {
-			return this.fileNames.indexOf(fileName);
-		},
-		_indexFromFilePath(filePath: string) : number {
-			for (let i = 0 ; i < this.openFiles.length; i++) {
-				if (this.openFiles[i].fullPath === filePath) return i;
-			}
-			return -1;
 		},
 
 		addError(line: number|CodeMirror.LineHandle): CodeMirror.LineWidget {
@@ -406,36 +336,100 @@ export default Vue.extend({
 		},
 		getBreakpoints(): number[] {
 			return this.editorController!.getBreakpoints();
-		}
+		},
+
+		triggerLint(): void {
+			//Toggle linter off and on again to force an update with the new setting
+			this.editor!.setOption("lint", false);
+			this.editor!.setOption("lint", this.lintOptions);
+		},
+
+		async _openFile(filepath: string): Promise<TabInfo> {
+			//Check to see if the file already exists as a tab
+			let fileTabIndex: number = this.openFiles.findIndex(f => f.path === filepath);
+
+			if (fileTabIndex > -1) {
+				//Switch to the existing tab
+				this.currentTab = fileTabIndex;
+				return this.openFiles[fileTabIndex];
+			}
+
+			//Load the file content from the file into an CodeMirror Doc
+			let content: string = await this._readFile(filepath);
+			let doc: CodeMirror.Doc = CodeMirror.Doc(content, WHILE);
+
+			//Open the file in the editor
+			let tabInfo: TabInfo = {
+				path: filepath,
+				name: path.basename(filepath),
+				doc: doc,
+				modified: false
+			};
+			//Open the file in a new tab and switch to it
+			this.currentTab = this.openFiles.push(tabInfo) - 1;
+
+			return tabInfo;
+		},
+		async _readFile(filepath: string): Promise<string> {
+			return await fs.promises.readFile(filepath, { encoding: ENCODING_UTF8 });
+		},
+
+		async _closeTab(tab: TabInfo): Promise<void> {
+			//Only save if the file has unsaved changes
+			if (!tab.doc.isClean()) {
+				//TODO: Prompt for file save using v-dialog
+				if (!this.ioController) {
+					console.error("Couldn't get IO controller");
+					return;
+				}
+
+				let res: string = await this.ioController.prompt({
+					title: 'Unsaved changes',
+					message: 'Do you want to save the file before closing?',
+					options: ['Cancel', `Don't Save`, 'Save'],
+				});
+
+				//Stop here if the user presses cancel
+				if (res === 'Cancel') return;
+				//Save the file
+				if (res === 'Save') await this._saveFile(tab);
+			}
+
+			//Close the tab
+			this.openFiles.splice(this.openFiles.indexOf(tab), 1);
+		},
+		async _saveFile(tab: TabInfo): Promise<void> {
+			//Write the file to persistent storage
+			await this._writeFile(tab.path, tab.doc.getValue());
+			//Mark the file as saved in the editor
+			tab.doc.markClean();
+		},
+		async _writeFile(filepath: string, content: string): Promise<void> {
+			await fs.promises.writeFile(filepath, content, { encoding: ENCODING_UTF8 });
+		},
 	},
 	watch: {
 		editor(new_val) {
 			this.$emit("editorChange", new_val);
 		},
-		/**
-		 * Update the selected file when the parent element changes the focused file
-		 */
-		focused(newFile: InternalFile|undefined) {
-			this.selectedFile = newFile;
-		},
-		/**
-		 * Update the editor content when the selected file is changed (either direction)
-		 */
-		async selectedFile(newFile: InternalFile|undefined, oldFile: InternalFile|undefined) {
+		async currentTab(tab: number): Promise<void> {
 			if (!this.editor) throw new Error("Couldn't get code editor");
 
-			this.$emit('fileFocus', newFile);
+			if (tab === -1) {
+				//Prevent writing in the editor if there are no files open
+				//TODO: Find a better way to handle the unnamed file
+				this.editor.setOption('readOnly', true);
+				this.editor.swapDoc(CodeMirror.Doc(''));
+			} else {
+				//Allow writing in the editor
+				this.editor.setOption('readOnly', false);
 
-			//Use the path to the file to save the document state
-			//Support using the editor without an open file by using the empty string
-			let newFilePath = newFile?.fullPath || '';
-			let oldFilePath = oldFile?.fullPath || '';
+				//Load the new tab's content into the editor
+				let tabInfo: TabInfo = this.openFiles[tab];
+				this.editor.swapDoc(tabInfo.doc);
 
-			//If the file is already open, use the existing Doc
-			//Otherwise create a new one
-			let newDoc: Doc = this.docs.get(newFilePath) || CodeMirror.Doc(newFile?.content || '', WHILE);
-			//Swap the current doc out for the new one, saving the old one
-			this.docs.set(oldFilePath, await this.editor.swapDoc(newDoc));
+				this.triggerLint();
+			}
 		},
 		/**
 		 * Emit an event when the editor controller object changes
@@ -443,16 +437,8 @@ export default Vue.extend({
 		editorController(newController) {
 			this.$emit("controller", newController);
 		},
-		/**
-		 * Emit an event when the open files list changes
-		 */
-		openFiles(newOpenFiles: InternalFile[]) {
-			this.$emit('filesChange', newOpenFiles);
-		},
 		allowExtended() {
-			//Toggle linter off and on again to force an update with the new setting
-			this.editor!.setOption("lint", false);
-			this.editor!.setOption("lint", this.lintOptions);
+			this.triggerLint();
 		},
 		isDarkTheme(isDark: boolean) {
 			if (this.editor) {
@@ -488,6 +474,10 @@ export default Vue.extend({
 .tabs {
 	/*By default v-tabs grows with flex 1*/
 	flex: 0;
+}
+
+.tab-close {
+	margin-left: .5em;
 }
 
 .codeHolder {
