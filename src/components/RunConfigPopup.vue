@@ -35,6 +35,7 @@
 							icon="trash"
 							title="Delete"
 							@click="deleteConfig()"
+							class="icon-delete"
 						/>
 					</v-card-title>
 
@@ -305,5 +306,9 @@ export default Vue.extend({
 
 .sidebar {
 	border-right: 1px solid grey;
+}
+
+.icon-delete {
+	cursor: pointer;
 }
 </style>
