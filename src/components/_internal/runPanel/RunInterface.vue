@@ -1,5 +1,5 @@
 <template>
-	<v-row class="mt-2 ml-1 mr-1" style="display: flex; flex-direction: row">
+	<v-container class="ma-0 pa-0 run-interface-container">
 		<v-list dense>
 			<v-list-item v-for="(name, i) in ['play', 'step-forward', 'stop']" :key="i">
 				<v-list-item-icon class="ma-0">
@@ -10,14 +10,14 @@
 			</v-list-item>
 		</v-list>
 
-		<OutputElement :value="outputText" style="flex: 1" />
+		<OutputElement :value="outputText" class="code-output"/>
 
 		<VariableTable
 			class="variable-viewer"
 			:variables="variables"
 			@change="onVariableChange"
 		/>
-	</v-row>
+	</v-container>
 </template>
 
 <script lang="ts">
@@ -117,30 +117,19 @@ export default Vue.extend({
 
 
 <style scoped>
-.debugger-controls {
-	/*width: 1em;*/
-	/*padding: 0 .5em;*/
-	/*float: left;*/
+.run-interface-container {
+	display: flex;
+	flex-direction: row;
+	height: 100%;
 }
 
-.run-panel-body {
-	/*overflow-y: auto;*/
-}
-
-.output-holder {
+.code-output {
+	flex: 1;
+	overflow-y: auto;
 	text-align: left;
-	overflow-wrap: anywhere;
-	/*flex: 1;*/
-	/*margin-left: 10px;*/
 }
 
 .variable-viewer {
-	/*float: right;*/
-	/*min-width: 30em;*/
-	/*max-width: 50%;*/
-}
-
-.output-holder, .variable-viewer {
-	overflow-y: auto;
+	flex: 0;
 }
 </style>

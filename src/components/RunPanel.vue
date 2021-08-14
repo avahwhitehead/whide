@@ -1,9 +1,15 @@
 <template>
 	<v-card class="pa-0 ma-0 run-panel-holder">
+		<v-card-text
+			v-text="'Run a program to view it here'"
+			v-if="!outputs.length"
+		/>
+
 		<v-tabs
 			v-model="selectedTab"
 			ref="sortableTabs"
 			:hide-slider="true"
+			class="tabs-holder"
 		>
 			<v-tab
 				v-for="(tab, i) in outputs" :key="i"
@@ -14,12 +20,13 @@
 			</v-tab>
 		</v-tabs>
 
-		<v-tabs-items v-model="selectedTab">
+		<v-tabs-items v-model="selectedTab" class="tab-items-container fill-height">
 			<v-tab-item
 				v-for="(tab, i) in outputs" :key="i"
 				:transition="false"
+				class="tab-item"
 			>
-				<RunInterface :instance-controller="tab" style="text-align: left" />
+				<RunInterface :instance-controller="tab" />
 			</v-tab-item>
 		</v-tabs-items>
 	</v-card>
@@ -96,5 +103,18 @@ export default Vue.extend({
 <style scoped>
 .run-panel-holder {
 	width: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.tabs-holder {
+	flex: 0;
+}
+
+.tab-items-container {
+	flex: 1;
+}
+.tab-item {
+	height: 100%;
 }
 </style>

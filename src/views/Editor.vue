@@ -57,22 +57,20 @@
 			<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)" @dir="dirChange"/>
 		</v-navigation-drawer>
 
-		<v-main class="pa-0 fill-height">
-			<v-col class="fill-height main-col">
-				<v-row class="editor-row">
-					<CodeEditorElement
-						:focused="focused_file"
-						:allow-extended="extendedWhile"
-						@controller="onEditorControllerChange"
-						@editorChange="onEditorObjectChange"
-						@fileFocus="onFocusedFileChange"
-					/>
-				</v-row>
+		<v-main class="pa-0 fill-height overflow-hidden">
+			<CodeEditorElement
+				class="top"
+				:focused="focused_file"
+				:allow-extended="extendedWhile"
+				@controller="onEditorControllerChange"
+				@editorChange="onEditorObjectChange"
+				@fileFocus="onFocusedFileChange"
+			/>
 
-				<v-row class="run-panel-row">
-					<run-panel @controller="c => this.runPanelController = c" />
-				</v-row>
-			</v-col>
+			<div class="bottom">
+				<v-divider />
+				<run-panel class="run-panel" @controller="c => this.runPanelController = c" />
+			</div>
 		</v-main>
 
 		<v-navigation-drawer app right clipped>
@@ -508,14 +506,37 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 	text-align: center;
 }
 
-.main-col {
+.top, .bottom {
+	/*Stack one on top of the other*/
+	position: absolute;
+	/*Fill the width*/
+	width: 100%;
+	left: 0;
+	right: 0;
+	/*Scroll on overflow*/
+	overflow-y: auto;
+}
+
+.top {
+	/*Align to the top*/
+	top: 0;
+	/*Take up most of the space*/
+	height: 65%;
+	max-height: 65%;
+}
+
+.bottom {
+	/*Align to the bottom*/
+	bottom: 0;
+	/*Fill the remaining space*/
+	height: 35%;
+	max-height: 35%;
+	/*Resize contents to make room for the divider*/
 	display: flex;
 	flex-direction: column;
 }
-.editor-row {
+
+.run-panel {
 	flex: 1;
-}
-.run-panel-row {
-	flex: .3;
 }
 </style>
