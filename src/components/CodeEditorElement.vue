@@ -34,7 +34,7 @@ import { fs } from "@/files/fs";
 import path from "path";
 import { ENCODING_UTF8 } from "memfs/lib/encoding";
 //The code editor
-import CodeMirror, { Annotation, LineWidget, LintStateOptions, } from "codemirror";
+import CodeMirror, { Annotation, LineHandle, LineWidget, LintStateOptions, } from "codemirror";
 //CodeMirror addons
 import 'codemirror/addon/lint/lint';
 //CodeMirror styling
@@ -54,7 +54,7 @@ interface DataType {
 	editor: CodeMirror.Editor|undefined;
 	editorController: EditorControllerInterface|undefined;
 	ioController: IOController|undefined;
-	openFiles: TabInfo[];
+	openFiles: FileInfoState[];
 	errors: LineWidgetType[];
 	infos: LineWidgetType[];
 	warnings: LineWidgetType[];
@@ -95,8 +95,6 @@ function makeWidget(editor : CodeMirror.Editor, line: number|CodeMirror.LineHand
  * Partially implemented EditorController object to allow controlling the editor from within plugins
  */
 abstract class EditorController extends EventEmitter implements EditorControllerInterface {
-	private breakpoints: CodeMirror.LineHandle[] = [];
-
 	protected constructor() {
 		super();
 	}
@@ -109,54 +107,217 @@ abstract class EditorController extends EventEmitter implements EditorController
 	abstract close(filePath: string) : Promise<void>;
 	abstract saveFiles() : Promise<void>;
 
-	toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean) : void {
-		//Line info
-		const lineHandle: CodeMirror.LineHandle = asLineHandle(this.editor, line);
-		let info = this.editor.lineInfo(line);
+	abstract toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean) : void;
 
-		//Not a valid line
-		if (!info) return;
+	abstract getBreakpoints(): number[];
+}
+
+/**
+ * Configuration options for creating a {@link FileInfoState} object.
+ */
+export type FileInfoStateOptions = Partial<{
+	/**
+	 * Whether the file should be marked as modified
+	 */
+	modified: boolean;
+	/**
+	 * The breakpoints to set up in the document
+	 */
+	breakpoints: number[];
+	/**
+	 * Options to use to create the CodeMirror document.
+	 * Also a {@code text} option to set the initial doc content
+	 */
+	docOptions: CustomMirrorDocOptions & { text?: string };
+}>;
+
+/**
+ * Information about a file opened in an editor tab.
+ */
+export class FileInfoState {
+	/**
+	 * The CodeMirror Doc object containing the file content
+	 * @private
+	 */
+	private _doc: CustomMirrorDoc;
+	/**
+	 * Whether the file has unsaved changes
+	 * @private
+	 */
+	private _modified: boolean;
+	/**
+	 * The name of the file to display in (e.g.) editor tabs
+	 * @private
+	 */
+	private _name: string;
+	/**
+	 * Full path to the file
+	 * @private
+	 */
+	private _path: string;
+
+	/**
+	 * @param name      Name of the file
+	 * @param path      Path to the file
+	 * @param options   (Optional) configuration objects for the file
+	 */
+	constructor(name: string, path: string, options?: FileInfoStateOptions) {
+		options = options || {};
+
+		this._name = name;
+		this._path = path;
+		this._modified = (options.modified !== undefined) ? options.modified : false;
+
+		//Create a new CodeMirror Doc
+		this._doc = new CustomMirrorDoc(options.docOptions?.text || '', this, options.docOptions);
+	}
+
+	get name(): string {
+		return this._name;
+	}
+	set name(value: string) {
+		this._name = value;
+	}
+	get modified(): boolean {
+		return this._modified;
+	}
+	set modified(value: boolean) {
+		this._modified = value;
+	}
+	get doc(): CustomMirrorDoc {
+		return this._doc;
+	}
+	set doc(value: CustomMirrorDoc) {
+		this._doc = value;
+	}
+	get breakpoints(): number[] {
+		return this._doc.breakpoints;
+	}
+	get path(): string {
+		return this._path;
+	}
+	set path(value: string) {
+		this._path = value;
+	}
+}
+
+/**
+ * Configuration options for creating a {@link CustomMirrorDoc} object.
+ */
+export type CustomMirrorDocOptions = Partial<{
+	/**
+	 * Language mode for the doc.
+	 * Defaults to WHILE.
+	 */
+	mode: any;
+	/**
+	 * See {@link CodeMirror.Doc}.
+	 */
+	firstLineNumber: number;
+	/**
+	 * See {@link CodeMirror.Doc}.
+	 */
+	lineSep: string;
+}>;
+
+/**
+ * Extension of the {@link CodeMirror.Doc} class.
+ * Adds additional features to the Doc object.
+ */
+export class CustomMirrorDoc extends CodeMirror.Doc {
+	/**
+	 * All the lines in the doc that have breakpoints
+	 * @private
+	 */
+	private readonly _breakpoints: LineHandle[];
+	/**
+	 * The {@link FileInfoState} object representing the file for this Doc
+	 * @private
+	 */
+	private readonly _fileInfo: FileInfoState;
+
+	/**
+	 * @param text      The initial text to add to the document
+	 * @param fileInfo  The file object using this Doc
+	 * @param opts      (Optional) Configuration options
+	 */
+	constructor(text: string, fileInfo: FileInfoState, opts?: CustomMirrorDocOptions) {
+		super(
+			text,
+			opts?.mode || WHILE,
+			opts?.firstLineNumber,
+			opts?.lineSep
+		);
+		this._breakpoints = [];
+		this._fileInfo = fileInfo;
+	}
+
+	/**
+	 * Toggle a breakpoint on a line of the document.
+	 * The breakpoint is enabled if currently disabled, or disabled if enabled.
+	 * Use the {@code enabled} param to force enabling/disabling a breakpoint.
+	 * @param line      Line number or line handle to add/remove the breakpoint from
+	 * @param enabled   {true} Enable the breakpoint, or {@code false} to disable it.
+	 * @param enabled   {false} Disable the breakpoint.
+	 * @param enabled   {undefined} Decide automatically.
+	 */
+	toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean) : void {
+		if (typeof line === 'number') {
+			//Get a line handle from the line number
+			line = this.getLineHandle(line);
+		} else {
+			//Check the line handle is for this doc
+			let info = this.getLineNumber(line);
+			if (!info) return;
+		}
 
 		//Toggle the breakpoint if a state wasn't specified
-		if (enabled === undefined) enabled = !info.gutterMarkers;
+		if (enabled === undefined) enabled = !this._breakpoints.includes(line);
 
-		let marker : HTMLElement|null = null;
 		if (enabled) {
 			//Make a new breakpoint marker
 			const node: Vue = new BreakpointWidget();
 			node.$mount();
-			//Use the breakpoint widget as the gutter marker
-			marker = node.$el as HTMLElement;
 			//Push the line to the list
-			this.breakpoints.push(lineHandle);
+			this._breakpoints.push(line);
+			//Add the marker to the gutter
+			//@ts-ignore
+			this.setGutterMarker(line, "breakpoints", node.$el as HTMLElement);
 		} else {
 			//Remove the line from the list of breakpoints
-			const index = this.breakpoints.indexOf(lineHandle);
-			if (index >= 0) this.breakpoints.splice(index, 1);
+			const index = this._breakpoints.indexOf(line);
+			if (index >= 0) this._breakpoints.splice(index, 1);
+			//Remove the marker from the gutter
+			//@ts-ignore
+			this.setGutterMarker(line, "breakpoints", null);
 		}
-		//Add/remove the marker to/from the gutter
-		this.editor.setGutterMarker(line, "breakpoints", marker);
 	}
 
-	getBreakpoints(): number[] {
-		let r : number[] = [];
-		for (let handle of this.breakpoints) {
-			//Convert the line handle to a number
-			const n : number|null = this.editor.getLineNumber(handle);
-			//If the line handle is valid, convert it to 1-index and add it to the result list
-			if (n !== null) r.push(n + 1);
-		}
-		return r;
+	/**
+	 * The FileInfo object representing this document
+	 */
+	get fileInfo(): FileInfoState {
+		return this._fileInfo;
+	}
+	/**
+	 * List of all the breakpoints configured in the document.
+	 * Returns a list of {@link CodeMirror.LineHandle}s to each of the breakpoints.
+	 *
+	 * See also {@link breakpoints}.
+	 */
+	get breakpointHandles(): CodeMirror.LineHandle[] {
+		return this._breakpoints;
+	}
+	/**
+	 * List of all the breakpoints configured in the document.
+	 * Returns a list of numbers to each of the breakpoints.
+	 *
+	 * See also {@link breakpointHandles}.
+	 */
+	get breakpoints(): number[] {
+		return this._breakpoints.map((h: LineHandle) => this.getLineNumber(h)!);
 	}
 }
-
-interface TabInfo {
-	path: string;
-	name: string;
-	modified: boolean;
-	doc: CodeMirror.Doc;
-}
-
 
 export default Vue.extend({
 	name: 'CodeEditorContainer',
@@ -209,9 +370,10 @@ export default Vue.extend({
 		this.editor = codeMirror;
 
 		//Toggle breakpoints when the gutter is clicked
-		this.editor.on("gutterClick", async (_:any, line: number|CodeMirror.LineHandle) => {
-			if (!this.editor) throw new Error("Couldn't get editor");
-			this.toggleBreakpoint(line)
+		this.editor.on("gutterClick", async (editor: CodeMirror.Editor, line: number|CodeMirror.LineHandle) => {
+			// this.toggleBreakpoint(line)
+			let doc = editor.getDoc() as CustomMirrorDoc;
+			doc.toggleBreakpoint(line);
 		});
 
 		//Mark the current tab as unsaved when the content is changed
@@ -222,6 +384,12 @@ export default Vue.extend({
 		//Create the editor controller object
 		const that = this;
 		this.editorController = new (class extends EditorController {
+			getBreakpoints(): number[] {
+				return (this.editor.getDoc() as CustomMirrorDoc).breakpoints;
+			}
+			toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean): void {
+				(this.editor.getDoc() as CustomMirrorDoc).toggleBreakpoint(line, enabled);
+			}
 			constructor() {
 				super();
 			}
@@ -236,7 +404,7 @@ export default Vue.extend({
 				return that.openFiles.map(t => t.path);
 			}
 			async close(filePath: string): Promise<void> {
-				let file: TabInfo|undefined = that.openFiles.find(f => f.path === filePath);
+				let file: FileInfoState|undefined = that.openFiles.find(f => f.path === filePath);
 				if (!file) {
 					console.error(`File "${filePath}" is not open`);
 					return;
@@ -281,7 +449,7 @@ export default Vue.extend({
 	},
 	methods: {
 		onTabDragEnd(event: SortableEvent): any {
-			const movedItem: TabInfo = this.openFiles.splice(event.oldIndex! - 1, 1)[0];
+			const movedItem: FileInfoState = this.openFiles.splice(event.oldIndex! - 1, 1)[0];
 			this.openFiles.splice(event.newIndex!, 0, movedItem);
 		},
 
@@ -336,12 +504,6 @@ export default Vue.extend({
 		removeWarning(widget: CodeMirror.LineWidget): void {
 			this.editor!.removeLineWidget(widget)
 		},
-		toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean) : void {
-			this.editorController!.toggleBreakpoint(line, enabled);
-		},
-		getBreakpoints(): number[] {
-			return this.editorController!.getBreakpoints();
-		},
 
 		triggerLint(): void {
 			//Toggle linter off and on again to force an update with the new setting
@@ -349,7 +511,7 @@ export default Vue.extend({
 			this.editor!.setOption("lint", this.lintOptions);
 		},
 
-		async _openFile(filepath: string): Promise<TabInfo> {
+		async _openFile(filepath: string): Promise<FileInfoState> {
 			//Check to see if the file already exists as a tab
 			let fileTabIndex: number = this.openFiles.findIndex(f => f.path === filepath);
 
@@ -361,15 +523,14 @@ export default Vue.extend({
 
 			//Load the file content from the file into an CodeMirror Doc
 			let content: string = await this._readFile(filepath);
-			let doc: CodeMirror.Doc = CodeMirror.Doc(content, WHILE);
-
 			//Open the file in the editor
-			let tabInfo: TabInfo = {
-				path: filepath,
-				name: path.basename(filepath),
-				doc: doc,
-				modified: false
-			};
+			let tabInfo: FileInfoState = new FileInfoState(
+				path.basename(filepath),
+				filepath,
+				{
+					docOptions: { text: content }
+				}
+			);
 			//Open the file in a new tab and switch to it
 			this.currentTab = this.openFiles.push(tabInfo) - 1;
 
@@ -379,7 +540,7 @@ export default Vue.extend({
 			return await fs.promises.readFile(filepath, { encoding: ENCODING_UTF8 });
 		},
 
-		async _closeTab(tab: TabInfo): Promise<void> {
+		async _closeTab(tab: FileInfoState): Promise<void> {
 			//Only save if the file has unsaved changes
 			if (!tab.doc.isClean()) {
 				//TODO: Prompt for file save using v-dialog
@@ -403,7 +564,7 @@ export default Vue.extend({
 			//Close the tab
 			this.openFiles.splice(this.openFiles.indexOf(tab), 1);
 		},
-		async _saveFile(tab: TabInfo): Promise<void> {
+		async _saveFile(tab: FileInfoState): Promise<void> {
 			//Write the file to persistent storage
 			await this._writeFile(tab.path, tab.doc.getValue());
 			//Mark the file as saved in the editor
@@ -421,21 +582,28 @@ export default Vue.extend({
 		async currentTab(tab: number): Promise<void> {
 			if (!this.editor) throw new Error("Couldn't get code editor");
 
+			let focusedFile: FileInfoState|undefined;
 			if (tab === -1) {
 				//Prevent writing in the editor if there are no files open
 				//TODO: Find a better way to handle the unnamed file
 				this.editor.setOption('readOnly', true);
 				this.editor.swapDoc(CodeMirror.Doc(''));
+
+				focusedFile = undefined;
 			} else {
+				focusedFile = this.openFiles[tab];
+
 				//Allow writing in the editor
 				this.editor.setOption('readOnly', false);
 
 				//Load the new tab's content into the editor
-				let tabInfo: TabInfo = this.openFiles[tab];
+				let tabInfo: FileInfoState = focusedFile;
 				this.editor.swapDoc(tabInfo.doc);
 
 				this.triggerLint();
 			}
+			//Update the focused file in the VueX store
+			this.$store.commit('openFiles.setFocused', focusedFile);
 		},
 		/**
 		 * Emit an event when the editor controller object changes

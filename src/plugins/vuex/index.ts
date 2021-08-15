@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex';
 import { RunConfiguration } from "@/types/RunConfiguration";
 import VuexPersistence from "vuex-persist";
+import { FileInfoState } from '@/components/CodeEditorElement.vue';
 
 //Make VueX available to Vue
 Vue.use(Vuex);
@@ -23,6 +24,8 @@ export interface RootState {
 	runConfigurations: RunConfiguration[];
 	chosenRunConfig: RunConfiguration|undefined;
 	settings: SettingsState;
+	openFiles: FileInfoState[];
+	focusedFile: FileInfoState|undefined;
 }
 
 /**
@@ -52,7 +55,14 @@ export interface SettingsAppearanceState {
 
 //Automatically save the VueX store in the browser localstorage
 const vuexLocal = new VuexPersistence<RootState>({
-	storage: window.localStorage
+	storage: window.localStorage,
+	reducer(state: RootState): Partial<RootState> {
+		return {
+			settings: state.settings,
+			chosenRunConfig: state.chosenRunConfig,
+			runConfigurations: state.runConfigurations,
+		};
+	},
 })
 
 //The VueX store object
@@ -67,7 +77,9 @@ const store = new Vuex.Store<RootState>({
 			appearance: {
 				theme: APP_THEME.AUTO,
 			}
-		}
+		},
+		openFiles: [],
+		focusedFile: undefined,
 	},
 	mutations: {
 		/**
@@ -130,6 +142,13 @@ const store = new Vuex.Store<RootState>({
 		 */
 		setHWhilePath(state: RootState, hwhilePath: string) {
 			state.settings.general.hwhilePath = hwhilePath;
+		},
+
+		'openFiles.set': function (state: RootState, files: FileInfoState[]) {
+			state.openFiles = [...files];
+		},
+		'openFiles.setFocused': function (state: RootState, file: FileInfoState) {
+			state.focusedFile = file;
 		},
 	},
 	plugins: [
