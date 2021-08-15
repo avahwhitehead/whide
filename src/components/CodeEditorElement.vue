@@ -214,6 +214,11 @@ export default Vue.extend({
 			this.toggleBreakpoint(line)
 		});
 
+		//Mark the current tab as unsaved when the content is changed
+		this.editor.on("change", () => {
+			this.openFiles[this.currentTab].modified = true;
+		});
+
 		//Create the editor controller object
 		const that = this;
 		this.editorController = new (class extends EditorController {
@@ -403,6 +408,7 @@ export default Vue.extend({
 			await this._writeFile(tab.path, tab.doc.getValue());
 			//Mark the file as saved in the editor
 			tab.doc.markClean();
+			tab.modified = false;
 		},
 		async _writeFile(filepath: string, content: string): Promise<void> {
 			await fs.promises.writeFile(filepath, content, { encoding: ENCODING_UTF8 });
