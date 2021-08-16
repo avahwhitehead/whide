@@ -89,7 +89,7 @@
 import Vue from "vue";
 import fileDownloader from "js-file-download";
 //Components
-import CodeEditorElement from "@/components/CodeEditorElement.vue";
+import CodeEditorElement, { FileInfoState } from "@/components/CodeEditorElement.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import RunPanel from "@/components/RunPanel.vue";
@@ -396,6 +396,12 @@ export default Vue.extend({
 
 			let runner: AbstractRunner;
 
+			//Get the breakpoints configured for the file
+			let runFileState: FileInfoState|undefined = this.$store.state.openFiles.find((f: FileInfoState) => f.path === config.file);
+			let breakpoints: number[] = runFileState ? runFileState.breakpoints : [];
+			//Convert the breakpoints from 0-indexing to 1-indexing
+			breakpoints = breakpoints.map(l => ++l);
+
 			if (config.interpreter === INTERPRETERS.WHILE_JS) {
 				throw new Error("Can't debug with While.js");
 			} else {
@@ -405,8 +411,7 @@ export default Vue.extend({
 					file: config.file,
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
 					output: outputController.stream,
-					//TODO: Add back support for breakpoints
-					// breakpoints: this.editorController.getBreakpoints(),
+					breakpoints: breakpoints,
 				});
 				//Set up user control for the debugger
 				outputController.debuggerCallbackHandler = runner as HWhileDebugger;

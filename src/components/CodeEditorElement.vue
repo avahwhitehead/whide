@@ -190,6 +190,12 @@ export class FileInfoState {
 	set doc(value: CustomMirrorDoc) {
 		this._doc = value;
 	}
+
+	/**
+	 * List of all the breakpoints configured for the file.
+	 * @returns {number[]}  List of lines which have a breakpoint configured.
+	 *                      Lines are 0-indexed.
+	 */
 	get breakpoints(): number[] {
 		return this._doc.breakpoints;
 	}
@@ -310,7 +316,8 @@ export class CustomMirrorDoc extends CodeMirror.Doc {
 	}
 	/**
 	 * List of all the breakpoints configured in the document.
-	 * Returns a list of numbers to each of the breakpoints.
+	 * Returns a list of line numbers representing each of the breakpoints.
+	 * Lines are 0-indexed.
 	 *
 	 * See also {@link breakpointHandles}.
 	 */
@@ -619,6 +626,9 @@ export default Vue.extend({
 				this.editor.setOption("theme", isDark ? DARK_THEME : LIGHT_THEME);
 			}
 		},
+		openFiles(openFiles: FileInfoState[]) {
+			this.$store.commit('openFiles.set', openFiles);
+		}
 	}
 });
 </script>
