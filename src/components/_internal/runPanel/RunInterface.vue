@@ -10,13 +10,19 @@
 			</v-list-item>
 		</v-list>
 
-		<OutputElement :value="outputText" class="code-output"/>
+		<v-row class="ma-0 pa-0 fill-height">
+			<v-col cols="8" class="ma-0 pa-0 fill-height overflow-y-auto">
+				<OutputElement :value="outputText" class="code-output d-block" />
+			</v-col>
 
-		<VariableTable
-			class="variable-viewer"
-			:variables="variables"
-			@change="onVariableChange"
-		/>
+			<v-col cols="4" class="ma-0 pa-0 pl-2 fill-height overflow-y-auto">
+				<VariableTable
+					class="variable-viewer"
+					:variables="variables"
+					@change="onVariableChange"
+				/>
+			</v-col>
+		</v-row>
 	</v-container>
 </template>
 

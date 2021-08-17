@@ -105,6 +105,7 @@ export default Vue.extend({
 	width: 100%;
 	display: flex;
 	flex-direction: column;
+	overflow-y: hidden;
 }
 
 .tabs-holder {
@@ -116,5 +117,9 @@ export default Vue.extend({
 }
 .tab-item {
 	height: 100%;
+}
+
+.tab-close {
+	margin-left: .5em;
 }
 </style>
