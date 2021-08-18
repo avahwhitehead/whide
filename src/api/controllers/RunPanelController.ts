@@ -1,12 +1,11 @@
 import { Transform } from "stream";
-import { RunPanelController as RunPanelControllerInterface, DebuggerControllerInterface } from "@/types";
-import { CustomDict } from "@/types/CustomDict";
 import { BinaryTree } from "@whide/tree-lang";
+import { AbstractDebugger } from "@/run/AbstractRunner";
 
 /**
  * Controller for the "run" panel.
  */
-export default class RunPanelController implements RunPanelControllerInterface {
+export default class RunPanelController {
 	private readonly _controllers : RunPanelInstanceController[];
 
 	/**
@@ -81,8 +80,8 @@ export class RunPanelInstanceController {
 	private _name: string;
 	private _output: string;
 	private readonly _stream: Transform;
-	private _variables : CustomDict<BinaryTree>;
-	private _debuggerCallbackHandler?: DebuggerControllerInterface;
+	private _variables : Map<string, Map<string, BinaryTree>>;
+	private _debuggerCallbackHandler?: AbstractDebugger;
 
 	/**
 	 *
@@ -92,7 +91,7 @@ export class RunPanelInstanceController {
 		this._name = name;
 		this._output = '';
 		this._stream = new Transform();
-		this._variables = {};
+		this._variables = new Map();
 
 		//Keep the written data as-is (output in same form as input)
 		this._stream._transform = function (chunk, encoding, callback) {
@@ -145,32 +144,26 @@ export class RunPanelInstanceController {
 		this._name = value;
 	}
 
-	get variables() : CustomDict<BinaryTree> {
+	get variables() : Map<string, Map<string, BinaryTree>> {
 		return this._variables;
 	}
 
-	set variables(variables : CustomDict<BinaryTree>) {
+	set variables(variables : Map<string, Map<string, BinaryTree>>) {
 		this._variables = variables;
 	}
 
+	/**
+	 * @deprecated
+	 */
 	setVariablesFromMap(variables : Map<string, Map<string, BinaryTree>>): void {
-		//Convert to the right type
-		//TODO: Convert RunPanel to use nested BinaryTree Maps
-		let vars: {[key:string]: BinaryTree} = {};
-		//Iterate over the programs first
-		for (let [p, m] of variables) {
-			//Iterate over each program's variable, prefixing the name
-			for (let [k, v] of m) vars[`(${p}) ${k}`] = v;
-		}
-		//Save the created object
-		this.variables = vars;
+		this.variables = variables;
 	}
 
-	get debuggerCallbackHandler(): DebuggerControllerInterface|undefined {
+	get debuggerCallbackHandler(): AbstractDebugger|undefined {
 		return this._debuggerCallbackHandler;
 	}
 
-	set debuggerCallbackHandler(value: DebuggerControllerInterface|undefined) {
+	set debuggerCallbackHandler(value: AbstractDebugger|undefined) {
 		this._debuggerCallbackHandler = value;
 	}
 }

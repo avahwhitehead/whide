@@ -96,7 +96,8 @@ import RunPanel from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 import RunConfigPopup from "@/components/RunConfigPopup.vue";
 //Other imports
-import { EditorController, IOController, Menu, RunPanelController } from "@/types";
+import { EditorController, IOController, Menu } from "@/types";
+import RunPanelController from "@/api/controllers/RunPanelController";
 import { AbstractInternalFile } from "@/files/InternalFile";
 import { vars } from "@/utils/globals";
 import path from "path";

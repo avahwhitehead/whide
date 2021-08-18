@@ -21,7 +21,4 @@ export {
 	PromptParams,
 	IOController,
 	EditorController,
-	RunPanelController,
-	RunPanelInstanceController,
-	DebuggerControllerInterface,
 } from "./controllers";

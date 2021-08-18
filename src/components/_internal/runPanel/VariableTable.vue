@@ -24,6 +24,14 @@
 					title="Open in tree viewer"
 				/>
 			</template>
+
+			<template v-slot:item.value="{ item }">
+				<div
+					class="text-truncate pa-0"
+					style="max-width: 200px;"
+					v-text="item.value"
+				/>
+			</template>
 		</v-data-table>
 
 		<VariableEditorPopup
@@ -43,6 +51,7 @@ import { BinaryTree } from "whilejs";
 import { DataTableHeader, DataTableItemProps } from "vuetify";
 
 export interface VariableDisplayType {
+	program: string;
 	name: string;
 	value: string;
 	type: string;
@@ -50,7 +59,6 @@ export interface VariableDisplayType {
 }
 
 interface DataTypeDescriptor {
-	headers: DataTableHeader[];
 	showVariableEditor: boolean;
 	editVariable: VariableDisplayType;
 }
@@ -66,24 +74,40 @@ export default Vue.extend({
 		variables: {
 			type: Array as () => Array<VariableDisplayType>,
 			required: true,
+		},
+		showProgramCol: {
+			type: Boolean,
+			default: true,
 		}
 	},
 	data(): DataTypeDescriptor {
 		return {
 			showVariableEditor: false,
 			editVariable: {
+				program: '',
 				name: '',
 				type: '',
 				value: '',
 				tree: null,
 			},
-			headers: [
-				{ text: 'Name', value: 'name' },
-				{ text: 'Value', value: 'value', sortable: false },
-				{ text: 'Type', value: 'type', sortable: false },
-				{ text: 'Actions', value: 'actions', sortable: false },
-			],
 		};
+	},
+	computed: {
+		headers(): DataTableHeader[] {
+			//The headers for all fixed columns
+			let headers = [
+				{text: 'Name', value: 'name'},
+				{text: 'Value', value: 'value', sortable: false},
+				{text: 'Type', value: 'type', sortable: false},
+				{text: 'Actions', value: 'actions', sortable: false},
+			];
+			//Only add the program column if requested
+			if (this.showProgramCol) {
+				headers.splice(0, 0, {text: 'Program', value: 'program'});
+			}
+			//Return the headers
+			return headers;
+		}
 	},
 	methods: {
 		onEditClick(variable: VariableDisplayType): void {
@@ -116,6 +140,17 @@ export default Vue.extend({
 })
 </script>
 
+<style>
+/*Remove padding on the table cells*/
+.v-data-table>.v-data-table__wrapper>table>tbody>tr>td,
+.v-data-table>.v-data-table__wrapper>table>tbody>tr>th,
+.v-data-table>.v-data-table__wrapper>table>tfoot>tr>td,
+.v-data-table>.v-data-table__wrapper>table>tfoot>tr>th,
+.v-data-table>.v-data-table__wrapper>table>thead>tr>td,
+.v-data-table>.v-data-table__wrapper>table>thead>tr>th {
+	padding: 0 !important;
+}
+</style>
 
 <style scoped>
 .action-icon:hover {

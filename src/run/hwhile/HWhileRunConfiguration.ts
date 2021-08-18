@@ -2,6 +2,9 @@ import { AbstractDebugger, AbstractRunner, ProgramState } from "@/run/AbstractRu
 import path from "path";
 import { HWhileConnector, InteractiveHWhileConnector } from "@whide/hwhile-wrapper";
 import { Writable } from "stream";
+import { BinaryTree } from "whilejs";
+import { treeParser } from "@whide/tree-lang";
+import { stringifyTree } from "@/utils/tree_converters";
 
 /**
  * Properties for the {@link HWhileRunner} constructor.
@@ -73,7 +76,9 @@ export class HWhileRunner implements AbstractRunner {
 
 export class HWhileDebugger implements AbstractDebugger {
 	private _props: HWhileDebugConfigurationProps;
-	private hWhileConnector: InteractiveHWhileConnector | undefined;
+	private hWhileConnector: InteractiveHWhileConnector|undefined;
+	private _currentState: ProgramState|undefined;
+	private _progName: string|undefined;
 
 	constructor(props: HWhileDebugConfigurationProps) {
 		this._props = props;
@@ -82,7 +87,7 @@ export class HWhileDebugger implements AbstractDebugger {
 	async init(): Promise<void> {
 		//Get the file name and program name
 		const file_name = path.basename(this._props.file);
-		const prog_name = file_name.split('.')[0];
+		this._progName = file_name.split('.')[0];
 
 		//Start the interpreter in the same directory as the file
 		const folder_path = path.dirname(this._props.file);
@@ -97,7 +102,7 @@ export class HWhileDebugger implements AbstractDebugger {
 		//Start the interpreter
 		await this.hWhileConnector.start();
 		//Load the chosen program
-		await this.hWhileConnector.load(prog_name, this._props.expression, true);
+		await this.hWhileConnector.load(this._progName, this._props.expression, true);
 
 		//Setup the program breakpoints
 		for (let b of this._props.breakpoints || []) {
@@ -113,16 +118,18 @@ export class HWhileDebugger implements AbstractDebugger {
 		//Stop the process here if the program is done
 		if (result.cause === 'done') {
 			await this.stop();
-			return {
+			this._currentState = {
 				variables,
 				done: true,
 			};
+		} else {
+			this._currentState = {
+				variables,
+				done: false,
+			};
 		}
 		//Return the program state
-		return {
-			variables,
-			done: false,
-		};
+		return this._currentState;
 	}
 
 	async step(): Promise<ProgramState> {
@@ -133,16 +140,18 @@ export class HWhileDebugger implements AbstractDebugger {
 		//Stop the process here if the program is done
 		if (result.cause === 'done') {
 			await this.stop();
-			return {
+			this._currentState = {
 				variables,
 				done: true,
 			};
+		} else {
+			this._currentState = {
+				variables,
+				done: false,
+			};
 		}
 		//Return the program state
-		return {
-			variables,
-			done: false,
-		};
+		return this._currentState;
 	}
 
 	async stop(): Promise<void> {
@@ -150,5 +159,43 @@ export class HWhileDebugger implements AbstractDebugger {
 		await this.hWhileConnector!.stop();
 		//Close the output stream
 		this._props.output.end();
+	}
+
+	async set(name: string, value: BinaryTree|string, program?: string): Promise<ProgramState> {
+		if (!program) program = this._progName!;
+
+		//Ensure there is a version of the tree as a string and a BinaryTree
+		let tree: BinaryTree;
+		let treeString: string;
+		if (typeof value === 'string') {
+			treeString = value;
+			tree = treeParser(value);
+		} else {
+			tree = value;
+			treeString = stringifyTree(value);
+		}
+
+		//Update the tree in HWhile
+		await this.hWhileConnector!.execute(`${name} := ${treeString}`, true);
+
+		//Create the program state if necessary
+		if (!this._currentState) this._currentState = {};
+		if (!this._currentState.variables) {
+			//Fetch the variable values from the interpreter
+			this._currentState.variables = await this.hWhileConnector!.store(true);
+		}
+
+		//Update the tree value in the program state
+		let programMap: Map<string,BinaryTree>|undefined = this._currentState.variables.get(program);
+		if (programMap) {
+			programMap.set(name, tree);
+		} else {
+			programMap = new Map();
+			programMap.set(name, tree);
+			this._currentState.variables.set(program, programMap);
+		}
+
+		//Return the program state
+		return this._currentState;
 	}
 }

@@ -7,9 +7,3 @@ export {
 	OutputPromptParams,
 	PromptParams
 } from "./IOController";
-
-export {
-	RunPanelController,
-	RunPanelInstanceController,
-	DebuggerControllerInterface
-} from "./RunPanelController";

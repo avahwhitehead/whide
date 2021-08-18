@@ -54,4 +54,14 @@ export interface AbstractDebugger extends AbstractRunner {
 	 * Stop executing the program.
 	 */
 	stop(): void|Promise<void>;
+
+	/**
+	 * Change the value of a variable
+	 * @param variable	The name of the variable to change
+	 * @param value		The new value to assign to the variable
+	 * @param program	The name of the program which has the variable. Default uses the name of the loaded program.
+	 * @returns {void|Promise<void>}	No return value
+	 * @returns {ProgramState|Promise<ProgramState>}	Object the program state after the variable is updated
+	 */
+	set(variable: string, value: BinaryTree|string, program?: string): void|ProgramState|Promise<void>|Promise<ProgramState>;
 }
