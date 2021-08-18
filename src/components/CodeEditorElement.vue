@@ -657,6 +657,8 @@ export default Vue.extend({
 	flex-direction: column;
 	/*Fill the available width*/
 	width: 100%;
+	/*Don't scroll with the tabs*/
+	overflow-y: hidden;
 }
 
 .tabs {
@@ -673,5 +675,7 @@ export default Vue.extend({
 	/*Fill the available space*/
 	flex: 1;
 	width: 100%;
+	/*Scroll the editor*/
+	overflow-y: auto;
 }
 </style>
