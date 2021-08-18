@@ -76,5 +76,6 @@ export default Vue.extend({
 .OutputElement {
 	white-space: pre-wrap;
 	max-width: 100%;
+	text-align: left;
 }
 </style>

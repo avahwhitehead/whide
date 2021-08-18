@@ -1,17 +1,19 @@
 <template>
-	<v-container class="ma-0 pa-0 run-interface-container">
-		<v-list dense>
-			<v-list-item v-for="(name, i) in ['play', 'step-forward', 'stop']" :key="i">
-				<v-list-item-icon class="ma-0">
-					<v-btn depressed block class="pa-0 ma-0">
-						<FontAwesomeIcon :icon="name" @click="onIconClick(name)"/>
-					</v-btn>
-				</v-list-item-icon>
-			</v-list-item>
-		</v-list>
-
+	<v-container fluid class="ma-0 pa-0 run-interface-container">
 		<v-row class="ma-0 pa-0 fill-height">
-			<v-col cols="8" class="ma-0 pa-0 fill-height overflow-y-auto">
+			<v-navigation-drawer class="pa-0" style="width: unset;">
+				<v-list dense>
+					<v-list-item v-for="(name, i) in ['play', 'step-forward', 'stop']" :key="i">
+						<v-list-item-icon class="ma-0">
+							<v-btn depressed block class="pa-0 ma-0">
+								<FontAwesomeIcon :icon="name" @click="onIconClick(name)"/>
+							</v-btn>
+						</v-list-item-icon>
+					</v-list-item>
+				</v-list>
+			</v-navigation-drawer>
+
+			<v-col class="ma-0 pa-0 fill-height overflow-y-auto">
 				<OutputElement :value="outputText" class="code-output d-block" />
 			</v-col>
 
@@ -124,18 +126,11 @@ export default Vue.extend({
 
 <style scoped>
 .run-interface-container {
-	display: flex;
-	flex-direction: row;
 	height: 100%;
 }
 
 .code-output {
-	flex: 1;
 	overflow-y: auto;
 	text-align: left;
-}
-
-.variable-viewer {
-	flex: 0;
 }
 </style>
