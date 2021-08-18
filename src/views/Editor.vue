@@ -97,7 +97,7 @@ import InputPrompt from "@/components/InputPrompt.vue";
 import RunConfigPopup from "@/components/RunConfigPopup.vue";
 //Other imports
 import { EditorController, IOController, Menu } from "@/types";
-import RunPanelController from "@/api/controllers/RunPanelController";
+import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
 import { AbstractInternalFile } from "@/files/InternalFile";
 import { vars } from "@/utils/globals";
 import path from "path";
@@ -393,7 +393,7 @@ export default Vue.extend({
 			let inputExpression = config.input;
 
 			//Open a new tab in the run panel
-			const outputController = await this.runPanelController!.addOutputStream(config.name);
+			const outputController: RunPanelInstanceController = await (this.runPanelController as RunPanelController).addOutputStream(config.name);
 
 			let runner: AbstractRunner;
 
@@ -420,8 +420,7 @@ export default Vue.extend({
 				await runner.init();
 				//Run to the first breakpoint
 				let state = await runner.run();
-				if (state && state.variables)
-					outputController.setVariablesFromMap(state.variables);
+				if (state && state.variables) outputController.variables = state.variables;
 			}
 			//Perform setup
 			await runner.init();

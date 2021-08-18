@@ -147,7 +147,7 @@ export default Vue.extend({
 			if (newState !== undefined) {
 				//Update the variable store
 				if (newState.variables !== undefined) {
-					this.instanceController!.setVariablesFromMap(newState.variables);
+					this.instanceController!.variables = newState.variables;
 				}
 			}
 		},
