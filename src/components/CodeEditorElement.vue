@@ -373,6 +373,10 @@ export default Vue.extend({
 			theme: this.isDarkTheme ? DARK_THEME : LIGHT_THEME
 		});
 		codeMirror.setSize("100%", "100%");
+		if (this.currentTab === -1) {
+			codeMirror.setOption('readOnly', true);
+		}
+
 		//Wrap the editor in an asynchronous wrapper
 		this.editor = codeMirror;
 
@@ -593,8 +597,8 @@ export default Vue.extend({
 			if (tab === -1) {
 				//Prevent writing in the editor if there are no files open
 				//TODO: Find a better way to handle the unnamed file
-				this.editor.setOption('readOnly', true);
 				this.editor.swapDoc(CodeMirror.Doc(''));
+				this.editor.setOption('readOnly', true);
 
 				focusedFile = undefined;
 			} else {
