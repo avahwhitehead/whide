@@ -47,8 +47,12 @@ import WHILE from "@/assets/whileSyntaxMode";
 import { ErrorType, ErrorType as WhileError, linter as whileLinter } from "whilejs";
 import InputPrompt from "@/components/InputPrompt.vue";
 
+//Editor themes for light and dark mode
 const DARK_THEME = 'ayu-mirage';
 const LIGHT_THEME = 'default';
+
+//Interval (in seconds) to autosave the open files
+const AUTOSAVE_INTERVAL: number = 20;
 
 interface DataType {
 	editor: CodeMirror.Editor|undefined;
@@ -431,6 +435,12 @@ export default Vue.extend({
 				})
 			}
 		})();
+
+		//Autosave files every 20 seconds
+		setInterval(() => {
+			if (!this.editorController) return;
+			this.editorController.saveFiles();
+		}, AUTOSAVE_INTERVAL * 1000);
 	},
 	computed: {
 		lintOptions(): LintStateOptions {
