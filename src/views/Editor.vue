@@ -416,16 +416,12 @@ export default Vue.extend({
 				});
 				//Set up user control for the debugger
 				outputController.debuggerCallbackHandler = runner as HWhileDebugger;
-				//Setup
+				//Perform setup
 				await runner.init();
 				//Run to the first breakpoint
 				let state = await runner.run();
 				if (state && state.variables) outputController.variables = state.variables;
 			}
-			//Perform setup
-			await runner.init();
-			//Run the program
-			await runner.run();
 		},
 
 		openRunConfigPopup() {
