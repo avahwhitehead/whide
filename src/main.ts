@@ -4,21 +4,12 @@ import router from "@/router";
 import vuetify from '@/plugins/vuetify'
 import store from '@/plugins/vuex'
 import App from "@/views/App.vue";
-//FontAwesome
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { fas } from '@fortawesome/free-solid-svg-icons'
 //Other
 import { fs } from "@/files/fs";
 import path from "path";
 import { Stats } from "fs";
 import { vars } from "@/utils/globals";
 import { ProgramOptions } from "@/types/CommandLine";
-
-//Make all icons available to FontAwesome
-library.add(fas);
-//Allow using FontAwesome component without import
-Vue.component('FontAwesomeIcon', FontAwesomeIcon);
 
 Vue.config.productionTip = false;
 

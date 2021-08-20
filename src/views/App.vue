@@ -13,6 +13,10 @@ import Vue from "vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 import { IOController } from "@/types";
 import { APP_THEME } from "@/plugins/vuex";
+import '@fortawesome/fontawesome-free/css/all.css';
+
+//TODO: Use v-alert for displaying errors
+//  https://vuetifyjs.com/en/components/alerts/#prominent
 
 let ioController: IOController|undefined;
 

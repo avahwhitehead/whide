@@ -3,7 +3,13 @@ const path = require("path");
 module.exports = {
 	pluginOptions: {
 		configureWebpack: {
-			target: "electron-renderer"
+			target: "electron-renderer",
+			rules: [
+				{
+					test: /\.css$/i,
+					use: ["style-loader", "css-loader"],
+				},
+			],
 		},
 		electronBuilder: {
 			nodeIntegration: true,
