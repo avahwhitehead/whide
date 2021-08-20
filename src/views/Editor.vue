@@ -54,7 +54,7 @@
 
 		<v-navigation-drawer app permanent clipped>
 			<v-btn @click="handleChangeRootClick">Change Root</v-btn>
-			<FilePicker :directory="cwd" @change="openFile" @dir="dirChange"/>
+			<FilePicker :directory="cwd" @change="openFile" />
 		</v-navigation-drawer>
 
 		<v-main class="pa-0 fill-height overflow-hidden">
@@ -98,7 +98,6 @@ import RunConfigPopup from "@/components/RunConfigPopup.vue";
 //Other imports
 import { EditorController, IOController, Menu } from "@/types";
 import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
-import { vars } from "@/utils/globals";
 import path from "path";
 import { fs } from "@/files/fs";
 import CodeMirror from "codemirror";
@@ -109,6 +108,7 @@ import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
 import { AbstractRunner } from "@/run/AbstractRunner";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
 import SettingsPopup from "@/components/SettingsPopup.vue";
+import store from "@/plugins/vuex";
 
 /**
  * Type declaration for the data() values
@@ -119,7 +119,6 @@ interface DataTypesDescriptor {
 	editorController?: EditorController;
 	ioController? : IOController;
 	runPanelController?: RunPanelController;
-	cwd: string;
 	extendedWhile: boolean;
 	showRunConfigPopup: boolean;
 	showSettingsPopup: boolean;
@@ -142,7 +141,6 @@ export default Vue.extend({
 			editorController: undefined,
 			ioController: undefined,
 			runPanelController: undefined,
-			cwd: vars.cwd,
 			extendedWhile: true,
 			showRunConfigPopup: false,
 			showSettingsPopup: false,
@@ -338,6 +336,14 @@ export default Vue.extend({
 				},
 			];
 		},
+		cwd: {
+			get(): string {
+				return this.$store.state.current_directory;
+			},
+			set(cwd: string): void {
+				store.commit('cwd.set', cwd);
+			},
+		}
 	},
 	methods: {
 		openTreeViewer() {
@@ -450,9 +456,6 @@ export default Vue.extend({
 		}
 	},
 	watch: {
-		cwd(cwd: string): void {
-			vars.cwd = cwd;
-		},
 		runConfigs(val: RunConfiguration[]) {
 			if (val.length > 0)
 				this.$store.state.chosenRunConfig = val[0];

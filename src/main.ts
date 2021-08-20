@@ -8,7 +8,6 @@ import App from "@/views/App.vue";
 import { fs } from "@/files/fs";
 import path from "path";
 import { Stats } from "fs";
-import { vars } from "@/utils/globals";
 import { ProgramOptions } from "@/types/CommandLine";
 
 Vue.config.productionTip = false;
@@ -36,10 +35,7 @@ async function _getCommandLineArgs(): Promise<ProgramOptions> {
  * @param userDir	The user's requested starting directory
  * @returns	string	The best path to use as CWD when starting the app
  */
-async function _getStartingDir(userDir: string) : Promise<string> {
-	//Application's working directory
-	let currDir = process.cwd() || '/';
-
+async function _isDirValid(userDir: string) : Promise<boolean> {
 	//Convert the directory to absolute path
 	userDir = path.resolve(userDir);
 
@@ -52,7 +48,7 @@ async function _getStartingDir(userDir: string) : Promise<string> {
 		if (e == 'ENOENT' || e.code === 'ENOENT') {
 			//The user's requested directory wasn't found - use the current process root
 			console.error("Target directory doesn't exist; using default");
-			return currDir;
+			return false;
 		} else {
 			throw e;
 		}
@@ -60,20 +56,25 @@ async function _getStartingDir(userDir: string) : Promise<string> {
 	//If the path is a file, use the parent directory
 	if (!stats.isDirectory()) {
 		console.error("Target directory is a file; using parent");
-		return path.resolve(userDir, '..');
+		return false;
 	}
 	//Otherwise Use the provided directory
-	return userDir;
+	return true;
 }
 
 async function main() {
 	//Get the user-provided command line arguments
 	let commandLineArgs: ProgramOptions = await _getCommandLineArgs();
 
-	//Configure the global `vars` object
-
-	//Start the app in a valid directory
-	vars.cwd = await _getStartingDir(commandLineArgs.workingDir || process.cwd());
+	//Start the app in the specified directory if provided
+	if (commandLineArgs.workingDir && await _isDirValid(commandLineArgs.workingDir)) {
+		store.commit('cwd.set', commandLineArgs.workingDir);
+	}
+	//Start the app in the current working directory if a working directory isn't set
+	//Otherwise start in the working directory
+	if (!commandLineArgs.workingDir && !store.state.current_directory) {
+		store.commit('cwd.set', process.cwd());
+	}
 
 	//Mount the app
 	new Vue({

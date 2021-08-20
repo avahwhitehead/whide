@@ -86,18 +86,22 @@ export default Vue.extend({
 			for (let name of files) {
 				//Get the child's full path
 				let fullPath = path.join(folder.path, name);
-				//Check whether this is a file or a folder
-				let stats: Stats = await fs.promises.stat(name);
-				let isDirectory = stats.isDirectory();
+				try {
+					//Check whether this is a file or a folder
+					let stats: Stats = await fs.promises.stat(fullPath);
+					let isDirectory = stats.isDirectory();
 
-				//Add the child to the list
-				res.push({
-					name: name,
-					path: fullPath,
-					//Only add a `children` list if this is a folder
-					//`undefined` means file, empty list means unloaded, populated list means loaded
-					children: isDirectory ? [] : undefined,
-				});
+					//Add the child to the list
+					res.push({
+						name: name,
+						path: fullPath,
+						//Only add a `children` list if this is a folder
+						//`undefined` means file, empty list means unloaded, populated list means loaded
+						children: isDirectory ? [] : undefined,
+					});
+				} catch (e) {
+					console.error(`Couldn't read file "${fullPath}" `, e);
+				}
 			}
 			//Add the children to the parent node in the tree
 			folder.children = res;

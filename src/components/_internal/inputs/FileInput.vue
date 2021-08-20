@@ -62,7 +62,6 @@
 import Vue, { PropType } from "vue";
 import { AbstractInternalFile, pathToFile } from "@/files/InternalFile";
 import FilePicker from "@/components/FilePicker.vue";
-import { vars } from '@/utils/globals';
 
 interface DataTypeDescriptor {
 	selected?: AbstractInternalFile;
@@ -99,12 +98,12 @@ export default Vue.extend({
 			selected: undefined,
 			open: true,
 			error: undefined,
-			dir: vars.cwd,
-			dirModel: vars.cwd,
+			dir: this.$store.state.current_directory,
+			dirModel: this.$store.state.current_directory,
 		};
 	},
 	mounted() {
-		this.dir = this.value || vars.cwd;
+		this.dir = this.value || this.$store.state.current_directory;
 	},
 	methods: {
 		onFileClick(file: AbstractInternalFile) {
@@ -136,7 +135,7 @@ export default Vue.extend({
 			this.$emit('change', selected ? selected.fullPath : undefined);
 		},
 		value(value?: string) {
-			this.dir = value || vars.cwd;
+			this.dir = value || this.$store.state.current_directory;
 		},
 		dir: {
 			immediate: true,

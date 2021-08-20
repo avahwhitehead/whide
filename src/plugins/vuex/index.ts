@@ -26,6 +26,7 @@ export interface RootState {
 	settings: SettingsState;
 	openFiles: FileInfoState[];
 	focusedFile: FileInfoState|undefined;
+	current_directory: string|undefined;
 }
 
 /**
@@ -61,6 +62,7 @@ const vuexLocal = new VuexPersistence<RootState>({
 			settings: state.settings,
 			chosenRunConfig: state.chosenRunConfig,
 			runConfigurations: state.runConfigurations,
+			current_directory: state.current_directory,
 		};
 	},
 })
@@ -80,6 +82,7 @@ const store = new Vuex.Store<RootState>({
 		},
 		openFiles: [],
 		focusedFile: undefined,
+		current_directory: undefined,
 	},
 	mutations: {
 		/**
@@ -149,6 +152,10 @@ const store = new Vuex.Store<RootState>({
 		},
 		'openFiles.setFocused': function (state: RootState, file: FileInfoState) {
 			state.focusedFile = file;
+		},
+
+		'cwd.set': function (state: RootState, directory: string) {
+			state.current_directory = directory;
 		},
 	},
 	plugins: [

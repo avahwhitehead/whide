@@ -63,7 +63,6 @@
 <script lang="ts">
 import Vue from "vue";
 import { AbstractInternalFile } from "@/files/InternalFile";
-import { vars } from '@/utils/globals';
 import FileInputElement from "@/components/_internal/inputs/FileInput.vue";
 import TreeInputElement from "@/components/_internal/inputs/TreeInput.vue";
 import { InputPromptTypes } from "@/types";
@@ -89,7 +88,6 @@ interface DataTypeDescriptor {
 		path?: AbstractInternalFile;
 	},
 	errors: string[];
-	vars: typeof vars;
 }
 
 export default Vue.extend({
@@ -118,7 +116,6 @@ export default Vue.extend({
 				path: undefined,
 			},
 			errors: [],
-			vars,
 		};
 	},
 	computed: {
