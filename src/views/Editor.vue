@@ -54,7 +54,7 @@
 
 		<v-navigation-drawer app permanent clipped>
 			<v-btn @click="handleChangeRootClick">Change Root</v-btn>
-			<FilePicker :directory="cwd" :load-level="2" @change="(file) => openFile(file)" @dir="dirChange"/>
+			<FilePicker :directory="cwd" @change="openFile" @dir="dirChange"/>
 		</v-navigation-drawer>
 
 		<v-main class="pa-0 fill-height overflow-hidden">
@@ -98,7 +98,6 @@ import RunConfigPopup from "@/components/RunConfigPopup.vue";
 //Other imports
 import { EditorController, IOController, Menu } from "@/types";
 import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
-import { AbstractInternalFile } from "@/files/InternalFile";
 import { vars } from "@/utils/globals";
 import path from "path";
 import { fs } from "@/files/fs";
@@ -345,9 +344,9 @@ export default Vue.extend({
 			let routeData = this.$router.resolve({ path: '/trees' });
 			window.open(routeData.href, '_blank');
 		},
-		async openFile(abstractFile: AbstractInternalFile) : Promise<void> {
+		async openFile(filePath: string) : Promise<void> {
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
-			this.editorController.open(abstractFile.fullPath);
+			this.editorController.open(filePath);
 		},
 
 		async runProgramClick() {
