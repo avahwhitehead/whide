@@ -454,14 +454,11 @@ export default Vue.extend({
 		cwd(cwd: string): void {
 			vars.cwd = cwd;
 		},
-		runConfigs: {
-			deep: true,
-			handler(val: RunConfiguration[]) {
-				if (val.length > 0)
-					this.$store.chosenRunConfig = val[0];
-				else
-					this.$store.chosenRunConfig = undefined;
-			}
+		runConfigs(val: RunConfiguration[]) {
+			if (val.length > 0)
+				this.$store.state.chosenRunConfig = val[0];
+			else
+				this.$store.state.chosenRunConfig = undefined;
 		}
 	}
 });
