@@ -2,29 +2,36 @@
 	<v-dialog
 		v-model="showDialog"
 		persistent
+		scrollable
+		height="400px"
 		max-width="800px"
 	>
 		<v-card class="ma-0 pa-0 pt-2">
-			{{ new_directory}}
+			<v-card-text>
+				<FilePicker
+					:directory="picker_root_directory"
+					hide-files
+					@changeFolder="onFolderSelect"
+				>
+					<template v-slot:controls="">
+						<v-btn
+							depressed
+							title="Parent directory"
+							@click="parentDirChange"
+						>
+							<v-icon>fa-level-up-alt</v-icon>
+						</v-btn>
+						<v-spacer />
+					</template>
+				</FilePicker>
+			</v-card-text>
 
 			<v-divider/>
 
-			<FilePicker
-				:directory="picker_root_directory"
-				hide-files
-				@changeFolder="onFolderSelect"
-			>
-				<template v-slot:controls="">
-					<v-btn
-						depressed
-						title="Parent directory"
-						@click="parentDirChange"
-					>
-						<v-icon>fa-level-up-alt</v-icon>
-					</v-btn>
-					<v-spacer />
-				</template>
-			</FilePicker>
+			<div style="text-align: left">
+				<span class="font-weight-bold">New root: </span>
+				<span>{{ new_directory}}</span>
+			</div>
 
 			<v-divider/>
 
@@ -119,7 +126,5 @@ export default Vue.extend({
 
 
 <style scoped>
-.actions-container {
-	border-top: 1px solid grey;
-}
+
 </style>
