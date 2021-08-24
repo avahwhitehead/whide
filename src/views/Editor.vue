@@ -54,7 +54,7 @@
 
 		<v-navigation-drawer app permanent clipped>
 			<v-btn @click="handleChangeRootClick">Change Root</v-btn>
-			<FilePicker :directory="cwd" @change="openFile" />
+			<FilePicker :directory="cwd" @changeFile="openFile" />
 		</v-navigation-drawer>
 
 		<v-main class="pa-0 fill-height overflow-hidden">
@@ -81,6 +81,7 @@
 		<InputPrompt @controller="c => this.ioController = c" />
 		<RunConfigPopup v-model="showRunConfigPopup" />
 		<SettingsPopup v-model="showSettingsPopup" />
+		<ChangeRootPopup v-model="showChangeRootPopup" />
 	</div>
 </template>
 
@@ -108,7 +109,7 @@ import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
 import { AbstractRunner } from "@/run/AbstractRunner";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
 import SettingsPopup from "@/components/SettingsPopup.vue";
-import store from "@/plugins/vuex";
+import ChangeRootPopup from "@/components/ChangeRootPopup.vue";
 
 /**
  * Type declaration for the data() values
@@ -122,11 +123,13 @@ interface DataTypesDescriptor {
 	extendedWhile: boolean;
 	showRunConfigPopup: boolean;
 	showSettingsPopup: boolean;
+	showChangeRootPopup: boolean;
 }
 
 export default Vue.extend({
 	name: 'Editor',
 	components: {
+		ChangeRootPopup,
 		SettingsPopup,
 		RunConfigPopup,
 		InputPrompt,
@@ -144,6 +147,7 @@ export default Vue.extend({
 			extendedWhile: true,
 			showRunConfigPopup: false,
 			showSettingsPopup: false,
+			showChangeRootPopup: false,
 		}
 	},
 	computed: {
@@ -341,7 +345,7 @@ export default Vue.extend({
 				return this.$store.state.current_directory;
 			},
 			set(cwd: string): void {
-				store.commit('cwd.set', cwd);
+				this.$store.commit('cwd.set', cwd);
 			},
 		}
 	},
@@ -351,6 +355,7 @@ export default Vue.extend({
 			window.open(routeData.href, '_blank');
 		},
 		async openFile(filePath: string) : Promise<void> {
+			console.log('open file ', filePath)
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
 			this.editorController.open(filePath);
 		},
@@ -441,15 +446,7 @@ export default Vue.extend({
 			this.cwd = dir;
 		},
 		handleChangeRootClick() {
-			if (!this.ioController) throw new Error("Couldn't get IO Controller");
-			this.ioController.getInput({
-				title: "Choose folder root",
-				message: "Select the folder to use as the new directory root",
-				type: "folder"
-			}).then((folder?: string) => {
-				if (!folder) return;
-				this.cwd = folder;
-			})
+			this.showChangeRootPopup = true;
 		},
 		toggleTheme() {
 			this.isDarkTheme = !this.isDarkTheme;
