@@ -82,7 +82,7 @@
 		<RunConfigPopup v-model="showRunConfigPopup" />
 		<SettingsPopup v-model="showSettingsPopup" />
 		<ChangeRootPopup v-model="showChangeRootPopup" />
-		<NewFilePopup v-model="showNewFilePopup" />
+		<NewFilePopup v-model="showNewFilePopup" :create-folder="createFolder" />
 	</div>
 </template>
 
@@ -103,7 +103,6 @@ import NewFilePopup from "@/components/NewFilePopup.vue";
 //Other imports
 import { EditorController, IOController, Menu } from "@/types";
 import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
-import path from "path";
 import { fs } from "@/files/fs";
 import CodeMirror from "codemirror";
 import { CustomDict } from "@/types/CustomDict";
@@ -127,6 +126,7 @@ interface DataTypesDescriptor {
 	showSettingsPopup: boolean;
 	showChangeRootPopup: boolean;
 	showNewFilePopup: boolean,
+	createFolder: boolean,
 }
 
 export default Vue.extend({
@@ -153,6 +153,7 @@ export default Vue.extend({
 			showSettingsPopup: false,
 			showChangeRootPopup: false,
 			showNewFilePopup: false,
+			createFolder: false,
 		}
 	},
 	computed: {
@@ -222,41 +223,9 @@ export default Vue.extend({
 								},
 								{
 									name: "New Folder",
-									args: [
-										{
-											name: "Parent Folder",
-											description: "Choose the folder to hold the new folder",
-											type: 'folder',
-										},
-										{
-											name: "Folder Name",
-											description: "Name of the folder",
-											validator(name) {
-												return !!name.match(/^[a-zA-Z0-9_ \-.]+$/);
-											},
-										}
-									],
-									command({args} : { args: CustomDict<string> }) {
-										const parent = args["Parent Folder"];
-										const name = args["Folder Name"];
-										//Build the full directory path
-										const full_path = path.join(parent, name);
-
-										try {
-											//Check the folder doesn't already exist
-											if (fs.existsSync(full_path)) {
-												_displayError(`The folder "${name}" already exists in "${parent}"`);
-												return;
-											}
-											//Create the folder
-											fs.mkdir(full_path, err => {
-												if (err) _displayError(err.message);
-												else console.log(`Successfully created folder "${full_path}"`);
-											});
-											_displaySuccess("Folder created successfully");
-										} catch (e) {
-											_displayError(e);
-										}
+									command: () => {
+										this.createFolder = true;
+										this.showNewFilePopup = true;
 									}
 								}
 							]

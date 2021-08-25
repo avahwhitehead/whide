@@ -20,7 +20,7 @@
 							:rules="[validation_filename]"
 						/>
 					</v-col>
-					<v-col cols="3">
+					<v-col cols="3" v-if="!createFolder">
 						<v-combobox
 							v-model="fileExtension"
 							:items="['while']"
@@ -63,7 +63,7 @@
 				<v-divider/>
 
 				<div style="text-align: left">
-					<span class="font-weight-bold">New file: </span>
+					<span class="font-weight-bold">New {{ createFolder ? 'folder' : 'file' }}: </span>
 					<span>{{ full_path }}</span>
 				</div>
 
@@ -105,6 +105,9 @@ interface DataTypeInterface {
 	isFormValid: boolean;
 }
 
+const DEFAULT_FILE_NAME = 'prog';
+const DEFAULT_FOLDER_NAME = 'myfolder';
+
 export default Vue.extend({
 	name: 'ChangeRootPopup',
 	components: {
@@ -112,10 +115,14 @@ export default Vue.extend({
 	},
 	props: {
 		value: Boolean,
+		createFolder: {
+			type: Boolean,
+			default: false,
+		}
 	},
 	data() : DataTypeInterface {
 		return {
-			fileName: 'program',
+			fileName: DEFAULT_FILE_NAME,
 			fileExtension: 'while',
 			directory: '',
 			isFormValid: true,
@@ -123,6 +130,11 @@ export default Vue.extend({
 	},
 	mounted() {
 		this.directory = this.current_directory;
+		if (this.createFolder) {
+			this.fileName = DEFAULT_FOLDER_NAME;
+		} else {
+			this.fileName = DEFAULT_FILE_NAME;
+		}
 	},
 	computed: {
 		showDialog: {
@@ -137,20 +149,29 @@ export default Vue.extend({
 			return this.$store.state.current_directory;
 		},
 		full_path(): string {
-			return path.resolve(this.directory, `${this.fileName || ''}.${this.fileExtension || ''}`);
+			let fullname: string = this.fileName || '';
+
+			if (!this.createFolder) fullname += '.' + (this.fileExtension || '');
+
+			let fullpath = path.resolve(this.directory, fullname);
+			if (this.createFolder) {
+				fullpath += '/';
+			}
+			return fullpath;
 		},
 	},
 	methods: {
-		save(): void {
+		async save(): Promise<void> {
 			//Check the file doesn't already exist
-			if (fs.existsSync(this.full_path)) {
-				console.error(`The file "${this.full_path}" already exists`);
-				return;
+			if (fs.existsSync(this.full_path)) return;
+
+			if (this.createFolder) {
+				//Create a folder
+				await fs.promises.mkdir(this.full_path);
+			} else {
+				//Create a file
+				await fs.promises.writeFile(this.full_path, '');
 			}
-			//Create the file
-			fs.writeFile(this.full_path, "", err => {
-				if (err) console.error(err.message);
-			});
 
 			//Hide the popup
 			this.showDialog = false;
@@ -163,7 +184,7 @@ export default Vue.extend({
 		},
 		
 		validation_filename(): true|string {
-			if (!this.fileName) return 'Enter a file extension';
+			if (!this.fileName) return 'Enter a file name';
 
 			if (fs.existsSync(this.full_path)) {
 				return 'That file already exists';
@@ -177,14 +198,19 @@ export default Vue.extend({
 	watch: {
 		showDialog(showDialog: boolean): void {
 			if (showDialog) {
-				this.fileName = 'program';
+				if (this.createFolder) this.fileName = DEFAULT_FOLDER_NAME;
+				else this.fileName = DEFAULT_FILE_NAME;
+
 				this.fileExtension = 'while';
 				this.directory = this.current_directory;
 				this.$nextTick(() => {
-					(this.$refs.form! as HTMLElement & {validate: () => void}).validate()
+					(this.$refs.form! as HTMLElement & {validate: () => void}).validate();
 				})
 			}
 		},
+		directory() {
+			(this.$refs.form! as HTMLElement & {validate: () => void}).validate();
+		}
 	},
 });
 </script>
