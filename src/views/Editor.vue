@@ -82,6 +82,7 @@
 		<RunConfigPopup v-model="showRunConfigPopup" />
 		<SettingsPopup v-model="showSettingsPopup" />
 		<ChangeRootPopup v-model="showChangeRootPopup" />
+		<NewFilePopup v-model="showNewFilePopup" />
 	</div>
 </template>
 
@@ -96,6 +97,9 @@ import MenuBar from "@/components/MenuBar.vue";
 import RunPanel from "@/components/RunPanel.vue";
 import InputPrompt from "@/components/InputPrompt.vue";
 import RunConfigPopup from "@/components/RunConfigPopup.vue";
+import SettingsPopup from "@/components/SettingsPopup.vue";
+import ChangeRootPopup from "@/components/ChangeRootPopup.vue";
+import NewFilePopup from "@/components/NewFilePopup.vue";
 //Other imports
 import { EditorController, IOController, Menu } from "@/types";
 import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
@@ -108,8 +112,6 @@ import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguratio
 import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
 import { AbstractRunner } from "@/run/AbstractRunner";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
-import SettingsPopup from "@/components/SettingsPopup.vue";
-import ChangeRootPopup from "@/components/ChangeRootPopup.vue";
 
 /**
  * Type declaration for the data() values
@@ -124,6 +126,7 @@ interface DataTypesDescriptor {
 	showRunConfigPopup: boolean;
 	showSettingsPopup: boolean;
 	showChangeRootPopup: boolean;
+	showNewFilePopup: boolean,
 }
 
 export default Vue.extend({
@@ -137,6 +140,7 @@ export default Vue.extend({
 		CodeEditorElement,
 		MenuBar,
 		RunPanel,
+		NewFilePopup,
 	},
 	data() : DataTypesDescriptor {
 		return {
@@ -148,6 +152,7 @@ export default Vue.extend({
 			showRunConfigPopup: false,
 			showSettingsPopup: false,
 			showChangeRootPopup: false,
+			showNewFilePopup: false,
 		}
 	},
 	computed: {
@@ -211,41 +216,8 @@ export default Vue.extend({
 							children: [
 								{
 									name: "New File",
-									args: [
-										{
-											name: "Parent Folder",
-											description: "Choose the folder to hold the file",
-											type: 'folder',
-										},
-										{
-											name: "File Name",
-											description: "Name of the file",
-											validator: function (name) {
-												return !!name.match(/^[a-zA-Z0-9_ \-.]+$/);
-											},
-										}
-									],
-									command({args} : { args: CustomDict<string> }) {
-										const parent = args["Parent Folder"];
-										const name = args["File Name"];
-										//Build the full file path
-										const full_path = path.join(parent, name);
-
-										try {
-											//Check the file doesn't already exist
-											if (fs.existsSync(full_path)) {
-												_displayError(`The file "${name}" already exists in "${parent}"`);
-												return;
-											}
-											//Create the file
-											fs.writeFile(full_path, "", err => {
-												if (err) _displayError(err.message);
-												else console.log(`Successfully created file "${full_path}"`);
-											});
-											_displaySuccess("File created successfully");
-										} catch (e) {
-											_displayError(e);
-										}
+									command: () => {
+										this.showNewFilePopup = true;
 									}
 								},
 								{
