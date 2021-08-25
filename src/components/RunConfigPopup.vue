@@ -40,7 +40,7 @@
 					</v-card-title>
 
 					<v-container>
-						<v-form ref="form">
+						<v-form ref="form" v-model="isFormValid">
 							<v-row class="mt-0">
 								<v-text-field
 									v-model="nameModel"
@@ -115,6 +115,7 @@
 					text
 					@click="saveConfig()"
 					v-text="'save'"
+					:disabled="!isFormValid"
 				/>
 			</v-card-actions>
 		</v-card>
@@ -140,6 +141,8 @@ interface DataTypeInterface {
 	inputModel: string,
 	interpreterVal: INTERPRETERS,
 
+	isFormValid: boolean,
+
 	configIndex: number,
 }
 
@@ -164,6 +167,7 @@ export default Vue.extend({
 			inputModel: '',
 			interpreterVal: INTERPRETERS.WHILE_JS,
 			configIndex: -1,
+			isFormValid: true,
 		}
 	},
 	computed: {
