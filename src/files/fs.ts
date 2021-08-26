@@ -102,7 +102,6 @@ if (nodeFs && Object.keys(nodeFs).length) {
 	//Make a proxy around memfs to watch for FS changes, and automatically export/store the changed version
 	let saveInProgress = false;
 	let fsWrapper = _wrapFs(memfs, () => {
-		console.log('Should save')
 		//Don't start another save if one is in progress
 		if (saveInProgress) return;
 		//Mark a save as in progress
