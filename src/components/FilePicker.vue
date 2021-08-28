@@ -19,6 +19,7 @@
 				return-object
 				transition
 				style="text-align: left;"
+				ref="treeViewer"
 			>
 				<template v-slot:prepend="{ item, open }">
 					<template v-if="item.children">
@@ -119,6 +120,23 @@ export default Vue.extend({
 			//Add the children to the parent node in the tree
 			folder.children = res;
 		},
+		/**
+		 * Force a node's children to be reloaded next time it is opened.
+		 * See bug report here: https://github.com/vuetifyjs/vuetify/issues/10587#issuecomment-770680909
+		 * @param ids    ID values of the nodes to unload
+		 */
+		markNodeUnloaded(...ids: string[]) {
+			let treeViewer = this.$refs.treeViewer as (Vue & { nodes: any[]; updateVnodeState: (id: string) => void });
+			if (!treeViewer) return;
+
+			let nodes = treeViewer.nodes;
+			for (const nodeKey in nodes) {
+				if (nodes[nodeKey].vnode) {
+					nodes[nodeKey].vnode.hasLoaded = false
+				}
+			}
+			for (let id of ids) treeViewer.updateVnodeState(id);
+		}
 	},
 	watch: {
 		active(active: FileType[]) {
@@ -147,6 +165,18 @@ export default Vue.extend({
 			await this.loadFolderChildren(root);
 			this.open = [root];
 			this.active = [root];
+		},
+
+		open(open: FileType[], oldOpen: FileType[]) {
+			//Get the folders which were closed
+			let closedFolders = oldOpen.filter(v => open.indexOf(v) === -1);
+
+			//Unload all the closed folders' children
+			for (let file of closedFolders) file.children = [];
+
+			//Force the child files to be reloaded next time the folder is open
+			//See: https://github.com/vuetifyjs/vuetify/issues/10587#issuecomment-770680909
+			this.markNodeUnloaded(...closedFolders.map(file => file.path));
 		},
 	},
 });
