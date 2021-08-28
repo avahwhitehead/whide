@@ -209,7 +209,9 @@ export default Vue.extend({
 			}
 		},
 		directory() {
-			(this.$refs.form! as HTMLElement & {validate: () => void}).validate();
+			if (this.showDialog) {
+				(this.$refs.form! as HTMLElement & { validate: () => void }).validate();
+			}
 		}
 	},
 });
