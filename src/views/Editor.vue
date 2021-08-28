@@ -218,6 +218,7 @@ export default Vue.extend({
 								{
 									name: "New File",
 									command: () => {
+										this.createFolder = false;
 										this.showNewFilePopup = true;
 									}
 								},
