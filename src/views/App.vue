@@ -90,21 +90,21 @@ Vue.config.errorHandler = function (err, _, info) {
 	});
 }
 
-window.onerror = function (msg:Event|string, url?:string, line?:number, col?:number, err?:Error) {
-	//https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
-	let message: string = '';
-	if (err) message = err.toString() + '\n';
-	message += `Info: ${msg}`;
-
-	//Log the error
-	console.error(message);
-	//Show in a popup
-	ioController?.prompt({
-		title: `Uncaught Error: ${err ? err.name : 'Unknown Error'}`,
-		message: message,
-		options: ['Ok']
-	});
-}
+// window.onerror = function (msg:Event|string, url?:string, line?:number, col?:number, err?:Error) {
+// 	//https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
+// 	let message: string = '';
+// 	if (err) message = err.toString() + '\n';
+// 	message += `Info: ${msg}`;
+//
+// 	//Log the error
+// 	console.error(message);
+// 	//Show in a popup
+// 	ioController?.prompt({
+// 		title: `Uncaught Error: ${err ? err.name : 'Unknown Error'}`,
+// 		message: message,
+// 		options: ['Ok']
+// 	});
+// }
 </script>
 
 <!--suppress CssUnusedSymbol -->

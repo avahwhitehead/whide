@@ -40,6 +40,7 @@ import Vue from "vue";
 import { fs } from "@/files/fs";
 import path from "path";
 import { Stats } from "fs";
+import FolderWatcherManager from "@/files/FolderWatcherManager";
 
 interface DataTypeInterface {
 	items: FileType[];
@@ -65,15 +66,10 @@ export default Vue.extend({
 		}
 	},
 	data() : DataTypeInterface {
-		let root = {
-			name: `${path.basename(this.directory)}/`,
-			path: this.directory,
-			children: [],
-		};
 		return {
-			open: [root],
+			open: [],
 			active: [],
-			items: [root],
+			items: [],
 		}
 	},
 	computed: {
@@ -81,7 +77,61 @@ export default Vue.extend({
 			return `${path.basename(this.directory)}/`
 		}
 	},
+	mounted() {
+		//Set up file watchers and open the root folder
+		this._onDirectoryChange(this.directory);
+	},
+	beforeDestroy() {
+		//Close the filewatchers before the element is destroyed
+		for (let folder of this.open) {
+			this._unwatchDirectory(folder.path)
+		}
+	},
 	methods: {
+		_watchDirectory(filepath: string) {
+			FolderWatcherManager.watch(filepath, this._onWatcherTrigger);
+		},
+		_unwatchDirectory(filepath: string) {
+			FolderWatcherManager.unwatch(filepath, this._onWatcherTrigger);
+		},
+		_onWatcherTrigger(change: string, filepath: string): void {
+			let item = this._findItemFromPath(filepath);
+			if (item) this.loadFolderChildren(item);
+		},
+		/**
+		 * Search through the {@code items} list looking for a file that matches the provided file path.
+		 * Dynamically searches through the items to reduce search time.
+		 * @param filepath  The path to look for
+		 * @param items     (Optional) the items list to search through.
+		 *                  Defaults to {@code this.items}.
+		 * @returns {FileType}  The item that represents that file path
+		 * @returns {null}      Could not find a matching path
+		 */
+		_findItemFromPath(filepath: string, items?: FileType[]): FileType|null {
+			//Use the provided items list, or the fallback
+			items = items || this.items;
+
+			//Normalize the filepath for comparison with each item
+			let normalizedFilepath = path.normalize(filepath);
+
+			for (let item of items) {
+				//Normalize this item's path
+				let normalizedPath = path.normalize(item.path);
+
+				if (normalizedPath === normalizedFilepath) {
+					//The paths are the same - return the found item
+					return item;
+				} else if (normalizedPath === normalizedFilepath.substr(0, normalizedPath.length)) {
+					if (item.children) {
+						//The item is a parent folder of the file - search in its children
+						return this._findItemFromPath(normalizedFilepath, item.children);
+					}
+					//Otherwise this is a file with the same name as a parent path
+					// keep looking for the file
+				}
+			}
+			return null;
+		},
 		async loadFolderChildren(folder: FileType) : Promise<void> {
 			//Don't try and load from files
 			if (!folder.children) return;
@@ -136,6 +186,25 @@ export default Vue.extend({
 				}
 			}
 			for (let id of ids) treeViewer.updateVnodeState(id);
+		},
+		async _onDirectoryChange(directory: string, olddir?: string): Promise<void> {
+			//Close the file watcher on the old root
+			if (olddir !== undefined) this._unwatchDirectory(olddir);
+
+			//Create a new root element
+			let root = {
+				name: `${path.basename(this.directory)}/`,
+				path: this.directory,
+				children: [],
+			};
+
+			//Load the root's children
+			//(Otherwise the treeviewer doesn't load)
+			await this.loadFolderChildren(root);
+
+			//Update the tree with the new root
+			this.items = [root];
+			this.open = [root];
 		}
 	},
 	watch: {
@@ -153,26 +222,27 @@ export default Vue.extend({
 				this.$emit('changeFile', filePath);
 			}
 		},
-		async directory(directory: string) {
-			//Open the new directory in the file picker
-			//And display its children
-			let root = {
-				name: `${path.basename(directory)}/`,
-				path: directory,
-				children: [],
-			};
-			this.items = [root];
-			await this.loadFolderChildren(root);
-			this.open = [root];
-			this.active = [root];
+		directory(directory: string, olddir: string) {
+			this._onDirectoryChange(directory, olddir)
 		},
 
 		open(open: FileType[], oldOpen: FileType[]) {
-			//Get the folders which were closed
+			//Get the folders which were just closed
 			let closedFolders = oldOpen.filter(v => open.indexOf(v) === -1);
+			//Get the folders which were just opened
+			let openedFolders = open.filter(v => oldOpen.indexOf(v) === -1);
 
-			//Unload all the closed folders' children
-			for (let file of closedFolders) file.children = [];
+			for (let folder of closedFolders) {
+				//Unload the closed folder's children
+				folder.children = [];
+				//Close the directory watcher
+				this._unwatchDirectory(folder.path);
+			}
+
+			//Open a directory watcher
+			for (let folder of openedFolders) {
+				this._watchDirectory(folder.path);
+			}
 
 			//Force the child files to be reloaded next time the folder is open
 			//See: https://github.com/vuetifyjs/vuetify/issues/10587#issuecomment-770680909
