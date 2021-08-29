@@ -42,7 +42,6 @@
 				>
 					<FilePicker
 						:directory="directory"
-						@changeFolder="onFolderSelect"
 						hide-files
 					>
 						<template v-slot:controls="">
@@ -109,7 +108,7 @@ const DEFAULT_FILE_NAME = 'prog';
 const DEFAULT_FOLDER_NAME = 'myfolder';
 
 export default Vue.extend({
-	name: 'ChangeRootPopup',
+	name: 'NewFilePopup',
 	components: {
 		FilePicker
 	},
@@ -155,7 +154,7 @@ export default Vue.extend({
 
 			let fullpath = path.resolve(this.directory, fullname);
 			if (this.createFolder) {
-				fullpath += '/';
+				fullpath += path.sep;
 			}
 			return fullpath;
 		},
@@ -176,13 +175,10 @@ export default Vue.extend({
 			//Hide the popup
 			this.showDialog = false;
 		},
-		onFolderSelect(directory: string): void {
-			this.directory = directory;
-		},
 		parentDirChange(): void {
 			this.directory = path.resolve(this.directory, '..');
 		},
-		
+
 		validation_filename(): true|string {
 			if (!this.fileName) return 'Enter a file name';
 
