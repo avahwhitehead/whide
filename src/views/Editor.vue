@@ -83,6 +83,7 @@
 		<SettingsPopup v-model="showSettingsPopup" />
 		<ChangeRootPopup v-model="showChangeRootPopup" />
 		<NewFilePopup v-model="showNewFilePopup" :create-folder="createFolder" />
+		<DeleteFilePopup v-model="showDeleteFilePopup" />
 	</div>
 </template>
 
@@ -100,13 +101,11 @@ import RunConfigPopup from "@/components/RunConfigPopup.vue";
 import SettingsPopup from "@/components/SettingsPopup.vue";
 import ChangeRootPopup from "@/components/ChangeRootPopup.vue";
 import NewFilePopup from "@/components/NewFilePopup.vue";
+import DeleteFilePopup from "@/components/DeleteFilePopup.vue";
 //Other imports
 import { EditorController, IOController, Menu } from "@/types";
 import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
-import { fs } from "@/files/fs";
 import CodeMirror from "codemirror";
-import { CustomDict } from "@/types/CustomDict";
-import { Stats } from "fs";
 import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguration";
 import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
 import { AbstractRunner } from "@/run/AbstractRunner";
@@ -125,6 +124,7 @@ interface DataTypesDescriptor {
 	showRunConfigPopup: boolean;
 	showSettingsPopup: boolean;
 	showChangeRootPopup: boolean;
+	showDeleteFilePopup: boolean,
 	showNewFilePopup: boolean,
 	createFolder: boolean,
 }
@@ -132,6 +132,7 @@ interface DataTypesDescriptor {
 export default Vue.extend({
 	name: 'Editor',
 	components: {
+		DeleteFilePopup,
 		ChangeRootPopup,
 		SettingsPopup,
 		RunConfigPopup,
@@ -152,6 +153,7 @@ export default Vue.extend({
 			showRunConfigPopup: false,
 			showSettingsPopup: false,
 			showChangeRootPopup: false,
+			showDeleteFilePopup: true,
 			showNewFilePopup: false,
 			createFolder: false,
 		}
@@ -185,29 +187,6 @@ export default Vue.extend({
 			return !!this.chosenRunConfig;
 		},
 		menus() : Menu[] {
-			const _displayError = async (error: string) => {
-				console.error(error);
-				if (!this.ioController) {
-					console.error("Couldn't get IO Controller");
-					return;
-				}
-				await this.ioController.showOutput({
-					message: error,
-					title: "An error occurred"
-				});
-			}
-			const _displaySuccess = async (msg: string) => {
-				console.log(msg);
-				if (!this.ioController) {
-					console.error("Couldn't get IO Controller");
-					return;
-				}
-				await this.ioController.showOutput({
-					message: msg,
-					title: "Success"
-				});
-			}
-
 			return [
 				{
 					name: "File",
@@ -239,24 +218,8 @@ export default Vue.extend({
 						},
 						{
 							name: "Delete",
-							args: [{
-								name: "Path",
-								description: "Choose the file/folder to delete",
-								type: 'path',
-							}],
-							command({args} : { args: CustomDict<string> }) {
-								const full_path = args["Path"];
-
-								try {
-									let stat: Stats = fs.statSync(full_path);
-									//Delete the file or folder at the path
-									if (stat.isDirectory()) fs.rmdirSync(full_path);
-									else fs.unlinkSync(full_path);
-
-									_displaySuccess("File deleted");
-								} catch (e) {
-									_displayError(e);
-								}
+							command: () => {
+								this.showDeleteFilePopup = true;
 							}
 						},
 						{
