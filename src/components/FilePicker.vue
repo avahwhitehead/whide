@@ -210,6 +210,7 @@ export default Vue.extend({
 		async _onDirectoryChange(directory: string, olddir?: string): Promise<void> {
 			//Close the file watcher on the old root
 			if (olddir !== undefined) this._unwatchDirectory(olddir);
+			this._watchDirectory(directory);
 
 			//Create a new root element
 			let root = {

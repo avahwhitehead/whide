@@ -26,10 +26,12 @@ class FolderWatcher {
 
 	public addCallback(watcher: FileWatcherCallbackType) {
 		this.watchers.add(watcher);
+		if (this._fswatcher === undefined) this.open();
 	}
 
 	public removeCallback(watcher: FileWatcherCallbackType) {
 		this.watchers.delete(watcher);
+		if (this.watchers.size === 0) this.close();
 	}
 
 	public close() {
@@ -45,9 +47,7 @@ class FolderWatcher {
 	}
 
 	private _onWatcherTrigger = (event: 'change'|'rename') => {
-		// console.log('here', this.watchers);
 		for (let watcher of this.watchers) {
-			// console.log('watcher ', watcher);
 			watcher(event, this._filepath);
 		}
 	}
@@ -56,13 +56,9 @@ class FolderWatcher {
 export default class FolderWatcherManager {
 	private static readonly _watcherMap: Map<string, FolderWatcher> = new Map<string, FolderWatcher>();
 
-	constructor() {
-		// this._watcherMap = new Map<string, FolderWatcher>();
-	}
-
 	public static watch(filepath: string, cb: FileWatcherCallbackType): void {
-		let normalizedPath = path.normalize(filepath);
-		let watcher = this._watcherMap.get(normalizedPath);
+		let normalizedPath: string = path.normalize(filepath);
+		let watcher: FolderWatcher | undefined = this._watcherMap.get(normalizedPath);
 
 		if (!watcher) {
 			watcher = new FolderWatcher(normalizedPath, [cb]);
@@ -79,9 +75,7 @@ export default class FolderWatcherManager {
 		if (watcher) {
 			if (cb) {
 				watcher.removeCallback(cb);
-				watcher.close();
 			} else {
-				// this._removeWatcher(filepath, watcher);
 				watcher.close();
 				this._watcherMap.delete(filepath);
 			}
