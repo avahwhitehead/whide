@@ -167,8 +167,28 @@ export default Vue.extend({
 					console.error(`Couldn't read file "${fullPath}" `, e);
 				}
 			}
+			//Combine the folder's new children with its old children to prevent unnecessary reloading
+			if (res && folder.children) this.mergeChildren(res, folder.children);
 			//Add the children to the parent node in the tree
 			folder.children = res;
+		},
+		/**
+		 * Combine the children of a new folder with its already loaded counterpart.
+		 * The `children` property of each folder in the new list is set to that of its equivalent in the old list.
+		 * @param newChildren   The new list of children
+		 * @param oldChildren   The old list of children
+		 * @returns {@code newChildren}
+		 */
+		mergeChildren(newChildren: FileType[], oldChildren: FileType[]): FileType[] {
+			for (let i = 0; i < newChildren.length; i++) {
+				let child = newChildren[i];
+				let oldChildIndex = oldChildren.findIndex(v => v.path === child.path);
+				if (oldChildIndex === -1) continue;
+
+				child.children = oldChildren[oldChildIndex].children;
+				oldChildren.splice(oldChildIndex, 1);
+			}
+			return newChildren;
 		},
 		/**
 		 * Force a node's children to be reloaded next time it is opened.
