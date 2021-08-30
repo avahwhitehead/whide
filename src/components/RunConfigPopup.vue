@@ -2,103 +2,110 @@
 	<v-dialog
 		v-model="showDialog"
 		persistent
-		max-width="800px"
+		max-width="900px"
+		scrollable
 	>
-		<v-card class="ma-0 pa-0 pt-2">
-			<v-row class="ma-0">
-				<v-col
-					cols="2"
-					class="sidebar text-body-2 pa-0"
-				>
-					<div class="pa-0">
-						<v-btn depressed @click="createConfig" >
-							<FontAwesomeIcon icon="plus"/>
-						</v-btn>
-					</div>
+		<v-card max-height="800px">
+			<v-navigation-drawer permanent absolute width="180px">
+				<div class="pa-0">
+					<v-btn depressed @click="createConfig" >
+						<FontAwesomeIcon icon="plus"/>
+					</v-btn>
+				</div>
+				<v-list dense>
+					<v-list-item-group v-model="configIndex" mandatory>
+						<v-list-item v-for="(config, i) in runConfigs" :key="i">
+							<v-list-item-content>
+								<v-list-item-title v-text="config.name" />
+							</v-list-item-content>
+						</v-list-item>
+					</v-list-item-group>
+				</v-list>
+			</v-navigation-drawer>
 
-					<v-list dense>
-						<v-list-item-group v-model="configIndex" mandatory>
-							<v-list-item v-for="(config, i) in runConfigs" :key="i">
-								<v-list-item-content>
-									<v-list-item-title v-text="config.name" />
-								</v-list-item-content>
-							</v-list-item>
-						</v-list-item-group>
-					</v-list>
-				</v-col>
+			<v-card-title class="pt-0 pb-0" style="padding-left: 190px;">
+				<span class="text-h5">Edit Run Configuration</span>
+				<v-spacer />
+				<FontAwesomeIcon
+					icon="trash"
+					title="Delete configuration"
+					@click="deleteConfig()"
+					class="icon-delete"
+				/>
+			</v-card-title>
 
-				<v-col>
-					<v-card-title class="pa-0">
-						<span class="text-h5">Run Configuration</span>
-						<v-spacer />
-						<FontAwesomeIcon
-							icon="trash"
-							title="Delete"
-							@click="deleteConfig()"
-							class="icon-delete"
+			<v-container style="overflow-y: auto; padding-left: 200px;">
+				<v-form ref="form" v-model="isFormValid">
+					<v-row class="mt-0">
+						<v-text-field
+							v-model="nameModel"
+							label="Configuration name*"
+							class="mb-0 mt-0 pb-0 pt-0"
+							required
+							:rules="nameInputRules"
 						/>
-					</v-card-title>
+					</v-row>
 
-					<v-container>
-						<v-form ref="form" v-model="isFormValid">
-							<v-row class="mt-0">
-								<v-text-field
-									v-model="nameModel"
-									label="Configuration name*"
-									class="mb-0 mt-0 pb-0 pt-0"
-									required
-									:rules="nameInputRules"
-								/>
-							</v-row>
+					<v-row class="">
+						<v-select
+							v-model="interpreterModel"
+							:items="interpreterList"
+							label="WHILE Interpreter"
+							class="dropdown"
+							item-text="name"
+							return-object
+							outlined
+							dense
+							required
+							:rules="interpreterInputRules"
+						/>
+					</v-row>
 
-							<v-row class="">
-								<v-select
-									v-model="interpreterModel"
-									:items="interpreterList"
-									label="WHILE Interpreter"
-									class="dropdown"
-									item-text="name"
-									return-object
-									outlined
-									dense
-									required
-									:rules="interpreterInputRules"
-								/>
-							</v-row>
-
-							<v-row class="">
-								<v-text-field
-									v-model="fileModel"
-									label="File*"
-									class="mb-0 mt-0 pb-0 pt-0"
-									required
-									:rules="fileInputRules"
-								/>
-							</v-row>
-							<v-row class="">
-								<v-text-field
-									v-model="inputModel"
-									label="Input tree*"
-									class="mb-0 mt-0 pb-0 pt-0"
-									required
-									:rules="treeInputRules"
-								/>
-							</v-row>
-							<v-row class="">
-								<v-text-field
-									v-model="formatModel"
-									label="Tree Display Format*"
-									class="mb-0 mt-0 pb-0 pt-0"
-									required
-									:rules="treeFormatInputRules"
-								/>
-							</v-row>
-						</v-form>
-					</v-container>
+					<v-row class="">
+						<v-text-field
+							v-model="fileModel"
+							label="File*"
+							class="mb-0 mt-0 pb-0 pt-0"
+							required
+							:rules="fileInputRules"
+						/>
+					</v-row>
+					<v-row class="">
+						<v-text-field
+							v-model="inputModel"
+							label="Input tree*"
+							class="mb-0 mt-0 pb-0 pt-0"
+							required
+							:rules="treeInputRules"
+						/>
+					</v-row>
+					<v-row>
+						<div
+							class="expand-button"
+							@click="showTreeGraph = !showTreeGraph"
+							v-text="`(${showTreeGraph ? 'hide' : 'show'} tree viewer)`"
+						/>
+					</v-row>
+					<v-row>
+						<transition name="fade">
+							<v-col style="height: 30em; width: 20em;" v-if="showTreeGraph">
+								<VariableTreeViewer :tree="displayableConvertedTree" />
+							</v-col>
+						</transition>
+					</v-row>
+<!--					<v-row class="">-->
+<!--						<v-text-field-->
+<!--							v-model="formatModel"-->
+<!--							label="Tree Display Format*"-->
+<!--							class="mb-0 mt-0 pb-0 pt-0"-->
+<!--							required-->
+<!--							:rules="treeFormatInputRules"-->
+<!--						/>-->
+<!--					</v-row>-->
+					</v-form>
 
 					<small>*indicates required field</small>
-				</v-col>
-			</v-row>
+			</v-container>
 
 			<v-card-actions class="actions-container">
 				<v-spacer />
@@ -125,13 +132,17 @@
 <script lang="ts">
 import Vue from "vue";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
+import VariableTreeViewer, { TreeType } from "@/components/VariableTreeViewer.vue";
+import { binaryTreeToDisplayable } from "@/utils/tree_converters";
+import { treeParser as parseTree } from "@whide/tree-lang";
+import { BinaryTree } from "whilejs";
 
 type InterpreterType = {
 	name: string,
 	interpreter: INTERPRETERS
 };
 
-interface DataTypeInterface {
+type DataTypeInterface = {
 	runnerProg: InterpreterType,
 	interpreterList: InterpreterType[],
 
@@ -144,12 +155,16 @@ interface DataTypeInterface {
 	isFormValid: boolean,
 
 	configIndex: number,
-}
+
+	showTreeGraph: boolean,
+	treeErrorMessage: string|undefined,
+	displayableConvertedTree: TreeType,
+} & any
 
 export default Vue.extend({
 	name: 'RunConfigPopup',
 	components: {
-
+		VariableTreeViewer,
 	},
 	props: {
 		value: Boolean,
@@ -164,10 +179,14 @@ export default Vue.extend({
 			nameModel: '',
 			formatModel: '',
 			fileModel: '',
-			inputModel: '',
+			inputModel: 'nil',
 			interpreterVal: INTERPRETERS.WHILE_JS,
 			configIndex: -1,
 			isFormValid: true,
+			showTreeGraph: true,
+
+			treeErrorMessage: undefined,
+			displayableConvertedTree: binaryTreeToDisplayable(null),
 		}
 	},
 	computed: {
@@ -220,6 +239,9 @@ export default Vue.extend({
 		treeInputRules(): ((v: string) => boolean|string)[] {
 			return [
 				this.rule_requireNonEmpty,
+				() => {
+					return this.treeErrorMessage || true
+				}
 			];
 		},
 		treeFormatInputRules(): ((v: string) => boolean|string)[] {
@@ -297,7 +319,30 @@ export default Vue.extend({
 				//Automatically refresh the form validations if the run configurations list updates
 				(this.$refs.form! as Vue & { validate: () => void }).validate();
 			}
-		}
+		},
+		inputModel(treeString: string) {
+			//Convert the tree string to a BinaryTree object
+			let parsed_tree: BinaryTree;
+			try {
+				parsed_tree = parseTree(treeString);
+			} catch (e) {
+				this.treeErrorMessage = (e as Error).message;
+				return;
+			}
+
+			//Attempt to convert the tree to a displayable representation
+			let displayable: TreeType|string = binaryTreeToDisplayable(parsed_tree, treeString);
+			if (typeof displayable === 'string') {
+				//Display the error message
+				//And keep the same tree display from before
+				this.treeErrorMessage = displayable;
+			} else {
+				//Clear any error messages
+				this.treeErrorMessage = undefined;
+				//Display the tree
+				this.displayableConvertedTree = displayable;
+			}
+		},
 	},
 });
 </script>
@@ -308,11 +353,20 @@ export default Vue.extend({
 	border-top: 1px solid grey;
 }
 
-.sidebar {
-	border-right: 1px solid grey;
+.expand-button {
+	text-decoration: underline;
+	color: blue;
 }
 
 .icon-delete {
 	cursor: pointer;
+}
+
+.fade-enter-active, .fade-leave-active {
+	transition: all .2s cubic-bezier(0, 0, 0, 0);
+}
+.fade-enter, .fade-leave-to {
+	transform: scaleY(0) translateZ(0);
+	height: 0;
 }
 </style>

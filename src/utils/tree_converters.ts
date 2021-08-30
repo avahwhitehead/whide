@@ -2,24 +2,37 @@ import treeConverter, { BinaryTree, ConversionResultType, ConvertedBinaryTree, s
 import { TreeType } from "@/components/VariableTreeViewer.vue";
 
 /**
- * Change a {@link BinaryTree} object to the displayable {@link TreeType}
- * @param binary	The binary tree to convert
+ * Change a {@link BinaryTree} object to the displayable {@link TreeType}.
+ * @param tree		The binary tree to convert
+ * @returns {TreeType}	The converted tree
  */
-export function binaryTreeToDisplayable(binary: BinaryTree) : TreeType {
-	//Display 'null' nodes as 'nil'
-	if (binary === null) {
-		return { name: 'nil', children: [], };
+export function binaryTreeToDisplayable(tree: BinaryTree): TreeType;
+/**
+ * Change a {@link BinaryTree} object to the displayable {@link TreeType},
+ * and convert the tree using a conversion string at the same time.
+ * @param tree		The binary tree to convert
+ * @param converter	Conversion string to modify the tree
+ * @returns {TreeType}	The converted tree
+ * @returns {string}	Error message which caused the conversion to fail
+ */
+export function binaryTreeToDisplayable(tree: BinaryTree, converter: string): TreeType|string;
+export function binaryTreeToDisplayable(tree: BinaryTree, converter?: string): TreeType|string {
+	converter = converter || 'any';
+
+	//Attempt to convert the tree using the input tree
+	let convertedTree: ConversionResultType | string;
+	try {
+		//Attempt to run the conversion
+		convertedTree = treeConverter(tree, converter);
+	} catch (e) {
+		//Return the errors
+		convertedTree = (e as Error).message;
 	}
-	//Add the children
-	let children: TreeType[] = [
-		binaryTreeToDisplayable(binary.left),
-		binaryTreeToDisplayable(binary.right),
-	];
-	//Return the created node
-	return {
-		name: '',
-		children,
-	};
+
+	//Return the tree as a `TreeType` if it is successful
+	if (typeof convertedTree !== 'string') return convertedTreeToDisplayable(convertedTree.tree);
+	//Return the error message otherwise
+	else return convertedTree;
 }
 
 /**
