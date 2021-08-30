@@ -153,7 +153,7 @@ export default Vue.extend({
 			showRunConfigPopup: false,
 			showSettingsPopup: false,
 			showChangeRootPopup: false,
-			showDeleteFilePopup: true,
+			showDeleteFilePopup: false,
 			showNewFilePopup: false,
 			createFolder: false,
 		}
