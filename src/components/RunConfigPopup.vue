@@ -69,6 +69,13 @@
 							required
 							:rules="fileInputRules"
 						/>
+						<v-btn
+							depressed
+							title="Choose file"
+							@click="showFilePicker = true"
+						>
+							<v-icon>far fa-folder</v-icon>
+						</v-btn>
 					</v-row>
 					<v-row class="">
 						<v-text-field
@@ -126,6 +133,72 @@
 				/>
 			</v-card-actions>
 		</v-card>
+
+		<v-dialog
+			v-model="showFilePicker"
+			persistent
+			scrollable
+			max-width="800px"
+		>
+			<v-card class="pa-3" max-height="600px">
+				<v-card-title>
+					<span>Choose File</span>
+				</v-card-title>
+
+				<v-divider />
+
+				<v-card-text
+					class="pa-0"
+					style="min-height: 15em"
+				>
+					<FilePicker
+						:directory="filePickerDirectory"
+						@changeFile="onPathSelect"
+					>
+						<template v-slot:controls="">
+							<v-btn
+								depressed
+								title="Parent directory"
+								@click="parentDirChange"
+								width="1em"
+								height="2em"
+							>
+								<v-icon>fa-level-up-alt</v-icon>
+							</v-btn>
+							<v-spacer />
+						</template>
+					</FilePicker>
+				</v-card-text>
+
+				<v-divider/>
+
+				<div style="text-align: left">
+					<span class="font-weight-bold">File: </span>
+					<span>{{ filePickerModel }}</span>
+				</div>
+
+				<v-divider/>
+
+				<v-card-actions class="actions-container">
+					<v-spacer />
+
+					<v-btn
+						color="blue darken-1"
+						text
+						@click="showFilePicker = false"
+						v-text="'Cancel'"
+					/>
+
+					<v-btn
+						color="blue darken-1"
+						:disabled="!fileModel"
+						@click="filePickerChooseClick()"
+						text
+						v-text="'Choose'"
+					/>
+				</v-card-actions>
+			</v-card>
+		</v-dialog>
 	</v-dialog>
 </template>
 
@@ -133,9 +206,12 @@
 import Vue from "vue";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
 import VariableTreeViewer, { TreeType } from "@/components/VariableTreeViewer.vue";
+import FilePicker from "@/components/FilePicker.vue";
 import { binaryTreeToDisplayable } from "@/utils/tree_converters";
 import { treeParser as parseTree } from "@whide/tree-lang";
 import { BinaryTree } from "whilejs";
+import { fs } from "@/files/fs";
+import path from "path";
 
 type InterpreterType = {
 	name: string,
@@ -159,11 +235,16 @@ type DataTypeInterface = {
 	showTreeGraph: boolean,
 	treeErrorMessage: string|undefined,
 	displayableConvertedTree: TreeType,
-} & any
+
+	showFilePicker: boolean,
+	filePickerDirectory: string,
+	filePickerModel: string,
+};
 
 export default Vue.extend({
 	name: 'RunConfigPopup',
 	components: {
+		FilePicker,
 		VariableTreeViewer,
 	},
 	props: {
@@ -187,6 +268,10 @@ export default Vue.extend({
 
 			treeErrorMessage: undefined,
 			displayableConvertedTree: binaryTreeToDisplayable(null),
+
+			showFilePicker: false,
+			filePickerDirectory: this.$store.state.current_directory,
+			filePickerModel: '',
 		}
 	},
 	computed: {
@@ -234,6 +319,7 @@ export default Vue.extend({
 		fileInputRules(): ((v: string) => boolean|string)[] {
 			return [
 				this.rule_requireNonEmpty,
+				(v: string) => fs.existsSync(v) || "File must exist"
 			];
 		},
 		treeInputRules(): ((v: string) => boolean|string)[] {
@@ -286,6 +372,17 @@ export default Vue.extend({
 
 		rule_requireNonEmpty(val: string): boolean|string {
 			return val.replaceAll(/\s+/g, '') !== '' || "Enter a value";
+		},
+
+		onPathSelect(p: string): void {
+			this.filePickerModel = p;
+		},
+		parentDirChange(): void {
+			this.filePickerDirectory = path.resolve(this.filePickerDirectory, '..');
+		},
+		filePickerChooseClick(): void {
+			this.fileModel = this.filePickerModel;
+			this.showFilePicker = false;
 		}
 	},
 	watch: {
