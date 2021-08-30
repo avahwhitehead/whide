@@ -82,7 +82,11 @@
 		<RunConfigPopup v-model="showRunConfigPopup" />
 		<SettingsPopup v-model="showSettingsPopup" />
 		<ChangeRootPopup v-model="showChangeRootPopup" />
-		<NewFilePopup v-model="showNewFilePopup" :create-folder="createFolder" />
+		<NewFilePopup
+			v-model="showNewFilePopup"
+			:create-folder="createFolder"
+			@created="onFileCreate"
+		/>
 		<DeleteFilePopup v-model="showDeleteFilePopup" />
 	</div>
 </template>
@@ -336,6 +340,12 @@ export default Vue.extend({
 				//Run to the first breakpoint
 				let state = await runner.run();
 				if (state && state.variables) outputController.variables = state.variables;
+			}
+		},
+
+		onFileCreate(filePath: string, isFolder: boolean) {
+			if (this.editorController && !isFolder) {
+				this.editorController.open(filePath);
 			}
 		},
 

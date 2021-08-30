@@ -172,6 +172,9 @@ export default Vue.extend({
 				await fs.promises.writeFile(this.full_path, '');
 			}
 
+			//Alert the parent element that the file/folder was created
+			this.$emit('created', this.full_path, this.createFolder);
+
 			//Hide the popup
 			this.showDialog = false;
 		},
