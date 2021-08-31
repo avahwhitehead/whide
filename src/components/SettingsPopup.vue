@@ -2,9 +2,10 @@
 	<v-dialog
 		v-model="showDialog"
 		persistent
+		scrollable
 		max-width="800px"
 	>
-		<v-card class="ma-0 pa-0 pt-2">
+		<v-card height="400px">
 			<v-row class="ma-0">
 				<v-col cols="2" class="sidebar text-body-2 pa-0">
 					<v-list dense>
@@ -32,9 +33,10 @@
 
 				<v-btn
 					color="blue darken-1"
+					:disabled="!areSettingsValid"
 					text
 					@click="showDialog = false"
-					v-text="'close'"
+					v-text="'Save'"
 				/>
 			</v-card-actions>
 		</v-card>
@@ -49,6 +51,7 @@ import SettingsGeneralPage from "@/components/_settings/SettingsGeneralPage.vue"
 interface DataTypeInterface {
 	pageIndex: number;
 	pagesList: string[];
+	isGeneralValid: boolean;
 }
 
 export default Vue.extend({
@@ -66,7 +69,8 @@ export default Vue.extend({
 			pagesList: [
 				'General',
 				'Appearance',
-			]
+			],
+			isGeneralValid: true,
 		}
 	},
 	computed: {
@@ -86,15 +90,9 @@ export default Vue.extend({
 				this.pageIndex = this.pagesList.indexOf(val);
 			}
 		},
-	},
-	mounted() {
-
-	},
-	methods: {
-
-	},
-	watch: {
-
+		areSettingsValid(): boolean {
+			return this.isGeneralValid;
+		},
 	},
 });
 </script>

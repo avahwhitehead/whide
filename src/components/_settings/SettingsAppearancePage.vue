@@ -1,22 +1,24 @@
 <template>
 	<v-col>
-		<v-card-title class="pa-0">
-			<span class="text-h5">Appearance</span>
-		</v-card-title>
+		<div class="text-h4">
+			<span>Appearance</span>
+		</div>
 
-		<v-card-text>
+		<v-container>
 			<v-form>
-				<v-radio-group
-					v-model="selectedTheme"
-					label="Application theme:"
-					dense
-				>
-					<v-radio label="Auto (OS default)" :value="THEME_AUTO" />
-					<v-radio label="Light" :value="THEME_LIGHT" />
-					<v-radio label="Dark" :value="THEME_DARK" />
-				</v-radio-group>
+				<v-row>
+					<v-radio-group
+						v-model="selectedTheme"
+						label="Application theme:"
+						dense
+					>
+						<v-radio label="Auto (OS default)" :value="THEME_AUTO" />
+						<v-radio label="Light" :value="THEME_LIGHT" />
+						<v-radio label="Dark" :value="THEME_DARK" />
+					</v-radio-group>
+				</v-row>
 			</v-form>
-		</v-card-text>
+		</v-container>
 	</v-col>
 </template>
 
