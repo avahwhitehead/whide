@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.1.0](https://github.com/sonrad10/Whide/compare/v2.0.0...v2.1.0) (2021-09-01)
+
+
+### Features
+
+* added an "unsaved" marker to the code editor tabs ([0370488](https://github.com/sonrad10/Whide/commit/03704889cdd1107f9f24abfe215e82a3a8e19d47))
+* added automatic browser dark theme detection ([1620436](https://github.com/sonrad10/Whide/commit/16204363a6bb1625f18341225a250fec15805049))
+* added autosave for editor files ([00a12d4](https://github.com/sonrad10/Whide/commit/00a12d479edf19615a85e736afdbe3b9acbf2db8))
+* added error highlighting support for extended WHILE ([9bf37b4](https://github.com/sonrad10/Whide/commit/9bf37b461dfe6eb3b16a2a7253ec43f2b0992f9c))
+* added linting for pure WHILE programs ([8c0af8e](https://github.com/sonrad10/Whide/commit/8c0af8ee1bbac34700c521d60a4ba5c49088685d))
+* added support for run configurations ([8686f7a](https://github.com/sonrad10/Whide/commit/8686f7a79cc62067b66f9101338a9ca75a05e0ff))
+* added support for running code with While.js ([fd3b36b](https://github.com/sonrad10/Whide/commit/fd3b36beb8286e230d12a86c7e962c1ee5717066))
+* created files now open in the editor after creation ([6ade94d](https://github.com/sonrad10/Whide/commit/6ade94dd03f728c47fd53aec842f600f0087818b))
+* made file picker refresh when a folder is reopened ([dd11488](https://github.com/sonrad10/Whide/commit/dd114885be3ed1572dbae93584c230b48899f0fa))
+* run and debug options disable when unavailable ([2aff784](https://github.com/sonrad10/Whide/commit/2aff784a3b1f154bb738420fba169d27aeefd64e))
+* used file watchers to automatically update the file picker when the filesystem changes ([d04b73d](https://github.com/sonrad10/Whide/commit/d04b73d3335278a537bb55c714f67027ebe45c54))
+
+
+### Bug Fixes
+
+* fixed electron not building compiled versions ([1930c97](https://github.com/sonrad10/Whide/commit/1930c97ad81b7feafe9abccd919059760c6ca3cf))
+* fixed ERR_STREAM_WRITE_AFTER_END error when debugging with HWhile ([df2612a](https://github.com/sonrad10/Whide/commit/df2612acb263b2ffee3dc8e8c65ce1b4a09c4bc4))
+* improved styling for code editor tabs ([f36a23a](https://github.com/sonrad10/Whide/commit/f36a23a946409f0470025ca90b0f4410ae918b47))
+* improved tabbed panel stylings ([f61fa1f](https://github.com/sonrad10/Whide/commit/f61fa1fe2391357af3049091ecbe80a2944e58dc))
+* improved the "new file" interface ([8a75c17](https://github.com/sonrad10/Whide/commit/8a75c17b58cd49eb1728596e862e282eff66ae2c))
+* made code editor fill the whole space ([a584000](https://github.com/sonrad10/Whide/commit/a584000603b9289029afd3ec41150f8f9ea4dc6c))
+* moved "delete file/folder" popup into its own element to match with new file/folder ([a234df8](https://github.com/sonrad10/Whide/commit/a234df8f301e29d6b7ded037a58b492d114ac69d))
+* Removed hangover '/settings' URL path ([84b9ed8](https://github.com/sonrad10/Whide/commit/84b9ed838d4c6521c4e4bce14e0f47acace13cd7))
+* stopped error messages being shown as intrusive alerts ([1da00d2](https://github.com/sonrad10/Whide/commit/1da00d2632498dc485deac15d1458fb466bb39fb))
+
 ## [2.0.0](https://github.com/sonrad10/Whide/compare/v1.8.1...v2.0.0) (2021-06-16)
 
 
