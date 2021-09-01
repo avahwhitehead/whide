@@ -17,7 +17,42 @@
 
 		<div ref="codeHolder" class="codeHolder"></div>
 
-		<InputPrompt @controller="ioControllerChange"/>
+		<v-dialog
+			persistent
+			v-model="showSaveDialog"
+			width="400px"
+		>
+			<v-card>
+				<v-card-text>Unsaved changes</v-card-text>
+				<v-card-text>
+					Do you want to save the file before closing?
+				</v-card-text>
+				<v-card-actions>
+					<v-spacer />
+
+					<v-btn
+						color="blue darken-1"
+						text
+						@click="showSaveDialog = false"
+						v-text="'Cancel'"
+					/>
+
+					<v-btn
+						color="blue darken-1"
+						text
+						@click="saveDialogNoSaveClick()"
+						v-text="`Don't Save`"
+					/>
+
+					<v-btn
+						color="blue darken-1"
+						text
+						@click="saveDialogSaveClick()"
+						v-text="'Save'"
+					/>
+				</v-card-actions>
+			</v-card>
+		</v-dialog>
 	</div>
 </template>
 
@@ -26,7 +61,7 @@
 import Vue from "vue";
 import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
 import BreakpointWidget from "./_internal/codeEditor/BreakpointWidget.vue";
-import { EditorController as EditorControllerInterface, IOController, } from "@/types";
+import { EditorController as EditorControllerInterface, } from "@/types";
 import { EventEmitter } from "events";
 import Sortable, { SortableEvent } from 'sortablejs';
 //File imports
@@ -45,7 +80,6 @@ import 'codemirror/addon/lint/lint.css';
 import WHILE from "@/assets/whileSyntaxMode";
 //WHILE linter
 import { ErrorType, ErrorType as WhileError, linter as whileLinter } from "whilejs";
-import InputPrompt from "@/components/InputPrompt.vue";
 
 //Editor themes for light and dark mode
 const DARK_THEME = 'ayu-mirage';
@@ -57,11 +91,12 @@ const AUTOSAVE_INTERVAL: number = 20;
 interface DataType {
 	editor: CodeMirror.Editor|undefined;
 	editorController: EditorControllerInterface|undefined;
-	ioController: IOController|undefined;
 	openFiles: FileInfoState[];
 	errors: LineWidgetType[];
 	infos: LineWidgetType[];
 	warnings: LineWidgetType[];
+	showSaveDialog: boolean;
+	closingTab: FileInfoState|undefined;
 }
 
 function addWidget(editor: CodeMirror.Editor, line: number|CodeMirror.LineHandle, element: HTMLElement) : CodeMirror.LineWidget {
@@ -333,7 +368,7 @@ export class CustomMirrorDoc extends CodeMirror.Doc {
 export default Vue.extend({
 	name: 'CodeEditorContainer',
 	components: {
-		InputPrompt,
+
 	},
 	props: {
 		value: {
@@ -350,11 +385,12 @@ export default Vue.extend({
 			//The code editor object - undefined until the object is created in `mounted`
 			editor: undefined,
 			editorController: undefined,
-			ioController: undefined,
 			openFiles: [],
 			errors: [],
 			infos: [],
 			warnings: [],
+			showSaveDialog: false,
+			closingTab: undefined,
 		}
 	},
 	mounted() {
@@ -500,13 +536,6 @@ export default Vue.extend({
 			});
 		},
 
-		/**
-		 * Handle the IO controller updating
-		 */
-		ioControllerChange(controller: IOController) {
-			this.ioController = controller;
-		},
-
 		addError(line: number|CodeMirror.LineHandle): CodeMirror.LineWidget {
 			return makeWidget(this.editor!, line, 'error', this.errors)
 		},
@@ -564,26 +593,12 @@ export default Vue.extend({
 		async _closeTab(tab: FileInfoState): Promise<void> {
 			//Only save if the file has unsaved changes
 			if (!tab.doc.isClean()) {
-				//TODO: Prompt for file save using v-dialog
-				if (!this.ioController) {
-					console.error("Couldn't get IO controller");
-					return;
-				}
-
-				let res: string = await this.ioController.prompt({
-					title: 'Unsaved changes',
-					message: 'Do you want to save the file before closing?',
-					options: ['Cancel', `Don't Save`, 'Save'],
-				});
-
-				//Stop here if the user presses cancel
-				if (res === 'Cancel') return;
-				//Save the file
-				if (res === 'Save') await this._saveFile(tab);
+				this.showSaveDialog = true;
+				this.closingTab = tab;
+			} else {
+				//Close the tab
+				this.openFiles.splice(this.openFiles.indexOf(tab), 1);
 			}
-
-			//Close the tab
-			this.openFiles.splice(this.openFiles.indexOf(tab), 1);
 		},
 		async _saveFile(tab: FileInfoState): Promise<void> {
 			//Write the file to persistent storage
@@ -594,6 +609,25 @@ export default Vue.extend({
 		},
 		async _writeFile(filepath: string, content: string): Promise<void> {
 			await fs.promises.writeFile(filepath, content, { encoding: ENCODING_UTF8 });
+		},
+
+		async saveDialogSaveClick() {
+			if (!this.closingTab) return;
+			//Save the file
+			await this._saveFile(this.closingTab)
+			//Close the tab
+			this.openFiles.splice(this.openFiles.indexOf(this.closingTab), 1);
+			//Hide the popup
+			this.showSaveDialog = false;
+			this.closingTab = undefined;
+		},
+		saveDialogNoSaveClick() {
+			if (!this.closingTab) return;
+			//Close the tab
+			this.openFiles.splice(this.openFiles.indexOf(this.closingTab), 1);
+			//Hide the popup
+			this.showSaveDialog = false;
+			this.closingTab = undefined;
 		},
 	},
 	watch: {
