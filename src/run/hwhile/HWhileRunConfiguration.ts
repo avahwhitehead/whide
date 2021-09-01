@@ -26,6 +26,11 @@ export interface HWhileRunnerProps {
 	 * Output stream to write the output to
 	 */
 	output: Writable;
+	/**
+	 * Callback for when an error occurs during execution
+	 * @param err	The error object
+	 */
+	onerror?: (err: Error) => void,
 }
 
 /**
@@ -69,7 +74,10 @@ export class HWhileRunner implements AbstractRunner {
 		//Pass interpreter output straight to the output console
 		shell.stdout.on("data", (data: Buffer) => this._props.output.write(data.toString()));
 		//Handle errors/close
-		shell.on('error', (error: Error) => console.log(` error: ${error.message}`));
+		shell.on('error', (error: Error) => {
+			if (this._props.onerror) this._props.onerror(error);
+			else console.error(error);
+		});
 		shell.on("close", () => this._props.output.end());
 	}
 }

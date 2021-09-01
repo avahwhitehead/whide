@@ -78,6 +78,29 @@
 			<v-switch class="mt-0" ref="pureWhileToggle" v-model="extendedWhile" :label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`" />
 		</v-navigation-drawer>
 
+		<v-dialog
+			v-model="showHWhileNotFoundError"
+			width="400px"
+		>
+			<v-card>
+				<v-card-title>Could not find HWhile</v-card-title>
+				<v-card-text>
+					Please ensure HWhile is installed on your computer and available on the global path,
+					or set the path to the HWhile executable in settings.
+				</v-card-text>
+				<v-card-actions>
+					<v-spacer />
+
+					<v-btn
+						color="blue darken-1"
+						text
+						@click="showHWhileNotFoundError = false"
+						v-text="'Ok'"
+					/>
+				</v-card-actions>
+			</v-card>
+		</v-dialog>
+
 		<InputPrompt @controller="c => this.ioController = c" />
 		<RunConfigPopup v-model="showRunConfigPopup" />
 		<SettingsPopup v-model="showSettingsPopup" />
@@ -131,6 +154,7 @@ interface DataTypesDescriptor {
 	showDeleteFilePopup: boolean,
 	showNewFilePopup: boolean,
 	createFolder: boolean,
+	showHWhileNotFoundError: boolean,
 }
 
 export default Vue.extend({
@@ -160,6 +184,7 @@ export default Vue.extend({
 			showDeleteFilePopup: false,
 			showNewFilePopup: false,
 			createFolder: false,
+			showHWhileNotFoundError: false,
 		}
 	},
 	computed: {
@@ -264,7 +289,6 @@ export default Vue.extend({
 			window.open(routeData.href, '_blank');
 		},
 		async openFile(filePath: string) : Promise<void> {
-			console.log('open file ', filePath)
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
 			this.editorController.open(filePath);
 		},
@@ -295,6 +319,7 @@ export default Vue.extend({
 					file: config.file,
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
 					output: outputController.stream,
+					onerror: this._handleRunDebugError,
 				});
 			}
 			//Perform setup
@@ -332,6 +357,7 @@ export default Vue.extend({
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
 					output: outputController.stream,
 					breakpoints: breakpoints,
+					onerror: this._handleRunDebugError,
 				});
 				//Set up user control for the debugger
 				outputController.debuggerCallbackHandler = runner as HWhileDebugger;
@@ -340,6 +366,14 @@ export default Vue.extend({
 				//Run to the first breakpoint
 				let state = await runner.run();
 				if (state && state.variables) outputController.variables = state.variables;
+			}
+		},
+
+		_handleRunDebugError(err: any): void {
+			if (err.code === 'ENOENT') {
+				this.showHWhileNotFoundError = true;
+			} else {
+				console.error(err)
 			}
 		},
 
