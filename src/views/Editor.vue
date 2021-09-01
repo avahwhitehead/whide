@@ -101,7 +101,7 @@
 			</v-card>
 		</v-dialog>
 
-		<InputPrompt @controller="c => this.ioController = c" />
+		<DownloadFilePopup v-model="showDownloadPopup" />
 		<RunConfigPopup v-model="showRunConfigPopup" />
 		<SettingsPopup v-model="showSettingsPopup" />
 		<ChangeRootPopup v-model="showChangeRootPopup" />
@@ -117,13 +117,12 @@
 
 <script lang="ts">
 import Vue from "vue";
-import fileDownloader from "js-file-download";
 //Components
 import CodeEditorElement, { FileInfoState } from "@/components/CodeEditorElement.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import RunPanel from "@/components/RunPanel.vue";
-import InputPrompt from "@/components/InputPrompt.vue";
+import DownloadFilePopup from "@/components/DownloadFilePopup.vue";
 import RunConfigPopup from "@/components/RunConfigPopup.vue";
 import SettingsPopup from "@/components/SettingsPopup.vue";
 import ChangeRootPopup from "@/components/ChangeRootPopup.vue";
@@ -155,16 +154,17 @@ interface DataTypesDescriptor {
 	showNewFilePopup: boolean,
 	createFolder: boolean,
 	showHWhileNotFoundError: boolean,
+	showDownloadPopup: boolean,
 }
 
 export default Vue.extend({
 	name: 'Editor',
 	components: {
 		DeleteFilePopup,
+		DownloadFilePopup,
 		ChangeRootPopup,
 		SettingsPopup,
 		RunConfigPopup,
-		InputPrompt,
 		FilePicker,
 		CodeEditorElement,
 		MenuBar,
@@ -185,6 +185,7 @@ export default Vue.extend({
 			showNewFilePopup: false,
 			createFolder: false,
 			showHWhileNotFoundError: false,
+			showDownloadPopup: false,
 		}
 	},
 	computed: {
@@ -252,23 +253,10 @@ export default Vue.extend({
 							}
 						},
 						{
-							name: "Download",
+							name: "Export",
 							command: () => {
-							if (this.focused_file) {
-								let content = this.editorController!.editor.getValue();
-								fileDownloader(content, this.focused_file);
-							} else {
-								if (!this.ioController) {
-									console.error("Error: Couldn't get IO Controller");
-									return;
-								}
-								this.ioController.prompt({
-									title: 'No file to download',
-									message: 'Open a file and try again',
-									options: ['Ok']
-								});
+								this.showDownloadPopup = true;
 							}
-						}
 						},
 					]
 				},
