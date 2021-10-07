@@ -71,11 +71,23 @@
 			</div>
 		</v-main>
 
-		<v-navigation-drawer app right clipped>
+		<v-navigation-drawer app right clipped v-model="showPopout">
 			<v-btn right @click="showSettingsPopup = !showSettingsPopup">Global Settings</v-btn>
 
 			<div class="title pt-2 pb-0">Options</div>
 			<v-switch class="mt-0" ref="pureWhileToggle" v-model="extendedWhile" :label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`" />
+
+			<v-btn
+				absolute
+				left
+				shaped
+				min-width="5px"
+				width="5px"
+				@click="showPopout = !showPopout"
+				:style="{top: '8%', transform:'translateX(-150%)', visibility: 'visible !important'}"
+			>
+				<FontAwesomeIcon :icon="showPopout ? 'angle-right' : 'angle-left'"/>
+			</v-btn>
 		</v-navigation-drawer>
 
 		<v-dialog
@@ -150,11 +162,12 @@ interface DataTypesDescriptor {
 	showRunConfigPopup: boolean;
 	showSettingsPopup: boolean;
 	showChangeRootPopup: boolean;
-	showDeleteFilePopup: boolean,
-	showNewFilePopup: boolean,
-	createFolder: boolean,
-	showHWhileNotFoundError: boolean,
-	showDownloadPopup: boolean,
+	showDeleteFilePopup: boolean;
+	showNewFilePopup: boolean;
+	createFolder: boolean;
+	showHWhileNotFoundError: boolean;
+	showDownloadPopup: boolean;
+	showPopout: boolean|undefined;
 }
 
 export default Vue.extend({
@@ -186,6 +199,7 @@ export default Vue.extend({
 			createFolder: false,
 			showHWhileNotFoundError: false,
 			showDownloadPopup: false,
+			showPopout: undefined,
 		}
 	},
 	computed: {
@@ -412,6 +426,10 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 }
 .v-select__selections .v-select__selection {
 	max-width: none;
+}
+
+.v-navigation-drawer--mini-variant, .v-navigation-drawer {
+	overflow: visible !important;
 }
 </style>
 
