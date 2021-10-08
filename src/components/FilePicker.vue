@@ -274,6 +274,8 @@ export default Vue.extend({
 </script>
 
 
-<style scoped>
-
+<style>
+.v-treeview-node__label {
+	user-select: none;
+}
 </style>

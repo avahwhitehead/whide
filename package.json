@@ -33,6 +33,7 @@
     "commander": "^7.0.0",
     "core-js": "^3.15.2",
     "d3": "^6.6.0",
+    "interactjs": "^1.10.11",
     "js-file-download": "^0.4.12",
     "localforage": "^1.9.0",
     "memfs": "^3.2.0",

@@ -52,20 +52,21 @@
 			</v-col>
 		</v-app-bar>
 
-		<v-navigation-drawer app permanent clipped>
+		<v-navigation-drawer app permanent clipped :width="fileViewerWidth" ref="filePanel">
 			<v-btn @click="handleChangeRootClick">Change Root</v-btn>
 			<FilePicker :directory="cwd" @changeFile="openFile" />
 		</v-navigation-drawer>
 
-		<v-main class="pa-0 fill-height overflow-hidden">
+		<v-main class="pa-0 fill-height overflow-hidden main-container">
 			<CodeEditorElement
 				class="top"
+				:style="{'height': 'calc(100% - ' + runPanelHeight + 'px)'}"
 				v-model="focused_file"
 				:allow-extended="extendedWhile"
 				@controller="onEditorControllerChange"
 			/>
 
-			<div class="bottom">
+			<div class="bottom" ref="runPanel" :style="{'height': runPanelHeight + 'px'}">
 				<v-divider />
 				<run-panel class="run-panel" @controller="c => this.runPanelController = c" />
 			</div>
@@ -148,6 +149,7 @@ import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguratio
 import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
 import { AbstractRunner } from "@/run/AbstractRunner";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
+import interact from "interactjs";
 
 /**
  * Type declaration for the data() values
@@ -168,6 +170,8 @@ interface DataTypesDescriptor {
 	showHWhileNotFoundError: boolean;
 	showDownloadPopup: boolean;
 	showPopout: boolean|undefined;
+	fileViewerWidth: number;
+	runPanelHeight: number;
 }
 
 export default Vue.extend({
@@ -200,6 +204,8 @@ export default Vue.extend({
 			showHWhileNotFoundError: false,
 			showDownloadPopup: false,
 			showPopout: undefined,
+			fileViewerWidth: 200,
+			runPanelHeight: 100,
 		}
 	},
 	computed: {
@@ -284,6 +290,29 @@ export default Vue.extend({
 				this.$store.commit('cwd.set', cwd);
 			},
 		}
+	},
+	mounted() {
+		const that = this;
+		//Make the file viewer drawer resizable
+		interact(this.$refs.filePanel.$el).resizable({
+			edges: { right: true },
+			listeners: {
+				move(event: any) {
+					const SNAP_DISTANCE = 50;
+					that.fileViewerWidth = Math.ceil(event.rect.width / SNAP_DISTANCE) * SNAP_DISTANCE;
+				}
+			}
+		});
+		//Make the run panel resizable
+		interact(this.$refs.runPanel).resizable({
+			edges: { top: true },
+			listeners: {
+				move(event: any) {
+					const SNAP_DISTANCE = 10;
+					that.runPanelHeight = Math.ceil(event.rect.height / SNAP_DISTANCE) * SNAP_DISTANCE;
+				}
+			}
+		});
 	},
 	methods: {
 		openTreeViewer() {
@@ -463,17 +492,15 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 .top {
 	/*Align to the top*/
 	top: 0;
-	/*Take up most of the space*/
-	height: 65%;
-	max-height: 65%;
+	min-height: 20%;
+	max-height: 90%;
 }
 
 .bottom {
 	/*Align to the bottom*/
 	bottom: 0;
-	/*Fill the remaining space*/
-	height: 35%;
-	max-height: 35%;
+	min-height: 10%;
+	max-height: 80%;
 	/*Resize contents to make room for the divider*/
 	display: flex;
 	flex-direction: column;
