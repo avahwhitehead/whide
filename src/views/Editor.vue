@@ -36,7 +36,8 @@
 					<v-btn
 						class="pa-2 program-button run"
 						:disabled="!allowRunning"
-						depressed @click="runProgramClick"
+						depressed
+						@click="runProgramClick"
 					>
 						<FontAwesomeIcon icon="play" />
 					</v-btn>
@@ -44,7 +45,8 @@
 					<v-btn
 						class="pa-2 program-button debug"
 						:disabled="!allowDebugging"
-						depressed @click="debugProgramClick"
+						depressed
+						@click="debugProgramClick"
 					>
 						<FontAwesomeIcon icon="bug" />
 					</v-btn>
@@ -205,7 +207,7 @@ export default Vue.extend({
 			showDownloadPopup: false,
 			showPopout: undefined,
 			fileViewerWidth: 200,
-			runPanelHeight: 100,
+			runPanelHeight: 200,
 		}
 	},
 	computed: {

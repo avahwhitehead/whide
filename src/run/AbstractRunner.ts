@@ -35,6 +35,10 @@ export interface AbstractRunner {
 	 * Called directly after {@link init}.
 	 */
 	run(): void|ProgramState|Promise<void>|Promise<ProgramState>;
+	/**
+	 * Stop executing the program.
+	 */
+	stop(): void|Promise<void>;
 }
 
 /**

@@ -5,6 +5,7 @@ import { Writable } from "stream";
 import { BinaryTree } from "whilejs";
 import { treeParser } from "@whide/tree-lang";
 import { stringifyTree } from "@/utils/tree_converters";
+import { ChildProcessWithoutNullStreams } from "child_process";
 
 /**
  * Properties for the {@link HWhileRunner} constructor.
@@ -48,37 +49,46 @@ export interface HWhileDebugConfigurationProps extends HWhileRunnerProps {
  */
 export class HWhileRunner implements AbstractRunner {
 	private _props: HWhileRunnerProps;
+	private _shell: ChildProcessWithoutNullStreams|null;
+	private _hWhileConnector: HWhileConnector|null;
 
 	constructor(props: HWhileRunnerProps) {
 		this._props = props;
+		this._shell = null;
+		this._hWhileConnector = null;
 	}
 
 	init(): void {
-		//No setup required
+		//Start the interpreter in the same directory as the file
+		this._hWhileConnector = new HWhileConnector({
+			hwhile: this._props.hwhile,
+			cwd: path.dirname(this._props.file),
+		});
 	}
 
 	run(): void {
-		//Get the file name and parent folder
-		const file_name = path.basename(this._props.file);
-		const folder_path = path.dirname(this._props.file);
-
-		//Start the interpreter in the same directory as the file
-		const hWhileConnector = new HWhileConnector({
-			hwhile: this._props.hwhile,
-			cwd: folder_path,
-		});
-
+		if (!this._hWhileConnector) {
+			throw new Error(`No HWhile connector is defined. Has init been called?`);
+		}
 		//Run the file
-		let shell = hWhileConnector.run(file_name, this._props.expression, false);
+		this._shell = this._hWhileConnector.run(
+			path.basename(this._props.file),
+			this._props.expression,
+			false
+		);
 
 		//Pass interpreter output straight to the output console
-		shell.stdout.on("data", (data: Buffer) => this._props.output.write(data.toString()));
+		this._shell.stdout.on("data", (data: Buffer) => this._props.output.write(data.toString()));
 		//Handle errors/close
-		shell.on('error', (error: Error) => {
+		this._shell.on('error', (error: Error) => {
 			if (this._props.onerror) this._props.onerror(error);
 			else console.error(error);
 		});
-		shell.on("close", () => this._props.output.end());
+		this._shell.on("close", () => this._props.output.end());
+	}
+
+	stop(): void | Promise<void> {
+		this._shell?.kill();
 	}
 }
 
