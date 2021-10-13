@@ -1,12 +1,43 @@
 <template>
 	<v-container fluid class="ma-0 pa-0 run-interface-container">
 		<v-row class="ma-0 pa-0 fill-height">
-			<v-navigation-drawer class="pa-0" style="width: unset;">
+			<v-navigation-drawer class="pa-0" style="width: unset;" permanent>
 				<v-list dense>
-					<v-list-item v-for="(name, i) in ['play', 'step-forward', 'stop']" :key="i">
+					<v-list-item>
 						<v-list-item-icon class="ma-0">
-							<v-btn depressed block class="pa-0 ma-0">
-								<FontAwesomeIcon :icon="name" @click="onIconClick(name)"/>
+							<v-btn
+								depressed
+								block
+								class="pa-0 ma-0"
+								:disabled="!allowRun"
+							>
+								<FontAwesomeIcon icon="play" @click="onIconClick('play')"/>
+							</v-btn>
+						</v-list-item-icon>
+					</v-list-item>
+
+					<v-list-item>
+						<v-list-item-icon class="ma-0">
+							<v-btn
+								depressed
+								block
+								class="pa-0 ma-0"
+								:disabled="!allowStep"
+							>
+								<FontAwesomeIcon icon="step-forward" @click="onIconClick('step-forward')"/>
+							</v-btn>
+						</v-list-item-icon>
+					</v-list-item>
+
+					<v-list-item>
+						<v-list-item-icon class="ma-0">
+							<v-btn
+								depressed
+								block
+								class="pa-0 ma-0"
+								:disabled="!allowStop"
+							>
+								<FontAwesomeIcon icon="stop" @click="onIconClick('stop')"/>
 							</v-btn>
 						</v-list-item-icon>
 					</v-list-item>
@@ -39,7 +70,7 @@
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import { BinaryTree } from "@whide/tree-lang";
-import { AbstractDebugger, ProgramState } from "@/run/AbstractRunner";
+import { AbstractRunner, ProgramState } from "@/run/AbstractRunner";
 import { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
 import OutputElement from "@/components/_internal/runPanel/OutputElement.vue";
 import VariableTable, { VariableDisplayType } from "@/components/_internal/runPanel/VariableTable.vue";
@@ -125,24 +156,42 @@ export default Vue.extend({
 			//Only show program names if there is more than 1 program being displayed
 			return this.selectedProgram === null;
 		},
+
+		allowRun(): boolean {
+			return this.instanceController
+				&& this.instanceController.runner.allowRun;
+		},
+		allowStep(): boolean {
+			return this.instanceController
+				&& this.instanceController.runner.allowStep;
+		},
+		allowStop(): boolean {
+			return this.instanceController
+				&& !this.instanceController.runner.isStopped;
+		},
 	},
 	methods: {
 		async onIconClick(icon: string): Promise<void> {
-			const debuggerCallbackHandler : AbstractDebugger = this.instanceController?.debuggerCallbackHandler!;
-			// if (!debuggerCallbackHandler) {
-			// 	this.ioController?.prompt({
-			// 		title: 'No files running',
-			// 		message: 'Start debugging a program to use these controls',
-			// 		options: ['Ok']
-			// 	});
-			// 	return;
-			// }
+			if (!this.instanceController) {
+				throw new Error('No run instance controller provided');
+			}
+			if (this.instanceController.isStopped) {
+				throw new Error('Run instance has stopped');
+			}
+
+			const runner : AbstractRunner = this.instanceController.runner;
 
 			//Perform the command and read the resulting program state
 			let newState: ProgramState|undefined;
-			if (icon === 'play') newState = await debuggerCallbackHandler.run() || undefined;
-			else if (icon === 'step-forward') newState = await debuggerCallbackHandler.step() || undefined;
-			else if (icon === 'stop') debuggerCallbackHandler.stop();
+			if (icon === 'play') {
+				newState = await runner.run() || undefined;
+			} else if (icon === 'step-forward') {
+				if (runner.step) {
+					newState = await runner.step() || undefined;
+				}
+			} else if (icon === 'stop') {
+				runner.stop();
+			}
 
 			if (newState !== undefined) {
 				//Update the variable store
@@ -159,7 +208,8 @@ export default Vue.extend({
 			v.type = conversionString;
 			v.value = stringifyTree(tree, conversionString);
 
-			this.instanceController.debuggerCallbackHandler!.set(name, tree);
+			if (this.instanceController.runner.set)
+				this.instanceController.runner.set(name, tree);
 		}
 	},
 })

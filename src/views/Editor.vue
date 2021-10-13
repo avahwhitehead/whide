@@ -333,9 +333,6 @@ export default Vue.extend({
 			let config = this.chosenRunConfig;
 			let inputExpression = config.input;
 
-			//Open a new tab in the run panel
-			const outputController = await this.runPanelController!.addOutputStream(config.name);
-
 			let runner: AbstractRunner;
 
 			if (config.interpreter === INTERPRETERS.WHILE_JS) {
@@ -343,7 +340,6 @@ export default Vue.extend({
 				runner = new WhileJsRunner({
 					expression: inputExpression,
 					file: config.file,
-					output: outputController.stream,
 				});
 			} else {
 				//Create an HWhile runner for the program
@@ -351,10 +347,13 @@ export default Vue.extend({
 					expression: inputExpression,
 					file: config.file,
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
-					output: outputController.stream,
 					onerror: this._handleRunDebugError,
 				});
 			}
+
+			//Open a new tab in the run panel
+			await this.runPanelController!.addOutputStream(runner, config.name);
+
 			//Perform setup
 			await runner.init();
 			//Run the program
@@ -368,9 +367,6 @@ export default Vue.extend({
 
 			let config = this.chosenRunConfig;
 			let inputExpression = config.input;
-
-			//Open a new tab in the run panel
-			const outputController: RunPanelInstanceController = await (this.runPanelController as RunPanelController).addOutputStream(config.name);
 
 			let runner: AbstractRunner;
 
@@ -388,18 +384,20 @@ export default Vue.extend({
 					expression: inputExpression,
 					file: config.file,
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
-					output: outputController.stream,
 					breakpoints: breakpoints,
 					onerror: this._handleRunDebugError,
 				});
-				//Set up user control for the debugger
-				outputController.debuggerCallbackHandler = runner as HWhileDebugger;
-				//Perform setup
-				await runner.init();
-				//Run to the first breakpoint
-				let state = await runner.run();
-				if (state && state.variables) outputController.variables = state.variables;
 			}
+
+			//Open a new tab in the run panel
+			const outputController: RunPanelInstanceController =
+				await (this.runPanelController as RunPanelController).addOutputStream(runner, config.name);
+
+			//Perform setup
+			await runner.init();
+			//Run to the first breakpoint
+			let state = await runner.run();
+			if (state && state.variables) outputController.variables = state.variables;
 		},
 
 		_handleRunDebugError(err: any): void {

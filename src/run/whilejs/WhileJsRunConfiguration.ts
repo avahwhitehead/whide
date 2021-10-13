@@ -1,5 +1,4 @@
-import { AbstractRunner } from "@/run/AbstractRunner";
-import { Writable } from "stream";
+import { BaseRunner } from "@/run/BaseRunner";
 import treeConverter, { ConversionResultType, stringify } from "@whide/tree-lang";
 import { fs } from "@/files/fs";
 import { ENCODING_UTF8 } from "memfs/lib/encoding";
@@ -18,23 +17,23 @@ export interface WhileJsRunnerProps {
 	 * Path to the file to run
 	 */
 	file: string;
-	/**
-	 * Output stream to write the output to
-	 */
-	output: Writable;
 }
 
 /**
  * Run a program using While.js.
  */
-export class WhileJsRunner implements AbstractRunner {
+export class WhileJsRunner extends BaseRunner {
 	private _props: WhileJsRunnerProps;
 	private _worker: WhileWorker|undefined;
-	// private _isLoaded: boolean = false;
 	private _loadedCallback: (()=>void)|undefined = undefined;
+	private _allowRun: boolean;
+	private _isStopped: boolean;
 
 	constructor(props: WhileJsRunnerProps) {
+		super();
 		this._props = props;
+		this._allowRun = false;
+		this._isStopped = true;
 	}
 
 	/**
@@ -44,6 +43,9 @@ export class WhileJsRunner implements AbstractRunner {
 		//Read the program string from the file
 		const programString = await fs.promises.readFile(this._props.file, ENCODING_UTF8);
 
+		//Allow the interpreter to be stopped
+		this._isStopped = false;
+
 		//Start a worker for the interpreter
 		this._worker = this._makeWorker();
 		//Load the program
@@ -52,7 +54,7 @@ export class WhileJsRunner implements AbstractRunner {
 			this._props.expression
 		));
 		//Display the input tree
-		this.outputStream.write(`In: ${this._props.expression}\n`);
+		this._display(`In: ${this._props.expression}\n`);
 
 		//Don't resolve the promise until the worker thread has loaded the program
 		return new Promise((resolve) => {
@@ -69,6 +71,7 @@ export class WhileJsRunner implements AbstractRunner {
 		if (this._worker === undefined) {
 			throw new Error('No worker thread exists. Ensure `init` has been called');
 		}
+		this._allowRun = false;
 		//Send the run request
 		this._worker.postMessage(WhileJsRunner._makeRunRequest());
 	}
@@ -77,7 +80,9 @@ export class WhileJsRunner implements AbstractRunner {
 		if (this._worker === undefined) {
 			throw new Error('No worker thread exists.');
 		}
+		//Stop the interpreter thread
 		this._worker.terminate();
+		this._isStopped = true;
 	}
 
 	/**
@@ -95,26 +100,27 @@ export class WhileJsRunner implements AbstractRunner {
 				case "loaded":
 					//Call the callback, if possible
 					if (that._loadedCallback) that._loadedCallback();
+					//Allow running
+					that._allowRun = true;
 					break;
 				case "end":
 					try {
 						//Convert the outputted tree to a human readable format and display it
 						let res: ConversionResultType = treeConverter(data.res, 'any');
-						that.outputStream.write(`Out: ${stringify(res.tree)}\n`);
+						that._display(`Out: ${stringify(res.tree)}\n`);
 					} catch (e) {
 						//Error when converting the tree
 						console.error('Error displaying prog result\n', e);
-						return;
 					}
-					worker.terminate();
+					that.stop();
 					break;
 				case "error":
 					console.error(`Error from WhileJs worker`, data.msg);
-					worker.terminate();
+					that.stop();
 					break;
 				default:
 					console.error(`Unknown response type: '${event.data.type}'`);
-					worker.terminate();
+					that.stop();
 					break;
 			}
 		};
@@ -135,7 +141,11 @@ export class WhileJsRunner implements AbstractRunner {
 		};
 	}
 
-	get outputStream(): Writable {
-		return this._props.output;
+	get allowRun(): boolean {
+		return this._allowRun;
+	}
+
+	get isStopped(): boolean {
+		return this._isStopped;
 	}
 }

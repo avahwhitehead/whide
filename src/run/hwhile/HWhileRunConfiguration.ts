@@ -1,7 +1,7 @@
-import { AbstractDebugger, AbstractRunner, ProgramState } from "@/run/AbstractRunner";
+import { ProgramState } from "@/run/AbstractRunner";
+import { BaseDebugger, BaseRunner } from "@/run/BaseRunner";
 import path from "path";
 import { HWhileConnector, InteractiveHWhileConnector } from "@whide/hwhile-wrapper";
-import { Writable } from "stream";
 import { BinaryTree } from "whilejs";
 import { treeParser } from "@whide/tree-lang";
 import { stringifyTree } from "@/utils/tree_converters";
@@ -24,10 +24,6 @@ export interface HWhileRunnerProps {
 	 */
 	hwhile: string;
 	/**
-	 * Output stream to write the output to
-	 */
-	output: Writable;
-	/**
 	 * Callback for when an error occurs during execution
 	 * @param err	The error object
 	 */
@@ -47,29 +43,38 @@ export interface HWhileDebugConfigurationProps extends HWhileRunnerProps {
 /**
  * Run a program using HWhile.
  */
-export class HWhileRunner implements AbstractRunner {
+export class HWhileRunner extends BaseRunner {
 	private _props: HWhileRunnerProps;
 	private _shell: ChildProcessWithoutNullStreams|null;
 	private _hWhileConnector: HWhileConnector|null;
+	private _allowRun: boolean;
+	private _isStopped: boolean;
 
 	constructor(props: HWhileRunnerProps) {
+		super();
 		this._props = props;
 		this._shell = null;
 		this._hWhileConnector = null;
+
+		this._allowRun = false;
+		this._isStopped = true;
 	}
 
 	init(): void {
+		this._isStopped = false;
 		//Start the interpreter in the same directory as the file
 		this._hWhileConnector = new HWhileConnector({
 			hwhile: this._props.hwhile,
 			cwd: path.dirname(this._props.file),
 		});
+		this._allowRun = true;
 	}
 
 	run(): void {
 		if (!this._hWhileConnector) {
 			throw new Error(`No HWhile connector is defined. Has init been called?`);
 		}
+		this._allowRun = false;
 		//Run the file
 		this._shell = this._hWhileConnector.run(
 			path.basename(this._props.file),
@@ -78,31 +83,51 @@ export class HWhileRunner implements AbstractRunner {
 		);
 
 		//Pass interpreter output straight to the output console
-		this._shell.stdout.on("data", (data: Buffer) => this._props.output.write(data.toString()));
+		this._shell.stdout.on("data", (data: Buffer) => this._display(data.toString()));
 		//Handle errors/close
 		this._shell.on('error', (error: Error) => {
 			if (this._props.onerror) this._props.onerror(error);
 			else console.error(error);
 		});
-		this._shell.on("close", () => this._props.output.end());
+		this._shell.on("close", () => this.stop());
 	}
 
 	stop(): void | Promise<void> {
 		this._shell?.kill();
+		this._isStopped = true;
+	}
+
+	get allowRun(): boolean {
+		return this._allowRun;
+	}
+
+	get isStopped(): boolean {
+		return this._isStopped;
 	}
 }
 
-export class HWhileDebugger implements AbstractDebugger {
+/**
+ * Debug a program using HWhile
+ */
+export class HWhileDebugger extends BaseDebugger {
 	private _props: HWhileDebugConfigurationProps;
 	private hWhileConnector: InteractiveHWhileConnector|undefined;
 	private _currentState: ProgramState|undefined;
 	private _progName: string|undefined;
+	private _allowRun: boolean;
+	private _allowStep: boolean;
+	private _isStopped: boolean;
 
 	constructor(props: HWhileDebugConfigurationProps) {
+		super();
 		this._props = props;
+		this._allowRun = false;
+		this._allowStep = false;
+		this._isStopped = true;
 	}
 
 	async init(): Promise<void> {
+		this._isStopped = false;
 		//Get the file name and program name
 		const file_name = path.basename(this._props.file);
 		this._progName = file_name.split('.')[0];
@@ -115,7 +140,7 @@ export class HWhileDebugger implements AbstractDebugger {
 		});
 
 		//Pass interpreter output straight to the output console
-		this.hWhileConnector.on("output", (data: string) => this._props.output.write(data.toString()));
+		this.hWhileConnector.on("output", (data: string) => this._display(data.toString()));
 
 		//Start the interpreter
 		await this.hWhileConnector.start();
@@ -126,6 +151,9 @@ export class HWhileDebugger implements AbstractDebugger {
 		for (let b of this._props.breakpoints || []) {
 			await this.hWhileConnector.addBreakpoint(b);
 		}
+
+		this._allowRun = true;
+		this._allowStep = true;
 	}
 
 	async run(): Promise<ProgramState> {
@@ -175,8 +203,9 @@ export class HWhileDebugger implements AbstractDebugger {
 	async stop(): Promise<void> {
 		//Stop the interpreter
 		await this.hWhileConnector!.stop();
-		//Close the output stream
-		this._props.output.end();
+		this._isStopped = true;
+		this._allowStep = false;
+		this._allowRun = false;
 	}
 
 	async set(name: string, value: BinaryTree|string, program?: string): Promise<ProgramState> {
@@ -215,5 +244,15 @@ export class HWhileDebugger implements AbstractDebugger {
 
 		//Return the program state
 		return this._currentState;
+	}
+
+	get allowRun(): boolean {
+		return this._allowRun;
+	}
+	get allowStep(): boolean {
+		return this._allowStep;
+	}
+	get isStopped(): boolean {
+		return this._isStopped;
 	}
 }

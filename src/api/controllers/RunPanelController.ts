@@ -1,6 +1,5 @@
-import { Transform } from "stream";
 import { BinaryTree } from "@whide/tree-lang";
-import { AbstractDebugger } from "@/run/AbstractRunner";
+import { AbstractRunner } from "@/run/AbstractRunner";
 
 /**
  * Controller for the "run" panel.
@@ -17,14 +16,15 @@ export default class RunPanelController {
 
 	/**
 	 * Add a new output area
-	 * @param name	The name to use in the tab
+	 * @param runner	Program runner to use in the output
+	 * @param name		The name to use in the tab
 	 */
-	async addOutputStream(name?: string) : Promise<RunPanelInstanceController> {
+	async addOutputStream(runner: AbstractRunner, name?: string) : Promise<RunPanelInstanceController> {
 		//Get the next available name
 		name = this._nextName(name || 'Run');
 
 		//Make an instance controller for this output area
-		const instanceController = new RunPanelInstanceController(name);
+		const instanceController = new RunPanelInstanceController(name, runner);
 		//Save the controller
 		this._controllers.push(instanceController);
 		//Return the controller
@@ -59,8 +59,8 @@ export default class RunPanelController {
 			this.controllers.map(e => e.name).filter(n => n.substr(0, prefix.length) === prefix)
 		);
 		//Start with the number of the length of the set
-		let start: number = nameSet.size + 1;
-		while (nameSet.has(nextName)) nextName = `${prefix} ${start++}`;
+		let start: number = nameSet.size;
+		while (nameSet.has(nextName)) nextName = `${prefix} (${++start})`;
 		return nextName;
 	}
 
@@ -78,62 +78,22 @@ export default class RunPanelController {
  */
 export class RunPanelInstanceController {
 	private _name: string;
-	private _output: string;
-	private readonly _stream: Transform;
-	private _variables : Map<string, Map<string, BinaryTree>>;
-	private _debuggerCallbackHandler?: AbstractDebugger;
+	private readonly _runner: AbstractRunner;
+	private _variables: Map<string, Map<string, BinaryTree>>;
 
 	/**
 	 *
-	 * @param name	The name of the output region
+	 * @param name		Display name for the controller
+	 * @param runner	Program runner outputting to this controller
 	 */
-	public constructor(name: string) {
+	public constructor(name: string, runner: AbstractRunner) {
 		this._name = name;
-		this._output = '';
-		this._stream = new Transform();
+		this._runner = runner;
 		this._variables = new Map();
-
-		//Keep the written data as-is (output in same form as input)
-		this._stream._transform = function (chunk, encoding, callback) {
-			this.push(chunk, encoding);
-			callback();
-		}
-
-		//Handle data coming in
-		this._stream.on('data', this._onData);
-
-		//The "end" event is emitted when the stream ends and all data has been consumed.
-		//The "close" event is emitted when an underlying source has been closed
-		//- https://areknawo.com/node-js-file-streams-explained/
-		this._stream.on('end', this._onClose);
-		this._stream.on('close', this._onClose);
-	}
-
-	/**
-	 * Handle data being written to the stream
-	 * @param chunk	The received data
-	 */
-	private _onData = (chunk: any) => {
-		//Convert to a string
-		const str = chunk.toString();
-		//Append to the end of the output
-		this._output += str;
-	}
-
-	/**
-	 * Handle the stream closing
-	 * @private
-	 */
-	private _onClose = () => {
-		this._output += "\n[Output stream closed]";
-	}
-
-	get stream(): Transform {
-		return this._stream;
 	}
 
 	get output(): string {
-		return this._output;
+		return this.runner.output;
 	}
 
 	get name(): string {
@@ -152,18 +112,18 @@ export class RunPanelInstanceController {
 		this._variables = variables;
 	}
 
+	get runner(): AbstractRunner {
+		return this._runner;
+	}
+
+	get isStopped(): boolean {
+		return this.runner.isStopped;
+	}
+
 	/**
 	 * @deprecated
 	 */
 	setVariablesFromMap(variables : Map<string, Map<string, BinaryTree>>): void {
 		this.variables = variables;
-	}
-
-	get debuggerCallbackHandler(): AbstractDebugger|undefined {
-		return this._debuggerCallbackHandler;
-	}
-
-	set debuggerCallbackHandler(value: AbstractDebugger|undefined) {
-		this._debuggerCallbackHandler = value;
 	}
 }
