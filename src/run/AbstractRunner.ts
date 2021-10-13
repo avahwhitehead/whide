@@ -49,6 +49,12 @@ export interface AbstractRunner extends RunnerControls {
 	readonly output: string;
 
 	/**
+	 * All the variables in the program.
+	 * Datatype is nested map of program name -> (variable name -> variable value).
+	 */
+	readonly variables?: Map<string, Map<string, BinaryTree>>;
+
+	/**
 	 * Perform any setup steps.
 	 * Run once at the start of debugging before any other method is called.
 	 */

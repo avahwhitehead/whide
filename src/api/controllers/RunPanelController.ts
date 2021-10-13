@@ -1,4 +1,3 @@
-import { BinaryTree } from "@whide/tree-lang";
 import { AbstractRunner } from "@/run/AbstractRunner";
 
 /**
@@ -78,8 +77,7 @@ export default class RunPanelController {
  */
 export class RunPanelInstanceController {
 	private _name: string;
-	private readonly _runner: AbstractRunner;
-	private _variables: Map<string, Map<string, BinaryTree>>;
+	private _runner: AbstractRunner;
 
 	/**
 	 *
@@ -89,11 +87,6 @@ export class RunPanelInstanceController {
 	public constructor(name: string, runner: AbstractRunner) {
 		this._name = name;
 		this._runner = runner;
-		this._variables = new Map();
-	}
-
-	get output(): string {
-		return this.runner.output;
 	}
 
 	get name(): string {
@@ -104,26 +97,11 @@ export class RunPanelInstanceController {
 		this._name = value;
 	}
 
-	get variables() : Map<string, Map<string, BinaryTree>> {
-		return this._variables;
-	}
-
-	set variables(variables : Map<string, Map<string, BinaryTree>>) {
-		this._variables = variables;
-	}
-
 	get runner(): AbstractRunner {
 		return this._runner;
 	}
 
-	get isStopped(): boolean {
-		return this.runner.isStopped;
-	}
-
-	/**
-	 * @deprecated
-	 */
-	setVariablesFromMap(variables : Map<string, Map<string, BinaryTree>>): void {
-		this.variables = variables;
+	set runner(value: AbstractRunner) {
+		this._runner = value;
 	}
 }

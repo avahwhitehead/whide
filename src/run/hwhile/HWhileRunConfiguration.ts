@@ -1,7 +1,7 @@
 import { ProgramState } from "@/run/AbstractRunner";
 import { BaseDebugger, BaseRunner } from "@/run/BaseRunner";
 import path from "path";
-import { HWhileConnector, InteractiveHWhileConnector } from "@whide/hwhile-wrapper";
+import { HWhileConnector, InteractiveHWhileConnector, RunResultType, StepResultType } from "@whide/hwhile-wrapper";
 import { BinaryTree } from "whilejs";
 import { treeParser } from "@whide/tree-lang";
 import { stringifyTree } from "@/utils/tree_converters";
@@ -117,6 +117,7 @@ export class HWhileDebugger extends BaseDebugger {
 	private _allowRun: boolean;
 	private _allowStep: boolean;
 	private _isStopped: boolean;
+	private _variables: Map<string, Map<string, BinaryTree>>;
 
 	constructor(props: HWhileDebugConfigurationProps) {
 		super();
@@ -124,6 +125,7 @@ export class HWhileDebugger extends BaseDebugger {
 		this._allowRun = false;
 		this._allowStep = false;
 		this._isStopped = true;
+		this._variables = new Map<string, Map<string, BinaryTree>>();
 	}
 
 	async init(): Promise<void> {
@@ -159,40 +161,33 @@ export class HWhileDebugger extends BaseDebugger {
 	async run(): Promise<ProgramState> {
 		//Run the program
 		let result = await this.hWhileConnector!.run(true);
-		//Read the variable values
-		let variables = await this.hWhileConnector!.store(true);
-		//Stop the process here if the program is done
-		if (result.cause === 'done') {
-			await this.stop();
-			this._currentState = {
-				variables,
-				done: true,
-			};
-		} else {
-			this._currentState = {
-				variables,
-				done: false,
-			};
-		}
-		//Return the program state
-		return this._currentState;
+		return await this._afterRun(result);
 	}
 
 	async step(): Promise<ProgramState> {
 		//Step over the next line in the program
 		let result = await this.hWhileConnector!.step(true);
-		//Read the variable values
-		let variables = await this.hWhileConnector!.store(true);
+		return await this._afterRun(result);
+	}
+
+	/**
+	 * Common operations after a run/step operation
+	 * @param result	The result of the run/step operation
+	 * @private
+	 */
+	private async _afterRun(result: StepResultType|RunResultType) {
+		//Read the updated variable values
+		this._variables = await this.hWhileConnector!.store(true);
 		//Stop the process here if the program is done
 		if (result.cause === 'done') {
 			await this.stop();
 			this._currentState = {
-				variables,
+				variables: this._variables,
 				done: true,
 			};
 		} else {
 			this._currentState = {
-				variables,
+				variables: this._variables,
 				done: false,
 			};
 		}
@@ -244,6 +239,10 @@ export class HWhileDebugger extends BaseDebugger {
 
 		//Return the program state
 		return this._currentState;
+	}
+
+	get variables(): Map<string, Map<string, BinaryTree>> {
+		return this._variables;
 	}
 
 	get allowRun(): boolean {

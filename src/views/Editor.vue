@@ -145,7 +145,7 @@ import NewFilePopup from "@/components/NewFilePopup.vue";
 import DeleteFilePopup from "@/components/DeleteFilePopup.vue";
 //Other imports
 import { EditorController, IOController, Menu } from "@/types";
-import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
+import RunPanelController from "@/api/controllers/RunPanelController";
 import CodeMirror from "codemirror";
 import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguration";
 import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
@@ -390,14 +390,12 @@ export default Vue.extend({
 			}
 
 			//Open a new tab in the run panel
-			const outputController: RunPanelInstanceController =
-				await (this.runPanelController as RunPanelController).addOutputStream(runner, config.name);
+			await (this.runPanelController as RunPanelController).addOutputStream(runner, config.name);
 
 			//Perform setup
 			await runner.init();
 			//Run to the first breakpoint
-			let state = await runner.run();
-			if (state && state.variables) outputController.variables = state.variables;
+			await runner.run();
 		},
 
 		_handleRunDebugError(err: any): void {

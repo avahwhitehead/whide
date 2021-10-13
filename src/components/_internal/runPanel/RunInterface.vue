@@ -48,7 +48,11 @@
 				<OutputElement :value="outputText" class="code-output d-block" />
 			</v-col>
 
-			<v-col cols="4" class="ma-0 pa-0 pl-2 fill-height overflow-y-auto">
+			<v-col
+				cols="4"
+				class="ma-0 pa-0 pl-2 fill-height overflow-y-auto"
+				v-if="instanceController && instanceController.runner.variables"
+			>
 				<v-select
 					v-model="selectedProgram"
 					:items="programs"
@@ -70,7 +74,7 @@
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import { BinaryTree } from "@whide/tree-lang";
-import { AbstractRunner, ProgramState } from "@/run/AbstractRunner";
+import { AbstractRunner } from "@/run/AbstractRunner";
 import { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
 import OutputElement from "@/components/_internal/runPanel/OutputElement.vue";
 import VariableTable, { VariableDisplayType } from "@/components/_internal/runPanel/VariableTable.vue";
@@ -100,7 +104,8 @@ export default Vue.extend({
 	computed: {
 		variables() : VariableDisplayType[] {
 			if (!this.instanceController) return [];
-			let vars: Map<string, Map<string, BinaryTree>> = this.instanceController.variables;
+			if (!this.instanceController.runner.variables) return [];
+			let vars: Map<string, Map<string, BinaryTree>> = this.instanceController.runner.variables;
 			let res: VariableDisplayType[] = [];
 
 			//Get the programs to display the variables for
@@ -132,12 +137,12 @@ export default Vue.extend({
 			return res;
 		},
 		outputText(): string {
-			return this.instanceController.output;
+			return this.instanceController.runner.output;
 		},
 		programs(): string[] {
 			//Get all the variables in the store
-			//Type is a map of programs -> variables -> value
-			let vars: Map<string, Map<string, BinaryTree>> = this.instanceController.variables;
+			if (!this.instanceController.runner.variables) return [];
+			let vars: Map<string, Map<string, BinaryTree>> = this.instanceController.runner.variables;
 
 			//List of all the programs
 			let programs: any[] = [
@@ -175,29 +180,19 @@ export default Vue.extend({
 			if (!this.instanceController) {
 				throw new Error('No run instance controller provided');
 			}
-			if (this.instanceController.isStopped) {
+			if (this.instanceController.runner.isStopped) {
 				throw new Error('Run instance has stopped');
 			}
 
 			const runner : AbstractRunner = this.instanceController.runner;
 
 			//Perform the command and read the resulting program state
-			let newState: ProgramState|undefined;
 			if (icon === 'play') {
-				newState = await runner.run() || undefined;
+				await runner.run();
 			} else if (icon === 'step-forward') {
-				if (runner.step) {
-					newState = await runner.step() || undefined;
-				}
+				if (runner.step) await runner.step();
 			} else if (icon === 'stop') {
 				runner.stop();
-			}
-
-			if (newState !== undefined) {
-				//Update the variable store
-				if (newState.variables !== undefined) {
-					this.instanceController!.variables = newState.variables;
-				}
 			}
 		},
 		
