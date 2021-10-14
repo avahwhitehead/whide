@@ -352,7 +352,7 @@ export default Vue.extend({
 			}
 
 			//Open a new tab in the run panel
-			await this.runPanelController!.addOutputStream(runner, config.name);
+			this.runPanelController!.addOutputStream(runner, config.name);
 
 			//Perform setup
 			await runner.init();
@@ -390,7 +390,7 @@ export default Vue.extend({
 			}
 
 			//Open a new tab in the run panel
-			await (this.runPanelController as RunPanelController).addOutputStream(runner, config.name);
+			this.runPanelController.addOutputStream(runner, config.name);
 
 			//Perform setup
 			await runner.init();

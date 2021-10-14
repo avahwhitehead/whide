@@ -4,7 +4,7 @@ import { AbstractRunner } from "@/run/AbstractRunner";
  * Controller for the "run" panel.
  */
 export default class RunPanelController {
-	private readonly _controllers : RunPanelInstanceController[];
+	private readonly _controllers: { name: string, runner: AbstractRunner }[];
 
 	/**
 	 *
@@ -18,33 +18,34 @@ export default class RunPanelController {
 	 * @param runner	Program runner to use in the output
 	 * @param name		The name to use in the tab
 	 */
-	async addOutputStream(runner: AbstractRunner, name?: string) : Promise<RunPanelInstanceController> {
+	addOutputStream(runner: AbstractRunner, name?: string): void {
 		//Get the next available name
 		name = this._nextName(name || 'Run');
-
-		//Make an instance controller for this output area
-		const instanceController = new RunPanelInstanceController(name, runner);
 		//Save the controller
-		this._controllers.push(instanceController);
-		//Return the controller
-		return instanceController;
+		this._addRunner(name, runner);
 	}
 
 	/**
 	 * Remove an instance controller
-	 * @param controller	The controller instance to remove
+	 * @param nameOrRunner	The name of the instance to remove, or the instance's runner
 	 */
-	async removeOutputStream(controller: RunPanelInstanceController): Promise<void> {
-		const index = this._controllers.indexOf(controller);
-		if (index !== -1) this._controllers.splice(index, 1);
+	removeOutputStream(nameOrRunner: string|AbstractRunner): void {
+		for (let i = 0; i < this._controllers.length; i++) {
+			const curr = this._controllers[i];
+			if (curr.name === nameOrRunner || curr.runner === nameOrRunner) {
+				this._controllers.splice(i, 1);
+			}
+		}
 	}
 
 	/**
-	 * Get a controller by its name
-	 * @param name	The name of the controller
+	 * Add a named runner to the store
+	 * @param name		The runner's name
+	 * @param runner	The runner
+	 * @private
 	 */
-	async getByName(name: string) : Promise<RunPanelInstanceController | undefined> {
-		return this.controllers.find(c => c.name === name);
+	private _addRunner(name: string, runner: AbstractRunner): void {
+		this._controllers.push({name, runner});
 	}
 
 	/**
@@ -55,7 +56,7 @@ export default class RunPanelController {
 		let nextName: string = prefix;
 		//Set of names starting with this prefix
 		let nameSet: Set<string> = new Set(
-			this.controllers.map(e => e.name).filter(n => n.substr(0, prefix.length) === prefix)
+			this.names.filter(n => n.substr(0, prefix.length) === prefix)
 		);
 		//Start with the number of the length of the set
 		let start: number = nameSet.size;
@@ -63,7 +64,7 @@ export default class RunPanelController {
 		return nextName;
 	}
 
-	get controllers(): RunPanelInstanceController[] {
+	get controllers(): { name: string, runner: AbstractRunner }[] {
 		return this._controllers;
 	}
 
@@ -72,36 +73,3 @@ export default class RunPanelController {
 	}
 }
 
-/**
- * Controller for a single output region of the "run" panel
- */
-export class RunPanelInstanceController {
-	private _name: string;
-	private _runner: AbstractRunner;
-
-	/**
-	 *
-	 * @param name		Display name for the controller
-	 * @param runner	Program runner outputting to this controller
-	 */
-	public constructor(name: string, runner: AbstractRunner) {
-		this._name = name;
-		this._runner = runner;
-	}
-
-	get name(): string {
-		return this._name;
-	}
-
-	set name(value: string) {
-		this._name = value;
-	}
-
-	get runner(): AbstractRunner {
-		return this._runner;
-	}
-
-	set runner(value: AbstractRunner) {
-		this._runner = value;
-	}
-}

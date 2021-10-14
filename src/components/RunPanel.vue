@@ -13,10 +13,10 @@
 		>
 			<v-tab
 				v-for="(tab, i) in outputs" :key="i"
-				@click.middle="onTabClose(tab)"
+				@click.middle="onTabClose(tab.runner)"
 			>
 				<span class="tab-name">{{tab.name}}</span>
-				<FontAwesomeIcon icon="times" class="tab-close" @click="onTabClose(tab)" />
+				<FontAwesomeIcon icon="times" class="tab-close" @click="onTabClose(tab.runner)" />
 			</v-tab>
 		</v-tabs>
 
@@ -26,7 +26,7 @@
 				:transition="false"
 				class="tab-item"
 			>
-				<RunInterface :instance-controller="tab" />
+				<RunInterface :runner="tab.runner" />
 			</v-tab-item>
 		</v-tabs-items>
 	</v-card>
@@ -34,13 +34,14 @@
 
 <script lang="ts">
 import Vue from "vue";
-import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
+import RunPanelController from "@/api/controllers/RunPanelController";
 import RunInterface from "@/components/_internal/runPanel/RunInterface.vue";
 import Sortable, { SortableEvent } from "sortablejs";
+import { AbstractRunner } from "@/run/AbstractRunner";
 
 interface DataTypeDescriptor {
 	runPanelController?: RunPanelController;
-	selectedTab: RunPanelInstanceController|undefined;
+	selectedTab: AbstractRunner|undefined;
 }
 
 export default Vue.extend({
@@ -56,9 +57,8 @@ export default Vue.extend({
 		}
 	},
 	computed: {
-		outputs(): RunPanelInstanceController[] {
-			if (!this.runPanelController) return [];
-			return this.runPanelController.controllers;
+		outputs(): { name: string, runner: AbstractRunner }[] {
+			return this.runPanelController?.controllers || [];
 		}
 	},
 	mounted() {
@@ -75,20 +75,23 @@ export default Vue.extend({
 	},
 	methods: {
 		onTabDragEnd(event: SortableEvent): any {
-			const movedItem: RunPanelInstanceController = this.outputs.splice(event.oldIndex! - 1, 1)[0];
+			const movedItem = this.outputs.splice(event.oldIndex! - 1, 1)[0];
 			this.outputs.splice(event.newIndex!, 0, movedItem);
 		},
 
-		async onTabClose(closed : RunPanelInstanceController) {
+		async onTabClose(closed: AbstractRunner) {
 			//Shouldn't happen
 			if (!this.runPanelController) throw new Error("Couldn't get run panel controller");
+
+			//Stop the runner
+			closed.stop();
 
 			//Remove the instance controller
 			await this.runPanelController.removeOutputStream(closed);
 		},
 	},
 	watch: {
-		outputs(tabs: RunPanelInstanceController[], oldTabs: RunPanelInstanceController[]) {
+		outputs(tabs: AbstractRunner[], oldTabs: AbstractRunner[]) {
 			//If a new tab is opened, select that
 			if (oldTabs.length + 1 === tabs.length) {
 				// this.selectedTab = tabs[tabs.length - 1];
@@ -110,6 +113,10 @@ export default Vue.extend({
 
 .tabs-holder {
 	flex: 0;
+}
+
+.tab-name {
+	text-transform: none !important;
 }
 
 .tab-items-container {
