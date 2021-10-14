@@ -70,7 +70,7 @@
 
 			<div class="bottom" ref="runPanel" :style="{'height': runPanelHeight + 'px'}">
 				<v-divider />
-				<run-panel class="run-panel" @controller="c => this.runPanelController = c" />
+				<run-panel class="run-panel" :runners="runners" />
 			</div>
 		</v-main>
 
@@ -145,7 +145,6 @@ import NewFilePopup from "@/components/NewFilePopup.vue";
 import DeleteFilePopup from "@/components/DeleteFilePopup.vue";
 //Other imports
 import { EditorController, IOController, Menu } from "@/types";
-import RunPanelController from "@/api/controllers/RunPanelController";
 import CodeMirror from "codemirror";
 import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguration";
 import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
@@ -161,7 +160,7 @@ interface DataTypesDescriptor {
 	codeEditor? : CodeMirror.Editor;
 	editorController?: EditorController;
 	ioController? : IOController;
-	runPanelController?: RunPanelController;
+	runners: {name:string, runner:AbstractRunner}[],
 	extendedWhile: boolean;
 	showRunConfigPopup: boolean;
 	showSettingsPopup: boolean;
@@ -195,7 +194,7 @@ export default Vue.extend({
 			focused_file: undefined,
 			editorController: undefined,
 			ioController: undefined,
-			runPanelController: undefined,
+			runners: [],
 			extendedWhile: true,
 			showRunConfigPopup: false,
 			showSettingsPopup: false,
@@ -317,6 +316,22 @@ export default Vue.extend({
 		});
 	},
 	methods: {
+		/**
+		 * Get the next available run controller name starting with a given string
+		 * @param prefix	The starting string
+		 */
+		_nextRunnerName(prefix: string = 'Run') {
+			let nextName: string = prefix;
+			//Set of names starting with this prefix
+			let nameSet: Set<string> = new Set(
+				this.runners.map(e => e.name).filter(n => n.substr(0, prefix.length) === prefix)
+			);
+			//Start with the number of the length of the set
+			let start: number = 0;
+			while (nameSet.has(nextName)) nextName = `${prefix} (${++start})`;
+			return nextName;
+		},
+
 		openTreeViewer() {
 			let routeData = this.$router.resolve({ path: '/trees' });
 			window.open(routeData.href, '_blank');
@@ -327,7 +342,6 @@ export default Vue.extend({
 		},
 
 		async runProgramClick() {
-			if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
 			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
 
 			let config = this.chosenRunConfig;
@@ -352,7 +366,7 @@ export default Vue.extend({
 			}
 
 			//Open a new tab in the run panel
-			this.runPanelController!.addOutputStream(runner, config.name);
+			this.runners.push({name: this._nextRunnerName(config.name), runner: runner});
 
 			//Perform setup
 			await runner.init();
@@ -361,7 +375,6 @@ export default Vue.extend({
 		},
 
 		async debugProgramClick() {
-			if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
 			if (!this.editorController) throw new Error("Couldn't get Editor Controller");
 			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
 
@@ -390,7 +403,7 @@ export default Vue.extend({
 			}
 
 			//Open a new tab in the run panel
-			this.runPanelController.addOutputStream(runner, config.name);
+			this.runners.push({name: this._nextRunnerName(config.name), runner: runner});
 
 			//Perform setup
 			await runner.init();

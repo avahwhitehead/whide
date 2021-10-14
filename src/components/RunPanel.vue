@@ -2,7 +2,7 @@
 	<v-card class="pa-0 ma-0 run-panel-holder">
 		<v-card-text
 			v-text="'Run a program to view it here'"
-			v-if="!outputs.length"
+			v-if="!runners.length"
 		/>
 
 		<v-tabs
@@ -12,7 +12,7 @@
 			class="tabs-holder"
 		>
 			<v-tab
-				v-for="(tab, i) in outputs" :key="i"
+				v-for="(tab, i) in runners" :key="i"
 				@click.middle="onTabClose(tab.runner)"
 			>
 				<span class="tab-name">{{tab.name}}</span>
@@ -20,9 +20,12 @@
 			</v-tab>
 		</v-tabs>
 
-		<v-tabs-items v-model="selectedTab" class="tab-items-container fill-height">
+		<v-tabs-items
+			v-model="selectedTab"
+			class="tab-items-container fill-height"
+		>
 			<v-tab-item
-				v-for="(tab, i) in outputs" :key="i"
+				v-for="(tab, i) in runners" :key="i"
 				:transition="false"
 				class="tab-item"
 			>
@@ -33,15 +36,13 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import RunPanelController from "@/api/controllers/RunPanelController";
+import Vue, { PropType } from "vue";
 import RunInterface from "@/components/_internal/runPanel/RunInterface.vue";
 import Sortable, { SortableEvent } from "sortablejs";
 import { AbstractRunner } from "@/run/AbstractRunner";
 
 interface DataTypeDescriptor {
-	runPanelController?: RunPanelController;
-	selectedTab: AbstractRunner|undefined;
+	selectedTab: number;
 }
 
 export default Vue.extend({
@@ -49,22 +50,15 @@ export default Vue.extend({
 	components: {
 		RunInterface,
 	},
-	props: {},
+	props: {
+		runners: Array as PropType<{ name: string, runner: AbstractRunner }[]>
+	},
 	data() : DataTypeDescriptor {
 		return {
-			runPanelController: undefined,
-			selectedTab: undefined,
-		}
-	},
-	computed: {
-		outputs(): { name: string, runner: AbstractRunner }[] {
-			return this.runPanelController?.controllers || [];
+			selectedTab: 0,
 		}
 	},
 	mounted() {
-		this.runPanelController = new RunPanelController();
-		this.$emit('controller', this.runPanelController);
-
 		//HTML element containing the tab elements
 		let tabsHolder = (this.$refs.sortableTabs! as Vue).$el.getElementsByClassName('v-slide-group__content')[0];
 		//Allow dragging to reorder the tabs
@@ -75,29 +69,25 @@ export default Vue.extend({
 	},
 	methods: {
 		onTabDragEnd(event: SortableEvent): any {
-			const movedItem = this.outputs.splice(event.oldIndex! - 1, 1)[0];
-			this.outputs.splice(event.newIndex!, 0, movedItem);
+			const movedItem = this.runners.splice(event.oldIndex! - 1, 1)[0];
+			this.runners.splice(event.newIndex!, 0, movedItem);
 		},
 
 		async onTabClose(closed: AbstractRunner) {
-			//Shouldn't happen
-			if (!this.runPanelController) throw new Error("Couldn't get run panel controller");
-
 			//Stop the runner
 			closed.stop();
 
 			//Remove the instance controller
-			await this.runPanelController.removeOutputStream(closed);
+			this.runners?.splice(
+				this.runners?.findIndex(e => e.runner === closed),
+				1
+			)
 		},
 	},
 	watch: {
-		outputs(tabs: AbstractRunner[], oldTabs: AbstractRunner[]) {
-			//If a new tab is opened, select that
-			if (oldTabs.length + 1 === tabs.length) {
-				// this.selectedTab = tabs[tabs.length - 1];
-				this.selectedTab = tabs.find(t => oldTabs.indexOf(t) === -1);
-			}
-		}
+		runners(tabs: { name: string, runner: AbstractRunner }[]) {
+			this.selectedTab = tabs.length - 1;
+		},
 	}
 })
 </script>
