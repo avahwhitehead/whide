@@ -62,13 +62,17 @@
 		<v-main class="pa-0 fill-height overflow-hidden main-container">
 			<CodeEditorElement
 				class="top"
-				:style="{'height': 'calc(100% - ' + runPanelHeight + 'px)'}"
+				:class="{'full-height': !showRunPanel}"
+				:style="{'height': codeEditorHeight}"
 				v-model="focused_file"
 				:allow-extended="extendedWhile"
 				@controller="onEditorControllerChange"
 			/>
 
-			<div class="bottom" ref="runPanel" :style="{'height': runPanelHeight + 'px'}">
+			<div class="bottom" ref="runPanel"
+				:class="{'hidden': !showRunPanel}"
+				:style="{'height': runPanelHeightString}"
+			>
 				<v-divider />
 				<run-panel class="run-panel" :runners="runners" />
 			</div>
@@ -236,6 +240,17 @@ export default Vue.extend({
 		},
 		allowRunning(): boolean {
 			return !!this.chosenRunConfig;
+		},
+		showRunPanel(): boolean {
+			return this.runners.length !== 0;
+		},
+		codeEditorHeight(): string {
+			if (!this.showRunPanel) return '100%';
+			return `calc(100% - ${this.runPanelHeightString})`;
+		},
+		runPanelHeightString(): string {
+			if (!this.showRunPanel) return '0';
+			return this.runPanelHeight + 'px';
 		},
 		menus() : Menu[] {
 			return [
@@ -506,6 +521,9 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 	min-height: 20%;
 	max-height: 90%;
 }
+.top.full-height {
+	max-height: 100%;
+}
 
 .bottom {
 	/*Align to the bottom*/
@@ -515,6 +533,13 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 	/*Resize contents to make room for the divider*/
 	display: flex;
 	flex-direction: column;
+}
+.bottom.hidden {
+	/*Align to the bottom*/
+	bottom: 0;
+	min-height: 0;
+	height: 0;
+	display: none;
 }
 
 .run-panel {
