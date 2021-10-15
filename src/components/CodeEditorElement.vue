@@ -714,6 +714,10 @@ export default Vue.extend({
 	margin-left: .5em;
 }
 
+.tab-name {
+	text-transform: none !important;
+}
+
 .codeHolder {
 	text-align: left;
 	/*Fill the available space*/
