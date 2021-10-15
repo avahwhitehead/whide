@@ -59,6 +59,23 @@
 							required
 							:rules="interpreterInputRules"
 						/>
+						<v-tooltip bottom content-class="help-tooltip">
+							<template v-slot:activator="{ on, attrs }">
+								<v-btn
+									depressed
+									icon
+									v-bind="attrs"
+									v-on="on"
+								>
+									<v-icon>fa-question</v-icon>
+								</v-btn>
+							</template>
+							<div>
+								<div>HWhile is the primary While interpreter, but requires that it has been installed.</div>
+								<div>While.js was built for compatability with Whide. It is newer and does not currently support debugging.</div>
+								<div>Both interpreters should produce the same results.</div>
+							</div>
+						</v-tooltip>
 					</v-row>
 
 					<v-row class="">
@@ -188,7 +205,7 @@ export default Vue.extend({
 		return {
 			runnerProg: { name:'While.js', interpreter:INTERPRETERS.WHILE_JS },
 			interpreterList: [
-				{ name:'HWhile (desktop app only)', interpreter:INTERPRETERS.HWHILE },
+				{ name:'HWhile', interpreter:INTERPRETERS.HWHILE },
 				{ name:'While.js', interpreter:INTERPRETERS.WHILE_JS },
 			],
 			nameModel: '',
