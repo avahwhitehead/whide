@@ -4,6 +4,9 @@ import { fs } from "@/files/fs";
 import { ENCODING_UTF8 } from "memfs/lib/encoding";
 import WhileWorker from "worker-loader!./WhilejsWorker";
 import { LoadRequest, RunRequest, WhileWorkerResponse } from "./WhileJsWorkerTypes";
+import { MacroManager, parseProgram } from "whilejs";
+import path from "path";
+import { AST_PROG } from "whilejs/lib/types/ast";
 
 /**
  * Properties for the {@link WhileJsRunner} constructor.
@@ -40,21 +43,31 @@ export class WhileJsRunner extends BaseRunner {
 	 * Perform setup operations required to run the interpreter.
 	 */
 	async init(): Promise<void> {
-		//Read the program string from the file
-		const programString = await fs.promises.readFile(this._props.file, ENCODING_UTF8);
+		//Read the program string from the files
+		let [prog, macros]: [AST_PROG, MacroManager] = await this._loadAllProgramFiles(this._props.file,);
 
 		//Allow the interpreter to be stopped
 		this._isStopped = false;
+
+		//Display the input tree
+		this._display(`In: ${this._props.expression}\n`);
+
+		//Take the macros out of the manager, and rename them so the programs match the file names
+		let macroList: AST_PROG[] = [];
+		for (let macro of macros.macros) {
+			macroList.push(macro.p);
+			macro.p.name.value = macro.n;
+		}
 
 		//Start a worker for the interpreter
 		this._worker = this._makeWorker();
 		//Load the program
 		this._worker.postMessage(WhileJsRunner._makeLoadRequest(
-			programString,
-			this._props.expression
-		));
-		//Display the input tree
-		this._display(`In: ${this._props.expression}\n`);
+				prog,
+				this._props.expression,
+				macroList
+			)
+		);
 
 		//Don't resolve the promise until the worker thread has loaded the program
 		return new Promise((resolve) => {
@@ -77,12 +90,11 @@ export class WhileJsRunner extends BaseRunner {
 	}
 
 	stop(): void {
-		if (this._worker === undefined) {
-			throw new Error('No worker thread exists.');
-		}
-		//Stop the interpreter thread
-		this._worker.terminate();
 		this._isStopped = true;
+		if (this._worker !== undefined) {
+			//Stop the interpreter thread
+			this._worker.terminate();
+		}
 	}
 
 	/**
@@ -127,11 +139,60 @@ export class WhileJsRunner extends BaseRunner {
 		return worker;
 	}
 
-	private static _makeLoadRequest(program: string, tree: string): LoadRequest {
+	/**
+	 * Load a while program from a file, and also recursively load any referenced macros
+	 * @param programFile	The root program file to load
+	 * @returns [AST_PROG, MacroManager]	The root program's AST, and a macro manager containing all the referenced programs
+	 * @private
+	 */
+	private async _loadAllProgramFiles(programFile: string): Promise<[AST_PROG, MacroManager]> {
+		let ast: AST_PROG = await this._loadProgramFromFile(programFile);
+
+		const parentDir = path.resolve(programFile, '..');
+
+		let macroManager: MacroManager = new MacroManager(ast);
+		while (macroManager.hasUnregistered) {
+			let macro: string | null = macroManager.getNextUnregistered();
+			let ast1: AST_PROG = await this._loadProgramFromFile(
+				path.join(parentDir, macro + '.while')
+			);
+			macroManager.register(ast1);
+		}
+
+		return [ast, macroManager];
+	}
+
+	/**
+	 * Load a WHILE program from a file, and return it as an AST
+	 * @param filePath	The path to the file
+	 * @returns AST_PROG	The program stored in the file as an AST
+	 * @throws Error	If the file cannot be read, or if the program failed to parse
+	 * @private
+	 */
+	private async _loadProgramFromFile(filePath: string): Promise<AST_PROG> {
+		const prog: string = await fs.promises.readFile(filePath, ENCODING_UTF8);
+
+		let [ast, errs] = parseProgram(prog);
+
+		if (!ast.complete) {
+			//Show errors if parsing failed
+			let output: string = `Error parsing program file ${filePath}.\n${errs.length} errors\n`;
+			for (let error of errs) {
+				output += `Error (${error.position.row}:${error.position.col}): ${error.message}\n`;
+			}
+			this._display(output);
+			throw new Error(`Error parsing program "${filePath}"`);
+		}
+
+		return ast;
+	}
+
+	private static _makeLoadRequest(program: AST_PROG, tree: string, macros: AST_PROG[]): LoadRequest {
 		return {
 			op: 'load',
 			prog: program,
 			tree: tree,
+			macros
 		};
 	}
 

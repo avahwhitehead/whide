@@ -1,9 +1,11 @@
 import { BinaryTree } from "whilejs";
+import { AST_PROG } from "whilejs/lib/types/ast";
 
 export interface LoadRequest {
 	op: 'load',
-	prog: string,
+	prog: AST_PROG,
 	tree: string,
+	macros: AST_PROG[]
 }
 
 export interface RunRequest {

@@ -1,4 +1,4 @@
-import { BinaryTree, ErrorType, Interpreter } from "whilejs";
+import { BinaryTree, Interpreter } from "whilejs";
 import { treeParser } from "@whide/tree-lang";
 import {
 	ErrorResponse,
@@ -7,6 +7,7 @@ import {
 	ProgFinishResponse,
 	WhileWorkerResponse
 } from "./WhileJsWorkerTypes";
+import { AST_PROG } from "whilejs/lib/types/ast";
 
 function _emit(data: WhileWorkerResponse): void {
 	(self as any as Worker).postMessage(data);
@@ -41,7 +42,8 @@ let interpreter: Interpreter|undefined = undefined;
 		let req: LoadRequest = event.data;
 
 		//Parse the provided tree to an object
-		let prog: string = req.prog;
+		let prog: AST_PROG = req.prog;
+		let macros: AST_PROG[] = req.macros;
 		let tree: BinaryTree;
 		try {
 			tree = treeParser(req.tree);
@@ -49,22 +51,8 @@ let interpreter: Interpreter|undefined = undefined;
 			_emitErr(e);
 			return;
 		}
-
-		//Parse the program and create an interpreter
-		let res: {success:true,interpreter:Interpreter}|{success:false,errors:ErrorType[]} = Interpreter.parse(prog, tree);
-
-		if (!res.success) {
-			//Show errors if parsing failed
-			let output: string = `Program parse failed with ${res.errors.length} errors:`;
-			for (let error of res.errors) {
-				output += `\nError (${error.position.row}:${error.position.col}): ${error.message}`;
-			}
-			_emitErr(output);
-			return;
-		}
-
 		//Store the interpreter object for running
-		interpreter = res.interpreter;
+		interpreter = new Interpreter(prog, tree, {macros: macros});
 		//Emit the loaded event
 		_emitLoaded();
 	} else if (event.data.op === 'run') {
