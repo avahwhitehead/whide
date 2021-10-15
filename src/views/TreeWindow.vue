@@ -54,7 +54,7 @@
 <script lang="ts">
 import Vue from "vue";
 import VariableTreeViewer, { TreeType } from "@/components/VariableTreeViewer.vue";
-import treeConverter, { ConversionResultType, BinaryTree, treeParser as parseTree } from "@whide/tree-lang";
+import treeConverter, { BinaryTree, ConversionResultType, treeParser as parseTree } from "@whide/tree-lang";
 import { binaryTreeToDisplayable, convertedTreeToDisplayable } from "@/utils/tree_converters";
 
 /**
@@ -160,42 +160,16 @@ export default Vue.extend({
 
 <style scoped>
 .tree-window {
-	max-width: 100vw;
-	max-height: 100vh;
-	height: 100%;
 	display: flex;
 	flex-direction: column;
-	flex: 1;
+	height: 100%;
 }
 
 .tree-viewer-row {
-	flex-grow: 0;
+	flex: 0;
 }
 
 .tree-viewer-row.viewer-row {
-	display: flex;
-	flex-direction: row;
-	min-height: 0;
 	flex: 1;
-}
-
-.panel {
-	display: flex;
-	flex-direction: column;
-	min-height: 0;
-	flex: 1;
-	height: 100%;
-}
-
-.tree-viewer {
-	height: 100%;
-	flex: 1;
-}
-
-.maximize-button.right {
-	text-align: right;
-}
-.maximize-button.left {
-	text-align: left;
 }
 </style>
