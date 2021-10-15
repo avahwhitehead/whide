@@ -17,7 +17,7 @@
 			<v-col md="3" sm="5" >
 				<v-row>
 					<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
-						<FontAwesomeIcon icon="cog" />
+						<FontAwesomeIcon icon="pencil-alt" />
 					</v-btn>
 
 					<v-select
