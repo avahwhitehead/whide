@@ -283,10 +283,11 @@ export default Vue.extend({
 			};
 			if (!this.currentOpenConfig) {
 				this.$store.commit('addRunConfig', newConfig);
-				return;
+			} else {
+				this.$store.commit('overwriteRunConfig', [this.currentOpenConfig, newConfig]);
 			}
 
-			this.$store.commit('overwriteRunConfig', [this.currentOpenConfig, newConfig]);
+			this.$store.commit('setChosenRunConfig', newConfig);
 		},
 		createConfig() {
 			let newConfig: RunConfiguration = {
@@ -374,6 +375,10 @@ export default Vue.extend({
 <style scoped>
 .actions-container {
 	border-top: 1px solid grey;
+}
+
+.help-tooltip {
+	opacity: 1!important;
 }
 
 .expand-button {

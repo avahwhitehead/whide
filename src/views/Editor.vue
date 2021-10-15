@@ -460,10 +460,10 @@ export default Vue.extend({
 	},
 	watch: {
 		runConfigs(val: RunConfiguration[]) {
-			if (val.length > 0)
-				this.$store.state.chosenRunConfig = val[0];
-			else
-				this.$store.state.chosenRunConfig = undefined;
+			if (val.length === 0)
+				this.chosenRunConfig = undefined;
+			else if (this.chosenRunConfig === undefined)
+				this.chosenRunConfig = val[0];
 		}
 	}
 });
