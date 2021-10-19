@@ -2,11 +2,11 @@
 	<v-dialog
 		v-model="showDialog"
 		persistent
-		max-width="900px"
+		max-width="80%"
 		scrollable
 	>
 		<v-card max-height="800px">
-			<v-navigation-drawer permanent absolute width="180px">
+			<v-navigation-drawer permanent absolute class="nav-drawer" width="180px" v-model="showSelectPanel">
 				<div class="pa-0">
 					<v-btn depressed @click="createConfig" >
 						<FontAwesomeIcon icon="plus"/>
@@ -23,7 +23,7 @@
 				</v-list>
 			</v-navigation-drawer>
 
-			<v-card-title class="pt-0 pb-0" style="padding-left: 190px;">
+			<v-card-title class="pt-0 pb-0" style="padding-left: 180px;">
 				<span class="text-h5">Edit Run Configuration</span>
 				<v-spacer />
 				<FontAwesomeIcon
@@ -34,102 +34,104 @@
 				/>
 			</v-card-title>
 
-			<v-container style="overflow-y: auto; padding-left: 200px;">
-				<v-form ref="form" v-model="isFormValid">
-					<v-row class="mt-0">
-						<v-text-field
-							v-model="nameModel"
-							label="Configuration name*"
-							class="mb-0 mt-0 pb-0 pt-0"
-							required
-							:rules="nameInputRules"
-						/>
-					</v-row>
+			<v-card-text style="padding-left: 180px">
+				<v-container class="pr-0 pl-5">
+					<v-form ref="form" v-model="isFormValid">
+						<v-row class="mt-0">
+							<v-text-field
+								v-model="nameModel"
+								label="Configuration name*"
+								class="mb-0 mt-0 pb-0 pt-0"
+								required
+								:rules="nameInputRules"
+							/>
+						</v-row>
 
-					<v-row class="">
-						<v-select
-							v-model="interpreterModel"
-							:items="interpreterList"
-							label="WHILE Interpreter"
-							class="dropdown"
-							item-text="name"
-							return-object
-							outlined
-							dense
-							required
-							:rules="interpreterInputRules"
-						/>
-						<v-tooltip bottom content-class="help-tooltip">
-							<template v-slot:activator="{ on, attrs }">
-								<v-btn
-									depressed
-									icon
-									v-bind="attrs"
-									v-on="on"
-								>
-									<v-icon>fa-question</v-icon>
-								</v-btn>
-							</template>
-							<div>
-								<div>HWhile is the primary While interpreter, but requires that it has been installed.</div>
-								<div>While.js was built for compatability with Whide. It is newer and does not currently support debugging.</div>
-								<div>Both interpreters should produce the same results.</div>
-							</div>
-						</v-tooltip>
-					</v-row>
+						<v-row class="">
+							<v-select
+								v-model="interpreterModel"
+								:items="interpreterList"
+								label="WHILE Interpreter"
+								class="dropdown"
+								item-text="name"
+								return-object
+								outlined
+								dense
+								required
+								:rules="interpreterInputRules"
+							/>
+							<v-tooltip bottom content-class="help-tooltip">
+								<template v-slot:activator="{ on, attrs }">
+									<v-btn
+										depressed
+										icon
+										v-bind="attrs"
+										v-on="on"
+									>
+										<v-icon>fa-question</v-icon>
+									</v-btn>
+								</template>
+								<div>
+									<div>HWhile is the primary While interpreter, but requires that it has been installed.</div>
+									<div>While.js was built for compatability with Whide. It is newer and does not currently support debugging.</div>
+									<div>Both interpreters should produce the same results.</div>
+								</div>
+							</v-tooltip>
+						</v-row>
 
-					<v-row class="">
-						<v-text-field
-							v-model="fileModel"
-							label="File*"
-							class="mb-0 mt-0 pb-0 pt-0"
-							required
-							:rules="fileInputRules"
-						/>
-						<v-btn
-							depressed
-							title="Choose file"
-							@click="showFilePicker = true"
-						>
-							<v-icon>far fa-folder</v-icon>
-						</v-btn>
-					</v-row>
-					<v-row class="">
-						<v-text-field
-							v-model="inputModel"
-							label="Input tree*"
-							class="mb-0 mt-0 pb-0 pt-0"
-							required
-							:rules="treeInputRules"
-						/>
-					</v-row>
-					<v-row>
-						<div
-							class="expand-button"
-							@click="showTreeGraph = !showTreeGraph"
-							v-text="`(${showTreeGraph ? 'hide' : 'show'} tree viewer)`"
-						/>
-					</v-row>
-					<v-row>
-						<transition name="fade">
-							<v-col style="height: 30em; width: 20em;" v-if="showTreeGraph">
-								<VariableTreeViewer :tree="displayableConvertedTree" />
-							</v-col>
-						</transition>
-					</v-row>
-<!--					<v-row class="">-->
-<!--						<v-text-field-->
-<!--							v-model="formatModel"-->
-<!--							label="Tree Display Format*"-->
-<!--							class="mb-0 mt-0 pb-0 pt-0"-->
-<!--							required-->
-<!--							:rules="treeFormatInputRules"-->
-<!--						/>-->
-<!--					</v-row>-->
-					</v-form>
+						<v-row class="">
+							<v-text-field
+								v-model="fileModel"
+								label="File*"
+								class="mb-0 mt-0 pb-0 pt-0"
+								required
+								:rules="fileInputRules"
+							/>
+							<v-btn
+								depressed
+								title="Choose file"
+								@click="showFilePicker = true"
+							>
+								<v-icon>far fa-folder</v-icon>
+							</v-btn>
+						</v-row>
+						<v-row class="">
+							<v-text-field
+								v-model="inputModel"
+								label="Input tree*"
+								class="mb-0 mt-0 pb-0 pt-0"
+								required
+								:rules="treeInputRules"
+							/>
+						</v-row>
+						<v-row>
+							<div
+								class="expand-button"
+								@click="showTreeGraph = !showTreeGraph"
+								v-text="`(${showTreeGraph ? 'hide' : 'show'} tree viewer)`"
+							/>
+						</v-row>
+						<v-row>
+							<transition name="fade">
+								<v-col style="height: 30em; width: 20em;" v-if="showTreeGraph">
+									<VariableTreeViewer :tree="displayableConvertedTree" />
+								</v-col>
+							</transition>
+						</v-row>
+<!--						<v-row class="">-->
+<!--							<v-text-field-->
+<!--								v-model="formatModel"-->
+<!--								label="Tree Display Format*"-->
+<!--								class="mb-0 mt-0 pb-0 pt-0"-->
+<!--								required-->
+<!--								:rules="treeFormatInputRules"-->
+<!--							/>-->
+<!--						</v-row>-->
+						</v-form>
 
 					<small>*indicates required field</small>
-			</v-container>
+				</v-container>
+			</v-card-text>
 
 			<v-card-actions class="actions-container">
 				<v-spacer />
@@ -285,8 +287,14 @@ export default Vue.extend({
 				this.rule_requireNonEmpty,
 			];
 		},
+		//Force the select panel to always be visible
+		showSelectPanel: {
+			get(): boolean { return true; },
+			set() { /*Do nothing*/ }
+		}
 	},
 	mounted() {
+		this.showSelectPanel = true;
 		this.currentOpenConfig = this.runConfigs[0] || undefined;
 	},
 	methods: {
@@ -332,12 +340,6 @@ export default Vue.extend({
 	watch: {
 		runnerProg(prog: InterpreterType) {
 			this.interpreterVal = prog.interpreter;
-		},
-		showDialog(val: boolean) {
-			//Load the first run configuration on open
-			if (val) this.configIndex = 0;
-			//Clear the values on close
-			else this.configIndex = -1;
 		},
 		currentOpenConfig(config: RunConfiguration|undefined) {
 			if (config === undefined) {
@@ -405,6 +407,15 @@ export default Vue.extend({
 
 .icon-delete {
 	cursor: pointer;
+}
+
+.nav-drawer {
+	/*
+	Fix for collapsing side panel
+	Source: https://github.com/vuetifyjs/vuetify/issues/5617#issuecomment-845067001
+	*/
+	transform: translateX(0) !important;
+	visibility: visible !important;
 }
 
 .fade-enter-active, .fade-leave-active {
