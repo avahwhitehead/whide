@@ -85,9 +85,6 @@ import { ErrorType, ErrorType as WhileError, linter as whileLinter } from "while
 const DARK_THEME = 'ayu-mirage';
 const LIGHT_THEME = 'default';
 
-//Interval (in seconds) to autosave the open files
-const AUTOSAVE_INTERVAL: number = 20;
-
 interface DataType {
 	editor: CodeMirror.Editor|undefined;
 	editorController: EditorControllerInterface|undefined;
@@ -428,8 +425,14 @@ export default Vue.extend({
 		});
 
 		//Mark the current tab as unsaved when the content is changed
-		this.editor.on("change", () => {
-			this.openFiles[this.currentTab].modified = true;
+		let pending: NodeJS.Timeout|undefined;
+		codeMirror.on("change", () => {
+			this.currentFileState!.modified = true;
+			if (pending) clearTimeout(pending);
+			pending = setTimeout(() => {
+				if (!this.editorController) return;
+				this.editorController.saveFiles();
+			}, 5000);
 		});
 
 		//Create the editor controller object
