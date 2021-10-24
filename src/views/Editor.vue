@@ -64,8 +64,6 @@
 				class="top"
 				:class="{'full-height': !showRunPanel}"
 				:style="{'height': codeEditorHeight}"
-				v-model="focused_file"
-				:allow-extended="extendedWhile"
 				@controller="onEditorControllerChange"
 			/>
 
@@ -79,10 +77,20 @@
 		</v-main>
 
 		<v-navigation-drawer app right clipped v-model="showPopout">
-			<v-btn right @click="showSettingsPopup = !showSettingsPopup">Global Settings</v-btn>
+			<v-btn
+				right
+				@click="showSettingsPopup = !showSettingsPopup"
+				v-text="`Global Settings`"
+			/>
 
 			<div class="title pt-2 pb-0">Options</div>
-			<v-switch class="mt-0" ref="pureWhileToggle" v-model="extendedWhile" :label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`" />
+			<v-switch
+				class="mt-0"
+				ref="pureWhileToggle"
+				v-model="extendedWhile"
+				:label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`"
+				:disabled="focusedFile === undefined"
+			/>
 
 			<v-btn
 				absolute
@@ -137,7 +145,7 @@
 <script lang="ts">
 import Vue from "vue";
 //Components
-import CodeEditorElement, { FileInfoState } from "@/components/CodeEditorElement.vue";
+import CodeEditorElement from "@/components/CodeEditorElement.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import RunPanel from "@/components/RunPanel.vue";
@@ -155,17 +163,16 @@ import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
 import { AbstractRunner } from "@/run/AbstractRunner";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
 import interact from "interactjs";
+import { FileInfoState } from "@/types/FileInfoState";
 
 /**
  * Type declaration for the data() values
  */
 interface DataTypesDescriptor {
-	focused_file? : string;
 	codeEditor? : CodeMirror.Editor;
 	editorController?: EditorController;
 	ioController? : IOController;
 	runners: {name:string, runner:AbstractRunner}[],
-	extendedWhile: boolean;
 	showRunConfigPopup: boolean;
 	showSettingsPopup: boolean;
 	showChangeRootPopup: boolean;
@@ -195,11 +202,9 @@ export default Vue.extend({
 	},
 	data() : DataTypesDescriptor {
 		return {
-			focused_file: undefined,
 			editorController: undefined,
 			ioController: undefined,
 			runners: [],
-			extendedWhile: true,
 			showRunConfigPopup: false,
 			showSettingsPopup: false,
 			showChangeRootPopup: false,
@@ -234,6 +239,21 @@ export default Vue.extend({
 			get(): RunConfiguration[] {
 				return this.$store.state.runConfigurations;
 			}
+		},
+		focusedFile(): FileInfoState|undefined {
+			const focusedFile = this.$store.state.focusedFile;
+			const openFiles = this.$store.state.openFiles;
+			if (focusedFile === -1) return undefined;
+			return openFiles[focusedFile];
+		},
+		extendedWhile: {
+			get(): boolean {
+				if (this.focusedFile === undefined) return true;
+				return this.focusedFile.extWhile;
+			},
+			set(val: boolean): void {
+				this.$store.commit('openFiles.focused.setExtended', val);
+			},
 		},
 		allowDebugging(): boolean {
 			return !!this.chosenRunConfig && this.chosenRunConfig.interpreter !== INTERPRETERS.WHILE_JS;
@@ -464,7 +484,7 @@ export default Vue.extend({
 				this.chosenRunConfig = undefined;
 			else if (this.chosenRunConfig === undefined)
 				this.chosenRunConfig = val[0];
-		}
+		},
 	}
 });
 </script>
