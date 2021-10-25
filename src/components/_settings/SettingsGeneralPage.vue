@@ -75,9 +75,13 @@ export default Vue.extend({
 		_hwhilePathRules(): ((v: string) => string|true)[] {
 			return [
 				v => {
+					//Empty input - use global hwhile
 					if (!v) return true;
-					return fs.existsSync(v) || 'File does not exist';
-				}
+					//Make sure the file is valid
+					if (!fs.existsSync(v)) return 'File does not exist';
+					if (fs.statSync(v).isFile()) return true;
+					return 'Select the HWhile executable file';
+				},
 			];
 		},
 	},
