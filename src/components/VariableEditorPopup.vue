@@ -2,75 +2,77 @@
 	<v-dialog
 		v-model="showDialog"
 		persistent
+		scrollable
 		max-width="700px"
 	>
-		<v-card class="pa-2">
-			<v-form ref="form">
-				<v-col class="">
-					<v-row dense>
-						<div class="text-h5">Edit Variable: '{{name}}'</div>
-						<v-spacer/>
-						<FontAwesomeIcon icon="times-circle" class="icon-close" @click="onCloseClick" />
-					</v-row>
+		<v-card class="pa-2 pr-0">
+			<v-container style="display: flex" class="pa-0">
+				<div class="text-h5">Edit Variable: '{{name}}'</div>
+				<v-spacer/>
+				<FontAwesomeIcon icon="times-circle" class="icon-close" @click="onCloseClick" />
+			</v-container>
 
-					<v-row dense>
-						<v-divider />
-					</v-row>
+			<v-divider />
 
-					<v-row dense>
-						<div class="text-body-2">Original Value:</div>
-					</v-row>
+			<v-card-text class="pl-0 pr-0">
+				<v-form ref="form">
+					<v-col>
+						<v-row dense>
+							<div style="text-align: left">
+								<div>Original Value:</div>
+								<div class="font-weight-bold" v-text="originalTree" />
+							</div>
+						</v-row>
 
-					<v-row dense>
-						<div class="text-body-1">{{this.originalTree}}</div>
-					</v-row>
+						<v-row dense>
+							<v-btn @click="resetInputs">Reset Value</v-btn>
+						</v-row>
 
-					<v-row dense>
-						<v-text-field
-							label="Value"
-							v-model="treeInput"
-							:rules="[
-								notEmptyRule,
-								() => treeError ? treeError : true,
-							]"
-						/>
-						<v-btn @click="resetInput()">Reset</v-btn>
-					</v-row>
+						<v-row dense>
+							<v-text-field
+								label="New Value"
+								v-model="treeInput"
+								:rules="[
+									notEmptyRule,
+									() => treeError ? treeError : true,
+								]"
+							/>
+						</v-row>
 
-					<v-row dense>
-						<v-text-field
-							label="Display format"
-							v-model="conversionString"
-							:rules="[
-								notEmptyRule,
-								() => converterError ? converterError : true,
-							]"
-						/>
-						<v-btn @click="resetConvString()">Reset</v-btn>
-					</v-row>
+						<v-row dense>
+							<v-text-field
+								label="Display format"
+								v-model="conversionString"
+								:rules="[
+									notEmptyRule,
+									() => converterError ? converterError : true,
+								]"
+							/>
+						</v-row>
 
-					<v-row dense>
-						<div
-							class="expand-button"
-							@click="show_tree_viewer = !show_tree_viewer"
-							v-text="`(${show_tree_viewer ? 'hide tree view' : 'show as tree'})`"
-						/>
-					</v-row>
+						<v-row dense>
+							<div
+								class="expand-button"
+								@click="show_tree_viewer = !show_tree_viewer"
+								v-text="`(${show_tree_viewer ? 'hide tree view' : 'show as tree'})`"
+							/>
+						</v-row>
 
-					<v-row dense>
-						<transition name="fade">
-							<VariableTreeViewer class="tree-viewer" :tree="displayableConvertedTree" v-if="show_tree_viewer" />
-						</transition>
-					</v-row>
-				</v-col>
+						<v-row dense>
+							<transition name="fade">
+								<VariableTreeViewer class="tree-viewer" :tree="displayableConvertedTree" v-if="show_tree_viewer" />
+							</transition>
+						</v-row>
+					</v-col>
+				</v-form>
+			</v-card-text>
 
-				<v-card-actions>
-					<v-spacer />
+			<v-card-actions>
+				<v-spacer />
 
-					<v-btn color="blue darken-1" text @click="onCloseClick()">Cancel</v-btn>
-					<v-btn color="blue darken-1" text @click="onSaveClick()">Apply</v-btn>
-				</v-card-actions>
-			</v-form>
+				<v-btn color="blue darken-1" text @click="onCloseClick()">Cancel</v-btn>
+				<v-btn color="blue darken-1" text @click="onSaveClick()">Apply</v-btn>
+			</v-card-actions>
 		</v-card>
 	</v-dialog>
 </template>
@@ -167,15 +169,12 @@ export default Vue.extend({
 		onSaveClick(): void {
 			this.$emit('change', this.parsedTree, this.conversionString);
 		},
-		resetInput(): void {
+		resetInputs(): void {
 			this.treeInput = this.originalTree;
-		},
-		resetConvString(): void {
 			this.conversionString = this.format;
 		},
 		resetForm(): void {
-			this.resetInput();
-			this.resetConvString();
+			this.resetInputs();
 		},
 		/**
 		 * Convert a binary tree using the inputted conversion string
