@@ -11,18 +11,28 @@
 			@dblclick:row="onRowDblClick"
 		>
 			<template v-slot:item.actions="{ item }">
-				<FontAwesomeIcon
-					icon="pencil-alt"
-					@click="onEditClick(item)"
-					class="ml-2 mr-2 action-icon"
+				<v-btn
+					icon
 					title="Edit"
-				/>
-				<FontAwesomeIcon
-					icon="eye"
-					@click="openTree(item)"
-					class="ml-2 mr-2 action-icon"
+					:disabled="disabled"
+				>
+					<FontAwesomeIcon
+						icon="pencil-alt"
+						@click="onEditClick(item)"
+						class="ml-2 mr-2 action-icon"
+					/>
+				</v-btn>
+				<v-btn
+					icon
 					title="Open in tree viewer"
-				/>
+				>
+					<FontAwesomeIcon
+						icon="eye"
+						@click="openTree(item)"
+						class="ml-2 mr-2 action-icon"
+
+					/>
+				</v-btn>
 			</template>
 
 			<template v-slot:item.value="{ item }">
@@ -78,6 +88,10 @@ export default Vue.extend({
 		showProgramCol: {
 			type: Boolean,
 			default: true,
+		},
+		disabled: {
+			type: Boolean,
+			default: false,
 		}
 	},
 	data(): DataTypeDescriptor {
@@ -125,6 +139,7 @@ export default Vue.extend({
 			window.open(routeData.href, '_blank');
 		},
 		onRowDblClick(event: MouseEvent, info: DataTableItemEvent) {
+			if (this.disabled) return;
 			this.onEditClick(info.item);
 		},
 		/**

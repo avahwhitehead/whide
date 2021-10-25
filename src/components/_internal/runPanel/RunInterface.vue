@@ -64,6 +64,7 @@
 					class="variable-viewer"
 					:variables="variables"
 					:showProgramCol="showTableProgramCol"
+					:disabled="runner.isStopped"
 					@change="onVariableChange"
 				/>
 			</v-col>

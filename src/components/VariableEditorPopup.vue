@@ -67,8 +67,8 @@
 				<v-card-actions>
 					<v-spacer />
 
-					<v-btn color="blue darken-1" text @click="onCloseClick()">Close</v-btn>
-					<v-btn color="blue darken-1" text @click="onSaveClick()">Save</v-btn>
+					<v-btn color="blue darken-1" text @click="onCloseClick()">Cancel</v-btn>
+					<v-btn color="blue darken-1" text @click="onSaveClick()">Apply</v-btn>
 				</v-card-actions>
 			</v-form>
 		</v-card>
