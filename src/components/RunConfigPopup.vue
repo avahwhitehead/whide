@@ -131,6 +131,7 @@
 					text
 					@click="deleteConfig"
 					v-text="'Delete'"
+					:disabled="disableForm"
 				/>
 
 				<v-spacer />
@@ -300,8 +301,6 @@ export default Vue.extend({
 	mounted() {
 		this.showSelectPanel = true;
 		this.currentOpenConfig = this.runConfigs[0] || undefined;
-		//Create a new configuration if none exist
-		if (this.runConfigs.length === 0) this.createConfig();
 	},
 	methods: {
 		saveConfig() {
@@ -353,11 +352,11 @@ export default Vue.extend({
 		},
 		currentOpenConfig(config: RunConfiguration|undefined) {
 			if (config === undefined) {
-				this.nameModel = 'Unnamed';
-				this.interpreterVal = INTERPRETERS.WHILE_JS;
+				this.nameModel = '';
+				this.interpreterVal = INTERPRETERS.HWHILE;
 				this.fileModel = '';
-				this.inputModel = 'nil';
-				this.formatModel = 'any';
+				this.inputModel = '';
+				this.formatModel = '';
 			} else {
 				this.nameModel = config.name;
 				this.interpreterVal = config.interpreter;
@@ -394,6 +393,12 @@ export default Vue.extend({
 				this.treeErrorMessage = undefined;
 				//Display the tree
 				this.displayableConvertedTree = displayable;
+			}
+		},
+		showDialog(showDialog) {
+			if (showDialog) {
+				//Create a new configuration if none exist
+				if (this.runConfigs.length === 0) this.createConfig();
 			}
 		},
 	},
