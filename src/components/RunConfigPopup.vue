@@ -2,7 +2,7 @@
 	<v-dialog
 		v-model="showDialog"
 		persistent
-		max-width="80%"
+		max-width="75%"
 		scrollable
 	>
 		<v-card max-height="800px">
@@ -23,15 +23,8 @@
 				</v-list>
 			</v-navigation-drawer>
 
-			<v-card-title class="pt-0 pb-0" style="padding-left: 180px;">
+			<v-card-title class="pt-0 pb-0" style="padding-left: 190px;">
 				<span class="text-h5">Edit Run Configuration</span>
-				<v-spacer />
-				<FontAwesomeIcon
-					icon="trash"
-					title="Delete configuration"
-					@click="deleteConfig()"
-					class="icon-delete"
-				/>
 			</v-card-title>
 
 			<v-card-text style="padding-left: 180px">
@@ -44,6 +37,7 @@
 								class="mb-0 mt-0 pb-0 pt-0"
 								required
 								:rules="nameInputRules"
+								:disabled="disableForm"
 							/>
 						</v-row>
 
@@ -59,6 +53,7 @@
 								dense
 								required
 								:rules="interpreterInputRules"
+								:disabled="disableForm"
 							/>
 							<v-tooltip bottom content-class="help-tooltip">
 								<template v-slot:activator="{ on, attrs }">
@@ -82,14 +77,15 @@
 						<v-row class="">
 							<v-text-field
 								v-model="fileModel"
-								label="File*"
+								label="Program*"
 								class="mb-0 mt-0 pb-0 pt-0"
 								required
 								:rules="fileInputRules"
+								:disabled="disableForm"
 							/>
 							<v-btn
 								depressed
-								title="Choose file"
+								title="Choose program"
 								@click="showFilePicker = true"
 							>
 								<v-icon>far fa-folder</v-icon>
@@ -102,6 +98,7 @@
 								class="mb-0 mt-0 pb-0 pt-0"
 								required
 								:rules="treeInputRules"
+								:disabled="disableForm"
 							/>
 						</v-row>
 						<v-row>
@@ -133,7 +130,14 @@
 				</v-container>
 			</v-card-text>
 
-			<v-card-actions class="actions-container">
+			<v-card-actions class="actions-container" style="padding-left: 180px">
+				<v-btn
+					color="blue darken-1"
+					text
+					@click="deleteConfig"
+					v-text="'Delete'"
+				/>
+
 				<v-spacer />
 
 				<v-btn
@@ -165,7 +169,9 @@ import { binaryTreeToDisplayable } from "@/utils/tree_converters";
 import { treeParser as parseTree } from "@whide/tree-lang";
 import { BinaryTree } from "whilejs";
 import { fs } from "@/files/fs";
+import path from "path";
 import FilePickerPopup from "@/components/FilePickerPopup.vue";
+import { FileInfoState } from "@/types/FileInfoState";
 
 type InterpreterType = {
 	name: string,
@@ -287,6 +293,9 @@ export default Vue.extend({
 				this.rule_requireNonEmpty,
 			];
 		},
+		disableForm(): boolean {
+			return this.runConfigs.length === 0;
+		},
 		//Force the select panel to always be visible
 		showSelectPanel: {
 			get(): boolean { return true; },
@@ -296,6 +305,8 @@ export default Vue.extend({
 	mounted() {
 		this.showSelectPanel = true;
 		this.currentOpenConfig = this.runConfigs[0] || undefined;
+		//Create a new configuration if none exist
+		if (this.runConfigs.length === 0) this.createConfig();
 	},
 	methods: {
 		saveConfig() {
@@ -315,9 +326,13 @@ export default Vue.extend({
 			this.$store.commit('setChosenRunConfig', newConfig);
 		},
 		createConfig() {
+			const openFile: FileInfoState|undefined = (this.$store.state.focusedFile >= 0)
+				? this.$store.state.openFiles[this.$store.state.focusedFile]
+				: undefined;
+
 			let newConfig: RunConfiguration = {
-				name: 'Unnamed',
-				file: '',
+				name: openFile ? path.basename(openFile.path) : 'Unnamed',
+				file: openFile ? openFile.path : '',
 				input: 'nil',
 				outputFormat: 'any',
 				interpreter: INTERPRETERS.HWHILE,
