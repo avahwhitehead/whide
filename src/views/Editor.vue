@@ -327,7 +327,14 @@ export default Vue.extend({
 			},
 		}
 	},
+	destroyed() {
+		//Remove the keypress handler before destroying the element
+		window.removeEventListener('keydown', this.handleKeypress);
+	},
 	mounted() {
+		//Handler for keypress events
+		window.addEventListener('keydown', this.handleKeypress);
+
 		const that = this;
 		//Make the file viewer drawer resizable
 		interact(this.$refs.filePanel.$el).resizable({
@@ -476,7 +483,25 @@ export default Vue.extend({
 		},
 		toggleTheme() {
 			this.isDarkTheme = !this.isDarkTheme;
-		}
+		},
+
+		handleKeypress(e: KeyboardEvent) {
+			//Whether ctrl (Linux/Windows) or cmd (Mac) is pressed
+			const isCtrl = (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey);
+
+			if (isCtrl) {
+				if (e.key === 's') {
+					//Save files
+					this.editorController?.saveFiles();
+				} else {
+					//Do nothing
+					return;
+				}
+				//Prevent any browser actions linked to this key combination
+				//This will only be reached if an action has been performed
+				e.preventDefault();
+			}
+		},
 	},
 	watch: {
 		runConfigs(val: RunConfiguration[]) {
