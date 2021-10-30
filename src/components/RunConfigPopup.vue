@@ -41,7 +41,7 @@
 							/>
 						</v-row>
 
-						<v-row class="">
+						<v-row>
 							<v-select
 								v-model="interpreterModel"
 								:items="interpreterList"
@@ -74,7 +74,7 @@
 							</v-tooltip>
 						</v-row>
 
-						<v-row class="">
+						<v-row>
 							<v-text-field
 								v-model="fileModel"
 								label="Program*"
@@ -85,13 +85,15 @@
 							/>
 							<v-btn
 								depressed
+								class="off-black"
 								title="Choose program"
 								@click="showFilePicker = true"
 							>
-								<v-icon>far fa-folder</v-icon>
+								<v-icon>fa-folder</v-icon>
 							</v-btn>
 						</v-row>
-						<v-row class="">
+
+						<v-row>
 							<v-text-field
 								v-model="inputModel"
 								label="Input tree*"
@@ -100,13 +102,15 @@
 								:rules="treeInputRules"
 								:disabled="disableForm"
 							/>
-						</v-row>
-						<v-row>
-							<div
-								class="expand-button"
+							<v-btn
+								depressed
+								class="off-black"
 								@click="showTreeGraph = !showTreeGraph"
-								v-text="`(${showTreeGraph ? 'hide' : 'show'} tree viewer)`"
-							/>
+								:title="`${showTreeGraph?'Hide':'Show'} graphical viewer`"
+							>
+								<v-icon v-if="showTreeGraph">fa-eye-slash</v-icon>
+								<v-icon v-else>fa-eye</v-icon>
+							</v-btn>
 						</v-row>
 						<v-row>
 							<transition name="fade">
@@ -115,15 +119,6 @@
 								</v-col>
 							</transition>
 						</v-row>
-<!--						<v-row class="">-->
-<!--							<v-text-field-->
-<!--								v-model="formatModel"-->
-<!--								label="Tree Display Format*"-->
-<!--								class="mb-0 mt-0 pb-0 pt-0"-->
-<!--								required-->
-<!--								:rules="treeFormatInputRules"-->
-<!--							/>-->
-<!--						</v-row>-->
 						</v-form>
 
 					<small>*indicates required field</small>
@@ -223,7 +218,7 @@ export default Vue.extend({
 			interpreterVal: INTERPRETERS.WHILE_JS,
 			configIndex: -1,
 			isFormValid: true,
-			showTreeGraph: true,
+			showTreeGraph: false,
 
 			treeErrorMessage: undefined,
 			displayableConvertedTree: binaryTreeToDisplayable(null),
@@ -422,6 +417,10 @@ export default Vue.extend({
 
 .icon-delete {
 	cursor: pointer;
+}
+
+.off-black {
+	color: #333 !important;
 }
 
 .nav-drawer {
