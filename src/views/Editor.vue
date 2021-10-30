@@ -1,81 +1,102 @@
 <template>
 	<div class="full-height">
 		<v-app-bar app dense flat clipped-left clipped-right class="header">
-			<v-col md="3" sm="5">
-				<MenuBar :menus="menus" style="max-width: max-content" />
-			</v-col>
+			<MenuBar :menus="menus" style="max-width: max-content" />
 
+			<v-spacer />
 			<v-spacer />
 
 			<v-btn right @click="openTreeViewer">
 				Open Tree Viewer
-<!--				<FontAwesomeIcon icon="project-diagram" />-->
 			</v-btn>
 
 			<v-spacer />
 
-			<v-col md="3" sm="5" >
-				<v-row>
-					<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
-						<FontAwesomeIcon icon="cog" />
-					</v-btn>
+			<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
+				<FontAwesomeIcon icon="pencil-alt" />
+			</v-btn>
 
-					<v-select
-						v-model="chosenRunConfig"
-						:items="runConfigs"
-						item-text="name"
-						item-value="abbr"
-						placeholder="Run Configuration"
-						class="dropdown"
-						return-object
-						dense
-						outlined
-						hide-details
-					/>
+			<v-select
+				v-model="chosenRunConfig"
+				:items="runConfigs"
+				item-text="name"
+				item-value="abbr"
+				placeholder="Run Configuration"
+				class="dropdown"
+				return-object
+				dense
+				outlined
+				hide-details
+			/>
 
-					<v-btn
-						class="pa-2 program-button run"
-						:disabled="!allowRunning"
-						depressed @click="runProgramClick"
-					>
-						<FontAwesomeIcon icon="play" />
-					</v-btn>
+			<v-btn
+				class="pa-2 program-button run"
+				:disabled="!allowRunning"
+				depressed
+				@click="runProgramClick"
+			>
+				<FontAwesomeIcon icon="play" />
+			</v-btn>
 
-					<v-btn
-						class="pa-2 program-button debug"
-						:disabled="!allowDebugging"
-						depressed @click="debugProgramClick"
-					>
-						<FontAwesomeIcon icon="bug" />
-					</v-btn>
-				</v-row>
-			</v-col>
+			<v-btn
+				class="pa-2 program-button debug"
+				:disabled="!allowDebugging"
+				depressed
+				@click="debugProgramClick"
+			>
+				<FontAwesomeIcon icon="bug" />
+			</v-btn>
 		</v-app-bar>
 
-		<v-navigation-drawer app permanent clipped>
+		<v-navigation-drawer app permanent clipped :width="fileViewerWidth" ref="filePanel">
 			<v-btn @click="handleChangeRootClick">Change Root</v-btn>
 			<FilePicker :directory="cwd" @changeFile="openFile" />
 		</v-navigation-drawer>
 
-		<v-main class="pa-0 fill-height overflow-hidden">
+		<v-main class="pa-0 fill-height overflow-hidden main-container">
 			<CodeEditorElement
 				class="top"
-				v-model="focused_file"
-				:allow-extended="extendedWhile"
+				:class="{'full-height': !showRunPanel}"
+				:style="{'height': codeEditorHeight}"
 				@controller="onEditorControllerChange"
 			/>
 
-			<div class="bottom">
+			<div class="bottom" ref="runPanel"
+				:class="{'hidden': !showRunPanel}"
+				:style="{'height': runPanelHeightString}"
+			>
 				<v-divider />
-				<run-panel class="run-panel" @controller="c => this.runPanelController = c" />
+				<run-panel class="run-panel" :runners="runners" />
 			</div>
 		</v-main>
 
-		<v-navigation-drawer app right clipped>
-			<v-btn right @click="showSettingsPopup = !showSettingsPopup">Global Settings</v-btn>
+		<v-navigation-drawer app right clipped v-model="showPopout">
+			<v-btn
+				right
+				@click="showSettingsPopup = !showSettingsPopup"
+				v-text="`Global Settings`"
+			/>
 
 			<div class="title pt-2 pb-0">Options</div>
-			<v-switch class="mt-0" ref="pureWhileToggle" v-model="extendedWhile" :label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`" />
+			<v-switch
+				class="mt-0"
+				ref="pureWhileToggle"
+				v-model="extendedWhile"
+				:label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`"
+				:disabled="focusedFile === undefined"
+			/>
+
+			<v-btn
+				absolute
+				left
+				shaped
+				min-width="5px"
+				width="5px"
+				@click="showPopout = !showPopout"
+				:style="{top: '8%', transform:'translateX(-150%)', visibility: 'visible !important'}"
+			>
+				<FontAwesomeIcon :icon="showPopout ? 'angle-right' : 'angle-left'"/>
+			</v-btn>
 		</v-navigation-drawer>
 
 		<v-dialog
@@ -118,7 +139,7 @@
 <script lang="ts">
 import Vue from "vue";
 //Components
-import CodeEditorElement, { FileInfoState } from "@/components/CodeEditorElement.vue";
+import CodeEditorElement from "@/components/CodeEditorElement.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import RunPanel from "@/components/RunPanel.vue";
@@ -130,31 +151,33 @@ import NewFilePopup from "@/components/NewFilePopup.vue";
 import DeleteFilePopup from "@/components/DeleteFilePopup.vue";
 //Other imports
 import { EditorController, IOController, Menu } from "@/types";
-import RunPanelController, { RunPanelInstanceController } from "@/api/controllers/RunPanelController";
 import CodeMirror from "codemirror";
 import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguration";
 import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
 import { AbstractRunner } from "@/run/AbstractRunner";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
+import interact from "interactjs";
+import { FileInfoState } from "@/types/FileInfoState";
 
 /**
  * Type declaration for the data() values
  */
 interface DataTypesDescriptor {
-	focused_file? : string;
 	codeEditor? : CodeMirror.Editor;
 	editorController?: EditorController;
 	ioController? : IOController;
-	runPanelController?: RunPanelController;
-	extendedWhile: boolean;
+	runners: {name:string, runner:AbstractRunner}[],
 	showRunConfigPopup: boolean;
 	showSettingsPopup: boolean;
 	showChangeRootPopup: boolean;
-	showDeleteFilePopup: boolean,
-	showNewFilePopup: boolean,
-	createFolder: boolean,
-	showHWhileNotFoundError: boolean,
-	showDownloadPopup: boolean,
+	showDeleteFilePopup: boolean;
+	showNewFilePopup: boolean;
+	createFolder: boolean;
+	showHWhileNotFoundError: boolean;
+	showDownloadPopup: boolean;
+	showPopout: boolean|undefined;
+	fileViewerWidth: number;
+	runPanelHeight: number;
 }
 
 export default Vue.extend({
@@ -173,11 +196,9 @@ export default Vue.extend({
 	},
 	data() : DataTypesDescriptor {
 		return {
-			focused_file: undefined,
 			editorController: undefined,
 			ioController: undefined,
-			runPanelController: undefined,
-			extendedWhile: true,
+			runners: [],
 			showRunConfigPopup: false,
 			showSettingsPopup: false,
 			showChangeRootPopup: false,
@@ -186,6 +207,9 @@ export default Vue.extend({
 			createFolder: false,
 			showHWhileNotFoundError: false,
 			showDownloadPopup: false,
+			showPopout: undefined,
+			fileViewerWidth: 200,
+			runPanelHeight: 200,
 		}
 	},
 	computed: {
@@ -210,11 +234,37 @@ export default Vue.extend({
 				return this.$store.state.runConfigurations;
 			}
 		},
+		focusedFile(): FileInfoState|undefined {
+			const focusedFile = this.$store.state.focusedFile;
+			const openFiles = this.$store.state.openFiles;
+			if (focusedFile === -1) return undefined;
+			return openFiles[focusedFile];
+		},
+		extendedWhile: {
+			get(): boolean {
+				if (this.focusedFile === undefined) return true;
+				return this.focusedFile.extWhile;
+			},
+			set(val: boolean): void {
+				this.$store.commit('openFiles.focused.setExtended', val);
+			},
+		},
 		allowDebugging(): boolean {
 			return !!this.chosenRunConfig && this.chosenRunConfig.interpreter !== INTERPRETERS.WHILE_JS;
 		},
 		allowRunning(): boolean {
 			return !!this.chosenRunConfig;
+		},
+		showRunPanel(): boolean {
+			return this.runners.length !== 0;
+		},
+		codeEditorHeight(): string {
+			if (!this.showRunPanel) return '100%';
+			return `calc(100% - ${this.runPanelHeightString})`;
+		},
+		runPanelHeightString(): string {
+			if (!this.showRunPanel) return '0';
+			return this.runPanelHeight + 'px';
 		},
 		menus() : Menu[] {
 			return [
@@ -271,7 +321,53 @@ export default Vue.extend({
 			},
 		}
 	},
+	destroyed() {
+		//Remove the keypress handler before destroying the element
+		window.removeEventListener('keydown', this.handleKeypress);
+	},
+	mounted() {
+		//Handler for keypress events
+		window.addEventListener('keydown', this.handleKeypress);
+
+		const that = this;
+		//Make the file viewer drawer resizable
+		interact(this.$refs.filePanel.$el).resizable({
+			edges: { right: true },
+			listeners: {
+				move(event: any) {
+					const SNAP_DISTANCE = 50;
+					that.fileViewerWidth = Math.ceil(event.rect.width / SNAP_DISTANCE) * SNAP_DISTANCE;
+				}
+			}
+		});
+		//Make the run panel resizable
+		interact(this.$refs.runPanel).resizable({
+			edges: { top: true },
+			listeners: {
+				move(event: any) {
+					const SNAP_DISTANCE = 10;
+					that.runPanelHeight = Math.ceil(event.rect.height / SNAP_DISTANCE) * SNAP_DISTANCE;
+				}
+			}
+		});
+	},
 	methods: {
+		/**
+		 * Get the next available run controller name starting with a given string
+		 * @param prefix	The starting string
+		 */
+		_nextRunnerName(prefix: string = 'Run') {
+			let nextName: string = prefix;
+			//Set of names starting with this prefix
+			let nameSet: Set<string> = new Set(
+				this.runners.map(e => e.name).filter(n => n.substr(0, prefix.length) === prefix)
+			);
+			//Start with the number of the length of the set
+			let start: number = 0;
+			while (nameSet.has(nextName)) nextName = `${prefix} (${++start})`;
+			return nextName;
+		},
+
 		openTreeViewer() {
 			let routeData = this.$router.resolve({ path: '/trees' });
 			window.open(routeData.href, '_blank');
@@ -282,14 +378,10 @@ export default Vue.extend({
 		},
 
 		async runProgramClick() {
-			if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
 			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
 
 			let config = this.chosenRunConfig;
 			let inputExpression = config.input;
-
-			//Open a new tab in the run panel
-			const outputController = await this.runPanelController!.addOutputStream(config.name);
 
 			let runner: AbstractRunner;
 
@@ -298,7 +390,6 @@ export default Vue.extend({
 				runner = new WhileJsRunner({
 					expression: inputExpression,
 					file: config.file,
-					output: outputController.stream,
 				});
 			} else {
 				//Create an HWhile runner for the program
@@ -306,10 +397,13 @@ export default Vue.extend({
 					expression: inputExpression,
 					file: config.file,
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
-					output: outputController.stream,
 					onerror: this._handleRunDebugError,
 				});
 			}
+
+			//Open a new tab in the run panel
+			this.runners.push({name: this._nextRunnerName(config.name), runner: runner});
+
 			//Perform setup
 			await runner.init();
 			//Run the program
@@ -317,15 +411,11 @@ export default Vue.extend({
 		},
 
 		async debugProgramClick() {
-			if (!this.runPanelController) throw new Error("Couldn't get Run Panel Controller");
 			if (!this.editorController) throw new Error("Couldn't get Editor Controller");
 			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
 
 			let config = this.chosenRunConfig;
 			let inputExpression = config.input;
-
-			//Open a new tab in the run panel
-			const outputController: RunPanelInstanceController = await (this.runPanelController as RunPanelController).addOutputStream(config.name);
 
 			let runner: AbstractRunner;
 
@@ -343,18 +433,18 @@ export default Vue.extend({
 					expression: inputExpression,
 					file: config.file,
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
-					output: outputController.stream,
 					breakpoints: breakpoints,
 					onerror: this._handleRunDebugError,
 				});
-				//Set up user control for the debugger
-				outputController.debuggerCallbackHandler = runner as HWhileDebugger;
-				//Perform setup
-				await runner.init();
-				//Run to the first breakpoint
-				let state = await runner.run();
-				if (state && state.variables) outputController.variables = state.variables;
 			}
+
+			//Open a new tab in the run panel
+			this.runners.push({name: this._nextRunnerName(config.name), runner: runner});
+
+			//Perform setup
+			await runner.init();
+			//Run to the first breakpoint
+			await runner.run();
 		},
 
 		_handleRunDebugError(err: any): void {
@@ -387,15 +477,33 @@ export default Vue.extend({
 		},
 		toggleTheme() {
 			this.isDarkTheme = !this.isDarkTheme;
-		}
+		},
+
+		handleKeypress(e: KeyboardEvent) {
+			//Whether ctrl (Linux/Windows) or cmd (Mac) is pressed
+			const isCtrl = (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey);
+
+			if (isCtrl) {
+				if (e.key === 's') {
+					//Save files
+					this.editorController?.saveFiles();
+				} else {
+					//Do nothing
+					return;
+				}
+				//Prevent any browser actions linked to this key combination
+				//This will only be reached if an action has been performed
+				e.preventDefault();
+			}
+		},
 	},
 	watch: {
 		runConfigs(val: RunConfiguration[]) {
-			if (val.length > 0)
-				this.$store.state.chosenRunConfig = val[0];
-			else
-				this.$store.state.chosenRunConfig = undefined;
-		}
+			if (val.length === 0)
+				this.chosenRunConfig = undefined;
+			else if (this.chosenRunConfig === undefined)
+				this.chosenRunConfig = val[0];
+		},
 	}
 });
 </script>
@@ -412,6 +520,10 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 }
 .v-select__selections .v-select__selection {
 	max-width: none;
+}
+
+.v-navigation-drawer--mini-variant, .v-navigation-drawer {
+	overflow: visible !important;
 }
 </style>
 
@@ -445,20 +557,28 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 .top {
 	/*Align to the top*/
 	top: 0;
-	/*Take up most of the space*/
-	height: 65%;
-	max-height: 65%;
+	min-height: 20%;
+	max-height: 90%;
+}
+.top.full-height {
+	max-height: 100%;
 }
 
 .bottom {
 	/*Align to the bottom*/
 	bottom: 0;
-	/*Fill the remaining space*/
-	height: 35%;
-	max-height: 35%;
+	min-height: 10%;
+	max-height: 80%;
 	/*Resize contents to make room for the divider*/
 	display: flex;
 	flex-direction: column;
+}
+.bottom.hidden {
+	/*Align to the bottom*/
+	bottom: 0;
+	min-height: 0;
+	height: 0;
+	display: none;
 }
 
 .run-panel {

@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex';
 import { RunConfiguration } from "@/types/RunConfiguration";
 import VuexPersistence from "vuex-persist";
-import { FileInfoState } from '@/components/CodeEditorElement.vue';
+import { FileInfoState } from "@/types/FileInfoState";
 
 //Make VueX available to Vue
 Vue.use(Vuex);
@@ -25,7 +25,7 @@ export interface RootState {
 	chosenRunConfig: RunConfiguration|undefined;
 	settings: SettingsState;
 	openFiles: FileInfoState[];
-	focusedFile: FileInfoState|undefined;
+	focusedFile: number;
 	current_directory: string|undefined;
 }
 
@@ -81,7 +81,7 @@ const store = new Vuex.Store<RootState>({
 			}
 		},
 		openFiles: [],
-		focusedFile: undefined,
+		focusedFile: -1,
 		current_directory: undefined,
 	},
 	mutations: {
@@ -150,8 +150,12 @@ const store = new Vuex.Store<RootState>({
 		'openFiles.set': function (state: RootState, files: FileInfoState[]) {
 			state.openFiles = [...files];
 		},
-		'openFiles.setFocused': function (state: RootState, file: FileInfoState) {
-			state.focusedFile = file;
+		'openFiles.setFocused': function (state: RootState, file: number|FileInfoState) {
+			if (typeof file === 'number') state.focusedFile = file;
+			else state.focusedFile = state.openFiles.indexOf(file);
+		},
+		'openFiles.focused.setExtended': function (state: RootState, isExt: boolean) {
+			if (state.focusedFile >= 0) state.openFiles[state.focusedFile].extWhile = isExt;
 		},
 
 		'cwd.set': function (state: RootState, directory: string) {

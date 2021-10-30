@@ -9,6 +9,11 @@ module.exports = {
 					test: /\.css$/i,
 					use: ["style-loader", "css-loader"],
 				},
+				// Handle our workers
+				{
+					test: /\.worker\.js$/,
+					use: { loader: "worker-loader" },
+				},
 			],
 		},
 		electronBuilder: {
