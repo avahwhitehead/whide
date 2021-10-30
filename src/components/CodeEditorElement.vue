@@ -82,10 +82,13 @@ import { ENCODING_UTF8 } from "memfs/lib/encoding";
 import CodeMirror, { Annotation, LineWidget, LintStateOptions } from "codemirror";
 //CodeMirror addons
 import 'codemirror/addon/lint/lint';
+import 'codemirror/addon/hint/anyword-hint';
+import 'codemirror/addon/hint/show-hint';
 //CodeMirror styling
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/ayu-mirage.css';
 import 'codemirror/addon/lint/lint.css';
+import 'codemirror/addon/hint/show-hint.css';
 //While language syntax definition
 import { PURE_WHILE, WHILE } from "@/assets/whileSyntaxMode";
 //WHILE linter
@@ -193,7 +196,10 @@ export default Vue.extend({
 			value: "",
 			mode: WHILE,
 			lint: this.lintOptions,
-			theme: this.isDarkTheme ? DARK_THEME : LIGHT_THEME
+			theme: this.isDarkTheme ? DARK_THEME : LIGHT_THEME,
+			extraKeys: {
+				"Ctrl-Space": "autocomplete",
+			},
 		});
 		codeMirror.setSize("100%", "100%");
 
@@ -256,9 +262,7 @@ export default Vue.extend({
 				await that._openFile(filePath);
 			}
 			async saveFiles(): Promise<void> {
-				that.openFiles.forEach(t => {
-					that._saveFile(t);
-				})
+				return that.saveAllFiles();
 			}
 		})();
 	},
@@ -433,6 +437,10 @@ export default Vue.extend({
 			this.showSaveDialog = false;
 			this.closingTab = undefined;
 		},
+
+		async saveAllFiles(): Promise<void> {
+			for (let t of this.openFiles) await this._saveFile(t);
+		}
 	},
 	watch: {
 		editor(new_val) {
@@ -493,6 +501,9 @@ export default Vue.extend({
 .CodeMirror {
 	height: 100%;
 	flex: 1;
+
+	/*font-family: Arial, monospace;*/
+	font-size: 15px;
 }
 </style>
 
