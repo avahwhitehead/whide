@@ -1,57 +1,51 @@
 <template>
 	<div class="full-height">
 		<v-app-bar app dense flat clipped-left clipped-right class="header">
-			<v-col md="3" sm="5">
-				<MenuBar :menus="menus" style="max-width: max-content" />
-			</v-col>
+			<MenuBar :menus="menus" style="max-width: max-content" />
 
+			<v-spacer />
 			<v-spacer />
 
 			<v-btn right @click="openTreeViewer">
 				Open Tree Viewer
-<!--				<FontAwesomeIcon icon="project-diagram" />-->
 			</v-btn>
 
 			<v-spacer />
 
-			<v-col md="3" sm="5" >
-				<v-row>
-					<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
-						<FontAwesomeIcon icon="pencil-alt" />
-					</v-btn>
+			<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
+				<FontAwesomeIcon icon="pencil-alt" />
+			</v-btn>
 
-					<v-select
-						v-model="chosenRunConfig"
-						:items="runConfigs"
-						item-text="name"
-						item-value="abbr"
-						placeholder="Run Configuration"
-						class="dropdown"
-						return-object
-						dense
-						outlined
-						hide-details
-					/>
+			<v-select
+				v-model="chosenRunConfig"
+				:items="runConfigs"
+				item-text="name"
+				item-value="abbr"
+				placeholder="Run Configuration"
+				class="dropdown"
+				return-object
+				dense
+				outlined
+				hide-details
+			/>
 
-					<v-btn
-						class="pa-2 program-button run"
-						:disabled="!allowRunning"
-						depressed
-						@click="runProgramClick"
-					>
-						<FontAwesomeIcon icon="play" />
-					</v-btn>
+			<v-btn
+				class="pa-2 program-button run"
+				:disabled="!allowRunning"
+				depressed
+				@click="runProgramClick"
+			>
+				<FontAwesomeIcon icon="play" />
+			</v-btn>
 
-					<v-btn
-						class="pa-2 program-button debug"
-						:disabled="!allowDebugging"
-						depressed
-						@click="debugProgramClick"
-					>
-						<FontAwesomeIcon icon="bug" />
-					</v-btn>
-				</v-row>
-			</v-col>
+			<v-btn
+				class="pa-2 program-button debug"
+				:disabled="!allowDebugging"
+				depressed
+				@click="debugProgramClick"
+			>
+				<FontAwesomeIcon icon="bug" />
+			</v-btn>
 		</v-app-bar>
 
 		<v-navigation-drawer app permanent clipped :width="fileViewerWidth" ref="filePanel">
