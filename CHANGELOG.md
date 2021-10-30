@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.2.0](https://github.com/sonrad10/Whide/compare/v2.1.0...v2.2.0) (2021-10-30)
+
+
+### Features
+
+* added a distinct Pure WHILE syntax highlighting mode ([7740b28](https://github.com/sonrad10/Whide/commit/7740b28375c7837dc823b3d0957606460dd451aa))
+* added keyboard shortcut for saving files ([07a2db5](https://github.com/sonrad10/Whide/commit/07a2db51da03c77dba9d9a6946cbd1ab442ec8cd))
+* added pullout toggle button to settings sidebar ([0a55b0c](https://github.com/sonrad10/Whide/commit/0a55b0c92274a89278fbe4ef93b560587bbacb47))
+* added simple autocompletion to the code editor ([1b94cee](https://github.com/sonrad10/Whide/commit/1b94cee5312381107ebe833eb43ec46e0be24406))
+* made file viewer and run panel resizable ([d45a6f1](https://github.com/sonrad10/Whide/commit/d45a6f1c1d3812bdbb95c6e01b53f817acfad4c0))
+
+
+### Bug Fixes
+
+* changed run configurations edit button ([8dde4de](https://github.com/sonrad10/Whide/commit/8dde4de7651181169a0f1bd7663d28f2e9e79847))
+* changed to only one 'reset' button in the variable edit popup ([1258b1d](https://github.com/sonrad10/Whide/commit/1258b1d10823629ca92f53fbfb9e549cce3b0e0f))
+* code editor tabs no longer show file names in upper case ([89f6a92](https://github.com/sonrad10/Whide/commit/89f6a929917bca625f670d771926e47cd849e318))
+* fixed behaviour of the top bar in small window sizes ([6996cd4](https://github.com/sonrad10/Whide/commit/6996cd4332d957c58d1bec4809437f66371abe92))
+* fixed run config window side panel sometimes not showing ([9667234](https://github.com/sonrad10/Whide/commit/9667234fbdca681e4b80501d8538f0545e3e8273))
+* fixed tree viewer layout issues ([2c2ddca](https://github.com/sonrad10/Whide/commit/2c2ddcaefc73661fe2c855e63eb35d309396d04a))
+* made code output region detect more strings as trees ([5af9b05](https://github.com/sonrad10/Whide/commit/5af9b051a7c1a31c27814860065fbf07cbd5ebb8))
+* prevented editing variable values after debugging has stopped ([87d7295](https://github.com/sonrad10/Whide/commit/87d7295d7cf6e83089f4e151c076aded564b14ba))
+* run panel hides when there are no programs to display ([b2fc243](https://github.com/sonrad10/Whide/commit/b2fc243a07f9f2c3a7704691d9190c2f4b3b7c87))
+* stopped chosen run configuration resetting when leaving the run config window ([81be765](https://github.com/sonrad10/Whide/commit/81be765d5f11e3c6679e6acc3d496c24c5934ba9))
+
 ## [2.1.0](https://github.com/sonrad10/Whide/compare/v2.0.0...v2.1.0) (2021-09-01)
 
 
