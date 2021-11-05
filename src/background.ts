@@ -1,11 +1,18 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 import { ExtendedCommand, makeCommandLineParser, ProgramOptions } from "@/types/CommandLine";
-const isDevelopment = process.env.NODE_ENV !== 'production';
 import path from "path";
+import { menuTemplate } from "@/menus";
+
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+//Configure the electron menus
+Electron.Menu.setApplicationMenu(
+	Electron.Menu.buildFromTemplate(menuTemplate)
+);
 
 //Parse command line arguments
 const program : ExtendedCommand = makeCommandLineParser();
