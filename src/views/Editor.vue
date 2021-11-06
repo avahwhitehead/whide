@@ -107,6 +107,7 @@
 
 		<v-dialog
 			v-model="showHWhileNotFoundError"
+			v-if="isNotElectron"
 			width="400px"
 		>
 			<v-card>
@@ -134,6 +135,7 @@
 		<ChangeRootPopup v-model="showChangeRootPopup" />
 		<NewFilePopup
 			v-model="showNewFilePopup"
+			v-if="isNotElectron"
 			:create-folder="createFolder"
 			@created="onFileCreate"
 		/>
@@ -164,6 +166,9 @@ import { AbstractRunner } from "@/run/AbstractRunner";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
 import interact from "interactjs";
 import { FileInfoState } from "@/types/FileInfoState";
+import { SaveDialogReturnValue } from "electron";
+import path from "path";
+import { fs } from "@/files/fs";
 
 const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
@@ -318,6 +323,9 @@ export default Vue.extend({
 		},
 		isElectron(): boolean {
 			return this.$store.state.isElectron;
+		},
+		isNotElectron(): boolean {
+			return !this.isElectron;
 		},
 	},
 	destroyed() {
@@ -508,12 +516,38 @@ export default Vue.extend({
 		},
 
 		menu_newFile_click() {
-			this.createFolder = false;
-			this.showNewFilePopup = true;
+			if (electron) {
+				let filePathPromise: Promise<SaveDialogReturnValue> = electron.remote.dialog.showSaveDialog(null, {
+					defaultPath: path.join(this.cwd, 'myfile.while'),
+					filters: [
+						{ name: 'WHILE files', extensions: ['while'] },
+						{ name: 'All files', extensions: ['*'] },
+					],
+					properties: ['showOverwriteConfirmation', 'createDirectory']
+				});
+				filePathPromise.then((value: SaveDialogReturnValue) => {
+					if (value.canceled) return;
+					fs.promises.writeFile(value.filePath!, '');
+				});
+			} else {
+				this.createFolder = false;
+				this.showNewFilePopup = true;
+			}
 		},
 		menu_newFolder_click() {
-			this.createFolder = true;
-			this.showNewFilePopup = true;
+			if (electron) {
+				let filePathPromise: Promise<SaveDialogReturnValue> = electron.remote.dialog.showSaveDialog(null, {
+					defaultPath: path.join(this.cwd, 'folder'),
+					buttonLabel: 'Create',
+				});
+				filePathPromise.then((value: SaveDialogReturnValue) => {
+					if (value.canceled) return;
+					fs.promises.mkdir(value.filePath!);
+				});
+			} else {
+				this.createFolder = true;
+				this.showNewFilePopup = true;
+			}
 		},
 		menu_save_click() {
 			this.editorController?.saveFiles();
