@@ -8,7 +8,7 @@
 	>
 		<v-card class="pa-3">
 			<v-card-title>
-				<span>New File</span>
+				<span>New {{ createFolder ? 'Folder' : 'File' }}</span>
 			</v-card-title>
 
 			<v-form ref="form" v-model="isFormValid">

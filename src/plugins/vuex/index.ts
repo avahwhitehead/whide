@@ -27,6 +27,7 @@ export interface RootState {
 	openFiles: FileInfoState[];
 	focusedFile: number;
 	current_directory: string|undefined;
+	isElectron: boolean;
 }
 
 /**
@@ -83,6 +84,7 @@ const store = new Vuex.Store<RootState>({
 		openFiles: [],
 		focusedFile: -1,
 		current_directory: undefined,
+		isElectron: (window['require'] !== undefined)
 	},
 	mutations: {
 		/**

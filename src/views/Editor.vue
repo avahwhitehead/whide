@@ -1,16 +1,22 @@
 <template>
 	<div class="full-height">
 		<v-app-bar app dense flat clipped-left clipped-right class="header">
-			<MenuBar :menus="menus" style="max-width: max-content" />
+			<MenuBar
+				:menus="menus"
+				style="max-width: max-content"
+				v-if="!isElectron"
+			/>
 
-			<v-spacer />
-			<v-spacer />
+			<v-spacer v-if="!isElectron" />
+			<v-spacer v-if="!isElectron" />
 
 			<v-btn right @click="openTreeViewer">
 				Open Tree Viewer
 			</v-btn>
 
 			<v-spacer />
+			<v-spacer v-if="isElectron" />
+			<v-spacer v-if="isElectron" />
 
 			<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
 				<FontAwesomeIcon icon="pencil-alt" />
@@ -159,6 +165,8 @@ import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
 import interact from "interactjs";
 import { FileInfoState } from "@/types/FileInfoState";
 
+const electron = (window['require'] !== undefined) ? require("electron") : undefined;
+
 /**
  * Type declaration for the data() values
  */
@@ -276,37 +284,25 @@ export default Vue.extend({
 							children: [
 								{
 									name: "New File",
-									command: () => {
-										this.createFolder = false;
-										this.showNewFilePopup = true;
-									}
+									command: this.menu_newFile_click,
 								},
 								{
 									name: "New Folder",
-									command: () => {
-										this.createFolder = true;
-										this.showNewFilePopup = true;
-									}
+									command: this.menu_newFolder_click,
 								}
 							]
 						},
 						{
 							name: "Save",
-							command: () => {
-								this.editorController!.saveFiles();
-							}
+							command: this.menu_save_click,
 						},
 						{
 							name: "Delete",
-							command: () => {
-								this.showDeleteFilePopup = true;
-							}
+							command: this.menu_delete_click,
 						},
 						{
 							name: "Export",
-							command: () => {
-								this.showDownloadPopup = true;
-							}
+							command: this.menu_export_click,
 						},
 					]
 				},
@@ -319,15 +315,36 @@ export default Vue.extend({
 			set(cwd: string): void {
 				this.$store.commit('cwd.set', cwd);
 			},
-		}
+		},
+		isElectron(): boolean {
+			return this.$store.state.isElectron;
+		},
 	},
 	destroyed() {
-		//Remove the keypress handler before destroying the element
-		window.removeEventListener('keydown', this.handleKeypress);
+		//Remove global event listeners before destroying the element
+		if (electron) {
+			electron.ipcRenderer.off('file.new-file', this.menu_newFile_click);
+			electron.ipcRenderer.off('file.new-folder', this.menu_newFolder_click);
+			electron.ipcRenderer.off('file.save', this.menu_save_click);
+			electron.ipcRenderer.off('file.delete', this.menu_delete_click);
+			electron.ipcRenderer.off('file.settings', this.menu_settings_click);
+		} else {
+			window.removeEventListener('keydown', this.handleKeypress);
+		}
 	},
 	mounted() {
-		//Handler for keypress events
-		window.addEventListener('keydown', this.handleKeypress);
+		//Set up listeners for the menus in electron, or keyboard shortcuts in the browser
+		if (electron) {
+			//Perform operations when menu items are clicked
+			electron.ipcRenderer.on('file.new-file', this.menu_newFile_click);
+			electron.ipcRenderer.on('file.new-folder', this.menu_newFolder_click);
+			electron.ipcRenderer.on('file.save', this.menu_save_click);
+			electron.ipcRenderer.on('file.delete', this.menu_delete_click);
+			electron.ipcRenderer.on('file.settings', this.menu_settings_click);
+		} else {
+			//Handler for keypress events
+			window.addEventListener('keydown', this.handleKeypress);
+		}
 
 		const that = this;
 		//Make the file viewer drawer resizable
@@ -367,7 +384,6 @@ export default Vue.extend({
 			while (nameSet.has(nextName)) nextName = `${prefix} (${++start})`;
 			return nextName;
 		},
-
 		openTreeViewer() {
 			let routeData = this.$router.resolve({ path: '/trees' });
 			window.open(routeData.href, '_blank');
@@ -376,7 +392,6 @@ export default Vue.extend({
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
 			this.editorController.open(filePath);
 		},
-
 		async runProgramClick() {
 			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
 
@@ -409,7 +424,6 @@ export default Vue.extend({
 			//Run the program
 			await runner.run();
 		},
-
 		async debugProgramClick() {
 			if (!this.editorController) throw new Error("Couldn't get Editor Controller");
 			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
@@ -446,7 +460,6 @@ export default Vue.extend({
 			//Run to the first breakpoint
 			await runner.run();
 		},
-
 		_handleRunDebugError(err: any): void {
 			if (err.code === 'ENOENT') {
 				this.showHWhileNotFoundError = true;
@@ -454,17 +467,14 @@ export default Vue.extend({
 				console.error(err)
 			}
 		},
-
 		onFileCreate(filePath: string, isFolder: boolean) {
 			if (this.editorController && !isFolder) {
 				this.editorController.open(filePath);
 			}
 		},
-
 		openRunConfigPopup() {
 			this.showRunConfigPopup = true;
 		},
-
 		onEditorControllerChange(editorController : EditorController) : void {
 			this.editorController = editorController;
 		},
@@ -496,6 +506,28 @@ export default Vue.extend({
 				e.preventDefault();
 			}
 		},
+
+		menu_newFile_click() {
+			this.createFolder = false;
+			this.showNewFilePopup = true;
+		},
+		menu_newFolder_click() {
+			this.createFolder = true;
+			this.showNewFilePopup = true;
+		},
+		menu_save_click() {
+			this.editorController?.saveFiles();
+		},
+		menu_delete_click() {
+			this.showDeleteFilePopup = true;
+		},
+		menu_export_click() {
+			this.showDownloadPopup = true;
+		},
+		menu_settings_click() {
+			this.showSettingsPopup = true;
+		},
+
 	},
 	watch: {
 		runConfigs(val: RunConfiguration[]) {
