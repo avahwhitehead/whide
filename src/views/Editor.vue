@@ -105,30 +105,6 @@
 			</v-btn>
 		</v-navigation-drawer>
 
-		<v-dialog
-			v-model="showHWhileNotFoundError"
-			v-if="isNotElectron"
-			width="400px"
-		>
-			<v-card>
-				<v-card-title>Could not find HWhile</v-card-title>
-				<v-card-text>
-					Please ensure HWhile is installed on your computer and available on the global path,
-					or set the path to the HWhile executable in settings.
-				</v-card-text>
-				<v-card-actions>
-					<v-spacer />
-
-					<v-btn
-						color="blue darken-1"
-						text
-						@click="showHWhileNotFoundError = false"
-						v-text="'Ok'"
-					/>
-				</v-card-actions>
-			</v-card>
-		</v-dialog>
-
 		<DownloadFilePopup v-model="showDownloadPopup" />
 		<RunConfigPopup v-model="showRunConfigPopup" />
 		<ChangeRootPopup v-model="showChangeRootPopup" />
@@ -164,7 +140,7 @@ import { AbstractRunner } from "@/run/AbstractRunner";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
 import interact from "interactjs";
 import { FileInfoState } from "@/types/FileInfoState";
-import { SaveDialogReturnValue } from "electron";
+import { MessageBoxOptions, SaveDialogReturnValue } from "electron";
 import path from "path";
 import { fs } from "@/files/fs";
 
@@ -183,7 +159,6 @@ interface DataTypesDescriptor {
 	showDeleteFilePopup: boolean;
 	showNewFilePopup: boolean;
 	createFolder: boolean;
-	showHWhileNotFoundError: boolean;
 	showDownloadPopup: boolean;
 	showPopout: boolean|undefined;
 	fileViewerWidth: number;
@@ -213,7 +188,6 @@ export default Vue.extend({
 			showDeleteFilePopup: false,
 			showNewFilePopup: false,
 			createFolder: false,
-			showHWhileNotFoundError: false,
 			showDownloadPopup: false,
 			showPopout: undefined,
 			fileViewerWidth: 200,
@@ -465,7 +439,7 @@ export default Vue.extend({
 		},
 		_handleRunDebugError(err: any): void {
 			if (err.code === 'ENOENT') {
-				this.showHWhileNotFoundError = true;
+				this.showHWhileNotFoundError();
 			} else {
 				console.error(err)
 			}
@@ -507,6 +481,22 @@ export default Vue.extend({
 				//Prevent any browser actions linked to this key combination
 				//This will only be reached if an action has been performed
 				e.preventDefault();
+			}
+		},
+
+		showHWhileNotFoundError(): void {
+			const title = `Could not find HWhile`;
+			const message = `Please ensure HWhile is installed on your computer and available on the global path,`
+				+ ` or set the path to the HWhile executable in settings.`;
+			if (electron) {
+				let opts: MessageBoxOptions = {
+					title,
+					message,
+					buttons: ['Ok'],
+				};
+				electron.remote.dialog.showMessageBox(opts);
+			} else {
+				window.alert(title + '\n' + message);
 			}
 		},
 
