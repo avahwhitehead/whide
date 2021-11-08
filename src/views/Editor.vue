@@ -107,7 +107,10 @@
 
 		<DownloadFilePopup v-model="showDownloadPopup" />
 		<RunConfigPopup v-model="showRunConfigPopup" />
-		<ChangeRootPopup v-model="showChangeRootPopup" />
+		<ChangeRootPopup
+			v-model="showChangeRootPopup"
+			v-if="isNotElectron"
+		/>
 		<NewFilePopup
 			v-model="showNewFilePopup"
 			v-if="isNotElectron"
@@ -140,7 +143,7 @@ import { AbstractRunner } from "@/run/AbstractRunner";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
 import interact from "interactjs";
 import { FileInfoState } from "@/types/FileInfoState";
-import { MessageBoxOptions, SaveDialogReturnValue } from "electron";
+import { MessageBoxOptions, OpenDialogReturnValue, SaveDialogReturnValue } from "electron";
 import path from "path";
 import { fs } from "@/files/fs";
 
@@ -460,7 +463,15 @@ export default Vue.extend({
 			this.cwd = dir;
 		},
 		handleChangeRootClick() {
-			this.showChangeRootPopup = true;
+			if (electron) {
+				electron.remote.dialog.showOpenDialog({
+					properties: ['openDirectory']
+				}).then((result: OpenDialogReturnValue) => {
+					this.cwd = result.filePaths[0];
+				})
+			} else {
+				this.showChangeRootPopup = true;
+			}
 		},
 		toggleTheme() {
 			this.isDarkTheme = !this.isDarkTheme;
