@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex';
 import { RunConfiguration } from "@/types/RunConfiguration";
 import VuexPersistence from "vuex-persist";
+import createMutationsSharer from "vuex-shared-mutations";
 import { FileInfoState } from "@/types/FileInfoState";
 
 //Make VueX available to Vue
@@ -167,6 +168,10 @@ const store = new Vuex.Store<RootState>({
 	plugins: [
 		//Enable persistence
 		vuexLocal.plugin,
+		//Enable sharing between concurrent tabs/windows
+		createMutationsSharer({
+			predicate: ['setAppTheme', 'setHWhilePath'],
+		})
 	],
 });
 

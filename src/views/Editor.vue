@@ -79,7 +79,7 @@
 		<v-navigation-drawer app right clipped v-model="showPopout">
 			<v-btn
 				right
-				@click="showSettingsPopup = !showSettingsPopup"
+				@click="showSettingsPopup"
 				v-text="`Global Settings`"
 			/>
 
@@ -131,7 +131,6 @@
 
 		<DownloadFilePopup v-model="showDownloadPopup" />
 		<RunConfigPopup v-model="showRunConfigPopup" />
-		<SettingsPopup v-model="showSettingsPopup" />
 		<ChangeRootPopup v-model="showChangeRootPopup" />
 		<NewFilePopup
 			v-model="showNewFilePopup"
@@ -153,7 +152,6 @@ import MenuBar from "@/components/MenuBar.vue";
 import RunPanel from "@/components/RunPanel.vue";
 import DownloadFilePopup from "@/components/DownloadFilePopup.vue";
 import RunConfigPopup from "@/components/RunConfigPopup.vue";
-import SettingsPopup from "@/components/SettingsPopup.vue";
 import ChangeRootPopup from "@/components/ChangeRootPopup.vue";
 import NewFilePopup from "@/components/NewFilePopup.vue";
 import DeleteFilePopup from "@/components/DeleteFilePopup.vue";
@@ -181,7 +179,6 @@ interface DataTypesDescriptor {
 	ioController? : IOController;
 	runners: {name:string, runner:AbstractRunner}[],
 	showRunConfigPopup: boolean;
-	showSettingsPopup: boolean;
 	showChangeRootPopup: boolean;
 	showDeleteFilePopup: boolean;
 	showNewFilePopup: boolean;
@@ -199,7 +196,6 @@ export default Vue.extend({
 		DeleteFilePopup,
 		DownloadFilePopup,
 		ChangeRootPopup,
-		SettingsPopup,
 		RunConfigPopup,
 		FilePicker,
 		CodeEditorElement,
@@ -213,7 +209,6 @@ export default Vue.extend({
 			ioController: undefined,
 			runners: [],
 			showRunConfigPopup: false,
-			showSettingsPopup: false,
 			showChangeRootPopup: false,
 			showDeleteFilePopup: false,
 			showNewFilePopup: false,
@@ -559,9 +554,13 @@ export default Vue.extend({
 			this.showDownloadPopup = true;
 		},
 		menu_settings_click() {
-			this.showSettingsPopup = true;
+			this.showSettingsPopup();
 		},
 
+		showSettingsPopup(): void {
+			let routeData = this.$router.resolve({ path: '/settings' });
+			window.open(routeData.href, '_blank',`width=800px,height=400px,location=no`);
+		},
 	},
 	watch: {
 		runConfigs(val: RunConfiguration[]) {
