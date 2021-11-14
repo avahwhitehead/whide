@@ -5,6 +5,7 @@ import { RouteConfig } from "vue-router/types/router";
 import EditorWindow from "@/views/Editor.vue";
 import TreeWindow from "@/views/TreeWindow.vue";
 import SettingsWindow from "@/views/SettingsWindow.vue";
+import RunConfigWindow from "@/views/RunConfigWindow.vue";
 
 //Use the router
 Vue.use(VueRouter);
@@ -14,6 +15,7 @@ const routes : RouteConfig[] = [
 	{ path: '/', component: EditorWindow },
 	{ path: '/trees', component: TreeWindow },
 	{ path: '/settings', component: SettingsWindow },
+	{ path: '/configurations', component: RunConfigWindow },
 ];
 
 //Create the router

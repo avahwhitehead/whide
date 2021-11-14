@@ -106,7 +106,6 @@
 		</v-navigation-drawer>
 
 		<DownloadFilePopup v-model="showDownloadPopup" />
-		<RunConfigPopup v-model="showRunConfigPopup" />
 		<ChangeRootPopup
 			v-model="showChangeRootPopup"
 			v-if="isNotElectron"
@@ -130,7 +129,6 @@ import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import RunPanel from "@/components/RunPanel.vue";
 import DownloadFilePopup from "@/components/DownloadFilePopup.vue";
-import RunConfigPopup from "@/components/RunConfigPopup.vue";
 import ChangeRootPopup from "@/components/ChangeRootPopup.vue";
 import NewFilePopup from "@/components/NewFilePopup.vue";
 import DeleteFilePopup from "@/components/DeleteFilePopup.vue";
@@ -157,7 +155,6 @@ interface DataTypesDescriptor {
 	editorController?: EditorController;
 	ioController? : IOController;
 	runners: {name:string, runner:AbstractRunner}[],
-	showRunConfigPopup: boolean;
 	showChangeRootPopup: boolean;
 	showDeleteFilePopup: boolean;
 	showNewFilePopup: boolean;
@@ -174,7 +171,6 @@ export default Vue.extend({
 		DeleteFilePopup,
 		DownloadFilePopup,
 		ChangeRootPopup,
-		RunConfigPopup,
 		FilePicker,
 		CodeEditorElement,
 		MenuBar,
@@ -186,7 +182,6 @@ export default Vue.extend({
 			editorController: undefined,
 			ioController: undefined,
 			runners: [],
-			showRunConfigPopup: false,
 			showChangeRootPopup: false,
 			showDeleteFilePopup: false,
 			showNewFilePopup: false,
@@ -452,9 +447,6 @@ export default Vue.extend({
 				this.editorController.open(filePath);
 			}
 		},
-		openRunConfigPopup() {
-			this.showRunConfigPopup = true;
-		},
 		onEditorControllerChange(editorController : EditorController) : void {
 			this.editorController = editorController;
 		},
@@ -561,6 +553,11 @@ export default Vue.extend({
 		showSettingsPopup(): void {
 			let routeData = this.$router.resolve({ path: '/settings' });
 			window.open(routeData.href, '_blank',`width=800px,height=400px,location=no`);
+		},
+
+		openRunConfigPopup(): void {
+			let routeData = this.$router.resolve({ path: '/configurations' });
+			window.open(routeData.href, '_blank',`width=1000px,height=600px,location=no`);
 		},
 	},
 	watch: {

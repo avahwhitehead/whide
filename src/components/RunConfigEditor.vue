@@ -1,160 +1,131 @@
 <template>
-	<v-dialog
-		v-model="showDialog"
-		persistent
-		max-width="75%"
-		scrollable
-	>
-		<v-card max-height="800px">
-			<v-navigation-drawer permanent absolute class="nav-drawer" width="180px" v-model="showSelectPanel">
-				<div class="pa-0">
-					<v-btn depressed @click="createConfig" >
-						<FontAwesomeIcon icon="plus"/>
+	<div>
+		<div class="actions-container">
+			<v-btn
+				color="blue darken-1"
+				text
+				@click="deleteConfig"
+				v-text="'Delete'"
+				:disabled="disableForm"
+			/>
+
+			<v-spacer />
+
+			<span class="text-h5">Edit Run Configuration</span>
+
+			<v-spacer />
+
+			<v-btn
+				color="blue darken-1"
+				text
+				@click="saveConfig()"
+				v-text="'save'"
+				:disabled="!isFormValid"
+			/>
+		</div>
+
+		<div class="pa-5">
+			<v-form ref="form" v-model="isFormValid">
+				<v-row class="mt-0">
+					<v-text-field
+						v-model="nameModel"
+						label="Configuration name*"
+						class="mb-0 mt-0 pb-0 pt-0"
+						required
+						:rules="nameInputRules"
+						:disabled="disableForm"
+					/>
+				</v-row>
+
+				<v-row>
+					<v-select
+						v-model="interpreterModel"
+						:items="interpreterList"
+						label="WHILE Interpreter"
+						class="dropdown"
+						item-text="name"
+						return-object
+						outlined
+						dense
+						required
+						:rules="interpreterInputRules"
+						:disabled="disableForm"
+					/>
+					<v-tooltip bottom content-class="help-tooltip">
+						<template v-slot:activator="{ on, attrs }">
+							<v-btn
+								depressed
+								icon
+								v-bind="attrs"
+								v-on="on"
+							>
+								<v-icon>fa-question</v-icon>
+							</v-btn>
+						</template>
+						<div>
+							<div>HWhile is the primary While interpreter, but requires that it has been installed.</div>
+							<div>While.js was built for compatability with Whide. It is newer and does not currently support debugging.</div>
+							<div>Both interpreters should produce the same results.</div>
+						</div>
+					</v-tooltip>
+				</v-row>
+
+				<v-row>
+					<v-text-field
+						v-model="fileModel"
+						label="Program*"
+						class="mb-0 mt-0 pb-0 pt-0"
+						required
+						:rules="fileInputRules"
+						:disabled="disableForm"
+					/>
+					<v-btn
+						depressed
+						class="off-black"
+						title="Choose program"
+						@click="showFilePicker = true"
+					>
+						<v-icon>fa-folder</v-icon>
 					</v-btn>
-				</div>
-				<v-list dense>
-					<v-list-item-group v-model="configIndex" mandatory>
-						<v-list-item v-for="(config, i) in runConfigs" :key="i">
-							<v-list-item-content>
-								<v-list-item-title v-text="config.name" />
-							</v-list-item-content>
-						</v-list-item>
-					</v-list-item-group>
-				</v-list>
-			</v-navigation-drawer>
+				</v-row>
 
-			<v-card-title class="pt-0 pb-0" style="padding-left: 190px;">
-				<span class="text-h5">Edit Run Configuration</span>
-			</v-card-title>
+				<v-row>
+					<v-text-field
+						v-model="inputModel"
+						label="Input tree*"
+						class="mb-0 mt-0 pb-0 pt-0"
+						required
+						:rules="treeInputRules"
+						:disabled="disableForm"
+					/>
+					<v-btn
+						depressed
+						class="off-black"
+						@click="showTreeGraph = !showTreeGraph"
+						:title="`${showTreeGraph?'Hide':'Show'} graphical viewer`"
+					>
+						<v-icon v-if="showTreeGraph">fa-eye-slash</v-icon>
+						<v-icon v-else>fa-eye</v-icon>
+					</v-btn>
+				</v-row>
+				<v-row>
+					<transition name="fade">
+						<v-col style="height: 30em; width: 20em;" v-if="showTreeGraph">
+							<VariableTreeViewer :tree="displayableConvertedTree" />
+						</v-col>
+					</transition>
+				</v-row>
+			</v-form>
 
-			<v-card-text style="padding-left: 180px">
-				<v-container class="pr-0 pl-5">
-					<v-form ref="form" v-model="isFormValid">
-						<v-row class="mt-0">
-							<v-text-field
-								v-model="nameModel"
-								label="Configuration name*"
-								class="mb-0 mt-0 pb-0 pt-0"
-								required
-								:rules="nameInputRules"
-								:disabled="disableForm"
-							/>
-						</v-row>
+			<small>*indicates required field</small>
+		</div>
 
-						<v-row>
-							<v-select
-								v-model="interpreterModel"
-								:items="interpreterList"
-								label="WHILE Interpreter"
-								class="dropdown"
-								item-text="name"
-								return-object
-								outlined
-								dense
-								required
-								:rules="interpreterInputRules"
-								:disabled="disableForm"
-							/>
-							<v-tooltip bottom content-class="help-tooltip">
-								<template v-slot:activator="{ on, attrs }">
-									<v-btn
-										depressed
-										icon
-										v-bind="attrs"
-										v-on="on"
-									>
-										<v-icon>fa-question</v-icon>
-									</v-btn>
-								</template>
-								<div>
-									<div>HWhile is the primary While interpreter, but requires that it has been installed.</div>
-									<div>While.js was built for compatability with Whide. It is newer and does not currently support debugging.</div>
-									<div>Both interpreters should produce the same results.</div>
-								</div>
-							</v-tooltip>
-						</v-row>
-
-						<v-row>
-							<v-text-field
-								v-model="fileModel"
-								label="Program*"
-								class="mb-0 mt-0 pb-0 pt-0"
-								required
-								:rules="fileInputRules"
-								:disabled="disableForm"
-							/>
-							<v-btn
-								depressed
-								class="off-black"
-								title="Choose program"
-								@click="showFilePicker = true"
-							>
-								<v-icon>fa-folder</v-icon>
-							</v-btn>
-						</v-row>
-
-						<v-row>
-							<v-text-field
-								v-model="inputModel"
-								label="Input tree*"
-								class="mb-0 mt-0 pb-0 pt-0"
-								required
-								:rules="treeInputRules"
-								:disabled="disableForm"
-							/>
-							<v-btn
-								depressed
-								class="off-black"
-								@click="showTreeGraph = !showTreeGraph"
-								:title="`${showTreeGraph?'Hide':'Show'} graphical viewer`"
-							>
-								<v-icon v-if="showTreeGraph">fa-eye-slash</v-icon>
-								<v-icon v-else>fa-eye</v-icon>
-							</v-btn>
-						</v-row>
-						<v-row>
-							<transition name="fade">
-								<v-col style="height: 30em; width: 20em;" v-if="showTreeGraph">
-									<VariableTreeViewer :tree="displayableConvertedTree" />
-								</v-col>
-							</transition>
-						</v-row>
-						</v-form>
-
-					<small>*indicates required field</small>
-				</v-container>
-			</v-card-text>
-
-			<v-card-actions class="actions-container" style="padding-left: 180px">
-				<v-btn
-					color="blue darken-1"
-					text
-					@click="deleteConfig"
-					v-text="'Delete'"
-					:disabled="disableForm"
-				/>
-
-				<v-spacer />
-
-				<v-btn
-					color="blue darken-1"
-					text
-					@click="showDialog = false"
-					v-text="'close'"
-				/>
-
-				<v-btn
-					color="blue darken-1"
-					text
-					@click="saveConfig()"
-					v-text="'save'"
-					:disabled="!isFormValid"
-				/>
-			</v-card-actions>
-		</v-card>
-
-		<FilePickerPopup v-model="showFilePicker" @change="onPathSelect" />
-	</v-dialog>
+		<FilePickerPopup
+			v-model="showFilePicker"
+			@change="onPathSelect"
+			v-if="!$store.state.isElectron"
+		/>
+	</div>
 </template>
 
 <script lang="ts">
@@ -165,9 +136,10 @@ import { binaryTreeToDisplayable } from "@/utils/tree_converters";
 import { treeParser as parseTree } from "@whide/tree-lang";
 import { BinaryTree } from "whilejs";
 import { fs } from "@/files/fs";
-import path from "path";
 import FilePickerPopup from "@/components/FilePickerPopup.vue";
-import { FileInfoState } from "@/types/FileInfoState";
+import { OpenDialogReturnValue } from "electron";
+
+const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
 type InterpreterType = {
 	name: string,
@@ -186,8 +158,6 @@ type DataTypeInterface = {
 
 	isFormValid: boolean,
 
-	configIndex: number,
-
 	showTreeGraph: boolean,
 	treeErrorMessage: string|undefined,
 	displayableConvertedTree: TreeType,
@@ -197,13 +167,13 @@ type DataTypeInterface = {
 };
 
 export default Vue.extend({
-	name: 'RunConfigPopup',
+	name: 'RunConfigForm',
 	components: {
 		FilePickerPopup,
 		VariableTreeViewer,
 	},
 	props: {
-		value: Boolean,
+		value: Number,
 	},
 	data() : DataTypeInterface {
 		return {
@@ -217,7 +187,6 @@ export default Vue.extend({
 			fileModel: '',
 			inputModel: 'nil',
 			interpreterVal: INTERPRETERS.WHILE_JS,
-			configIndex: -1,
 			isFormValid: true,
 			showTreeGraph: false,
 
@@ -229,16 +198,16 @@ export default Vue.extend({
 		}
 	},
 	computed: {
-		showDialog: {
-			get(): boolean {
-				return this.value;
-			},
-			set(value: boolean): void {
-				this.$emit('input', value);
-			}
-		},
 		runConfigs(): RunConfiguration[] {
 			return this.$store.state.runConfigurations;
+		},
+		configIndex: {
+			get(): number {
+				return this.value;
+			},
+			set(val: number): void {
+				this.$emit('input', val);
+			}
 		},
 		interpreterModel: {
 			get(): InterpreterType {
@@ -292,14 +261,8 @@ export default Vue.extend({
 		disableForm(): boolean {
 			return this.runConfigs.length === 0;
 		},
-		//Force the select panel to always be visible
-		showSelectPanel: {
-			get(): boolean { return true; },
-			set() { /*Do nothing*/ }
-		}
 	},
 	mounted() {
-		this.showSelectPanel = true;
 		this.currentOpenConfig = this.runConfigs[0] || undefined;
 	},
 	methods: {
@@ -318,21 +281,6 @@ export default Vue.extend({
 			}
 
 			this.$store.commit('setChosenRunConfig', newConfig);
-		},
-		createConfig() {
-			const openFile: FileInfoState|undefined = (this.$store.state.focusedFile >= 0)
-				? this.$store.state.openFiles[this.$store.state.focusedFile]
-				: undefined;
-
-			let newConfig: RunConfiguration = {
-				name: openFile ? path.basename(openFile.path) : 'Unnamed',
-				file: openFile ? openFile.path : '',
-				input: 'nil',
-				outputFormat: 'any',
-				interpreter: INTERPRETERS.HWHILE,
-			}
-			this.$store.commit('addRunConfig', newConfig);
-			this.configIndex = this.runConfigs.indexOf(newConfig);
 		},
 		deleteConfig() {
 			this.$store.commit('removeRunConfig', this.currentOpenConfig);
@@ -395,10 +343,18 @@ export default Vue.extend({
 				this.displayableConvertedTree = displayable;
 			}
 		},
-		showDialog(showDialog) {
-			if (showDialog) {
-				//Create a new configuration if none exist
-				if (this.runConfigs.length === 0) this.createConfig();
+
+		showFilePicker(showFilePicker: boolean): void {
+			if (showFilePicker && electron) {
+				electron.remote.dialog.showOpenDialog({
+					filters: [
+						{ name: 'WHILE files', extensions: ['while'] },
+						{ name: 'All files', extensions: ['*'] },
+					],
+					properties: [],
+				}).then((result: OpenDialogReturnValue) => {
+					this.onPathSelect(result.filePaths[0]);
+				})
 			}
 		},
 	},
@@ -408,7 +364,12 @@ export default Vue.extend({
 
 <style scoped>
 .actions-container {
-	border-top: 1px solid grey;
+	border-bottom: 1px solid grey;
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	width: 100%;
+	display: flex;
 }
 
 .help-tooltip {
