@@ -12,7 +12,7 @@
 			</v-list>
 		</v-col>
 
-		<SettingsGeneralPage v-if="currentPage === 'General'" />
+		<SettingsGeneralPage v-if="$store.state.isElectron && currentPage === 'General'" />
 		<SettingsAppearancePage v-else-if="currentPage === 'Appearance'" />
 		<v-card v-else>
 			<v-card-text>
@@ -43,7 +43,9 @@ export default Vue.extend({
 		return {
 			pageIndex: 0,
 			pagesList: [
-				'General',
+				//Only show the General page if the app is running in electron
+				//Currently this only has the HWhile path field
+				...(this.$store.state.isElectron ? ['General'] : []),
 				'Appearance',
 			],
 			isGeneralValid: true,

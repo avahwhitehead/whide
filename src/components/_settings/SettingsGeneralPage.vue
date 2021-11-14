@@ -22,10 +22,18 @@
 						<v-icon>far fa-folder</v-icon>
 					</v-btn>
 				</v-row>
+				<v-row>
+					<small>This should be a path to the HWhile executable file, not its containing folder.</small>
+					<small>Leave this blank to use HWhile on the global path.</small>
+				</v-row>
 			</v-form>
 		</v-container>
 
-		<FilePickerPopup v-model="showFilePicker" @change="onPathSelect" />
+		<FilePickerPopup
+			v-model="showFilePicker"
+			@change="onPathSelect"
+			v-if="!$store.state.isElectron"
+		/>
 	</v-col>
 </template>
 
@@ -33,6 +41,9 @@
 import Vue from "vue";
 import FilePickerPopup from "@/components/FilePickerPopup.vue";
 import * as fs from "fs";
+import { OpenDialogReturnValue } from "electron";
+
+const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
 interface DataTypeInterface {
 	showFilePicker: boolean;
@@ -89,7 +100,21 @@ export default Vue.extend({
 		onPathSelect(newPath: string) {
 			this.hwhilePath = newPath;
 		}
-	}
+	},
+	watch: {
+		showFilePicker(showFilePicker): void {
+			if (showFilePicker && electron) {
+				electron.remote.dialog.showOpenDialog({
+					filters: [
+						{ name: 'All files', extensions: ['*'] },
+					],
+					properties: [],
+				}).then((result: OpenDialogReturnValue) => {
+					this.onPathSelect(result.filePaths[0]);
+				})
+			}
+		}
+	},
 });
 </script>
 
