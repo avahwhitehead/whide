@@ -170,7 +170,15 @@ const store = new Vuex.Store<RootState>({
 		vuexLocal.plugin,
 		//Enable sharing between concurrent tabs/windows
 		createMutationsSharer({
-			predicate: ['setAppTheme', 'setHWhilePath'],
+			predicate: [
+				'addRunConfig',
+				'removeRunConfig',
+				'overwriteRunConfig',
+				'setChosenRunConfig',
+				'setAppTheme',
+				'setHWhilePath',
+				'cwd.set',
+			],
 		})
 	],
 });
