@@ -26,7 +26,6 @@
 				v-model="chosenRunConfig"
 				:items="runConfigs"
 				item-text="name"
-				item-value="abbr"
 				placeholder="Run Configuration"
 				class="dropdown"
 				return-object
@@ -410,9 +409,10 @@ export default Vue.extend({
 
 			//Get the breakpoints configured for the file
 			let runFileState: FileInfoState|undefined = this.$store.state.openFiles.find((f: FileInfoState) => f.path === config.file);
-			let breakpoints: number[] = runFileState ? runFileState.breakpoints : [];
-			//Convert the breakpoints from 0-indexing to 1-indexing
-			breakpoints = breakpoints.map(l => ++l);
+
+			let breakpoints: { line: number; prog: string }[];
+			if (!runFileState) breakpoints = [];
+			else breakpoints = this.getBreakpointsInFolder(path.resolve(runFileState!.path, '..'));
 
 			if (config.interpreter === INTERPRETERS.WHILE_JS) {
 				throw new Error("Can't debug with While.js");
@@ -559,6 +559,16 @@ export default Vue.extend({
 			let routeData = this.$router.resolve({ path: '/configurations' });
 			window.open(routeData.href, '_blank',`width=1000px,height=600px,location=no`);
 		},
+
+		getBreakpointsInFolder(folder: string): {line:number, prog:string}[] {
+			//Filter breakpoints down to only those that have a folder as the IMMEDIATE parent
+			return this.$store.state.breakpoints.filter(
+				(b: {line:number, prog:string}) => path.resolve(b.prog, '..') === folder
+			).map((b: {line:number, prog:string}) => {
+				b.prog = path.basename(b.prog).split(/\./)[0]
+				return b;
+			});
+		}
 	},
 	watch: {
 		runConfigs(val: RunConfiguration[]) {

@@ -26,6 +26,7 @@ export interface RootState {
 	chosenRunConfig: RunConfiguration|undefined;
 	settings: SettingsState;
 	openFiles: FileInfoState[];
+	breakpoints: {line: number, prog: string}[];
 	focusedFile: number;
 	current_directory: string|undefined;
 	isElectron: boolean;
@@ -85,7 +86,8 @@ const store = new Vuex.Store<RootState>({
 		openFiles: [],
 		focusedFile: -1,
 		current_directory: undefined,
-		isElectron: (window['require'] !== undefined)
+		isElectron: (window['require'] !== undefined),
+		breakpoints: [],
 	},
 	mutations: {
 		/**
@@ -163,6 +165,31 @@ const store = new Vuex.Store<RootState>({
 
 		'cwd.set': function (state: RootState, directory: string) {
 			state.current_directory = directory;
+		},
+
+		'breakpoint.add': function (state: RootState, [line, prog]: [number, string]) {
+			state.breakpoints.push({
+				prog,
+				line
+			});
+		},
+		'breakpoint.del': function (state: RootState, [line, prog]: [number, string]) {
+			// state.breakpoints = state.breakpoints.filter(b => b.line === line && b.prog === prog)
+			let i = 0;
+			while (i < state.breakpoints.length) {
+				if (state.breakpoints[i].line === line && state.breakpoints[i].prog === prog) {
+					state.breakpoints.splice(i, 1);
+				} else i++
+			}
+		},
+		'breakpoint.delAll': function (state: RootState, prog: string) {
+			// state.breakpoints = state.breakpoints.filter(b => b.prog === prog)
+			let i = 0;
+			while (i < state.breakpoints.length) {
+				if (state.breakpoints[i].prog === prog) {
+					state.breakpoints.splice(i, 1);
+				} else i++
+			}
 		},
 	},
 	plugins: [

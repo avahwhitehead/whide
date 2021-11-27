@@ -36,7 +36,7 @@ export interface HWhileDebugConfigurationProps extends HWhileRunnerProps {
 	/**
 	 * Breakpoints to set up in the debugger
 	 */
-	breakpoints?: number[];
+	breakpoints?: (number|{line:number, prog:string})[];
 }
 
 /**
@@ -148,9 +148,7 @@ export class HWhileDebugger extends BaseDebugger {
 		await this.hWhileConnector.load(this._progName, this._props.expression, true, false);
 
 		//Setup the program breakpoints
-		for (let b of this._props.breakpoints || []) {
-			await this.hWhileConnector.addBreakpoint(b);
-		}
+		await this.addBreakpoints(...(this._props.breakpoints || []));
 
 		this._allowRun = true;
 		this._allowStep = true;
@@ -211,6 +209,30 @@ export class HWhileDebugger extends BaseDebugger {
 			variables: res.allVariables,
 			currentLine: res.line,
 		};
+	}
+
+	async addBreakpoints(...pnts: (number | { line: number; prog: string })[]): Promise<void> {
+		for (let val of pnts) {
+			if (typeof val === 'number') await this.addBreakpoint(val);
+			else await this.addBreakpoint(val.line, val.prog);
+		}
+		return;
+	}
+
+	async delBreakpoints(...pnts: (number | { line: number; prog: string })[]): Promise<void> {
+		for (let val of pnts) {
+			if (typeof val === 'number') await this.delBreakpoint(val);
+			else await this.delBreakpoint(val.line, val.prog);
+		}
+		return;
+	}
+
+	private async addBreakpoint(line: number, prog?: string): Promise<void> {
+		await this.hWhileConnector!.addBreakpoint(line, prog);
+	}
+
+	private async delBreakpoint(line: number, prog?: string): Promise<void> {
+		await this.hWhileConnector!.delBreakpoint(line, prog);
 	}
 
 	get variables(): Map<string, Map<string, BinaryTree>> {

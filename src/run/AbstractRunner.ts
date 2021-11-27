@@ -87,4 +87,22 @@ export interface AbstractRunner extends RunnerControls {
 	 * @returns {ProgramState|Promise<ProgramState>}	Object the program state after the variable is updated
 	 */
 	set?(variable: string, value: BinaryTree|string, program?: string): void|ProgramState|Promise<void>|Promise<ProgramState>;
+
+	/**
+	 * Add 1 or more breakpoints to a program's execution.
+	 * If a breakpoint is provided as type {@link number}, it is added to the current program.
+	 * If the breakpoint is of type {@code {line:number, prog:string\}} then the breakpoint is added to the
+	 * program with the given name.
+	 * @param val	List or sequence of breakpoints to add
+	 */
+	addBreakpoints?(...val: (number|{line: number, prog: string})[]): void|Promise<void>;
+
+	/**
+	 * Remove 1 or more breakpoints from a program's execution.
+	 * If a breakpoint is provided as type {@link number}, it is removed from the current program.
+	 * If the breakpoint is of type {@code {line:number, prog:string\}} then the breakpoint is removed from the
+	 * program with the given name.
+	 * @param val	List or sequence of breakpoints to remove
+	 */
+	delBreakpoints?(...val: (number|{line: number, prog: string})[]): void|Promise<void>;
 }

@@ -214,7 +214,7 @@ export default Vue.extend({
 		//Toggle breakpoints when the gutter is clicked
 		this.editor.on("gutterClick", async (editor: CodeMirror.Editor, line: number|CodeMirror.LineHandle) => {
 			let doc = editor.getDoc() as CustomMirrorDoc;
-			doc.toggleBreakpoint(line);
+			that.toggleBreakpoint(doc, line);
 		});
 
 		//Mark the current tab as unsaved when the content is changed
@@ -235,7 +235,7 @@ export default Vue.extend({
 				return (this.editor.getDoc() as CustomMirrorDoc).breakpoints;
 			}
 			toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean): void {
-				(this.editor.getDoc() as CustomMirrorDoc).toggleBreakpoint(line, enabled);
+				that.toggleBreakpoint(that.editor!.getDoc() as CustomMirrorDoc, line, enabled);
 			}
 			constructor() {
 				super();
@@ -317,6 +317,19 @@ export default Vue.extend({
 			}
 		},
 
+		toggleBreakpoint(doc: CustomMirrorDoc, line: number|CodeMirror.LineHandle, enabled?: boolean) {
+			const prog = this.openFiles[this.currentTab].path;
+			const isEnabled = doc.toggleBreakpoint(line, enabled);
+
+			let lineNo: number = (typeof line === 'number') ? line : doc.getLineNumber(line)!;
+			lineNo++;
+			if (isEnabled) {
+				this.$store.commit('breakpoint.add', [lineNo, prog]);
+			} else {
+				this.$store.commit('breakpoint.del', [lineNo, prog]);
+			}
+		},
+
 		lintCode(content: string): Annotation[]|Promise<Annotation[]> {
 			if (!content) return [];
 
@@ -390,6 +403,13 @@ export default Vue.extend({
 			);
 			//Open the file in a new tab and switch to it
 			this.currentTab = this.openFiles.push(tabInfo) - 1;
+
+			//Set up the breakpoints in the document if there are any saved
+			let breakpoints: {prog:string, line:number}[] = this.$store.state.breakpoints;
+			for (let {line} of breakpoints.filter(b => b.prog === filepath)) {
+				const lineHandle = tabInfo.doc.getLineHandle(line);
+				if (lineHandle) tabInfo.doc.toggleBreakpoint(lineHandle, true);
+			}
 
 			return tabInfo;
 		},
