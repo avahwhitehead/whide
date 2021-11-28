@@ -32,8 +32,11 @@ export abstract class BaseOutputController {
  * Parent class partially implementing {@link AbstractRunner} for use by interpreters.
  */
 export abstract class BaseRunner extends BaseOutputController implements AbstractRunner {
-	protected constructor() {
+	readonly directory: string;
+
+	protected constructor(directory: string) {
 		super();
+		this.directory = directory;
 	}
 
 	abstract init(): void|ProgramState|Promise<void>|Promise<ProgramState>;
@@ -57,8 +60,11 @@ export abstract class BaseRunner extends BaseOutputController implements Abstrac
  * Parent class partially implementing {@link AbstractRunner} for use by debuggers.
  */
 export abstract class BaseDebugger extends BaseOutputController implements AbstractRunner {
-	protected constructor() {
+	readonly directory: string;
+
+	protected constructor(directory: string) {
 		super();
+		this.directory = directory;
 	}
 
 	abstract init(): void|ProgramState|Promise<void>|Promise<ProgramState>;

@@ -44,6 +44,11 @@ export interface RunnerControls {
  */
 export interface AbstractRunner extends RunnerControls {
 	/**
+	 * The folder in which the runner is operating - the runner's CWD.
+	 */
+	readonly directory: string;
+
+	/**
 	 * The output result of display to the user
 	 */
 	readonly output: string;

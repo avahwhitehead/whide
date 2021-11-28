@@ -153,7 +153,6 @@ interface DataTypesDescriptor {
 	codeEditor? : CodeMirror.Editor;
 	editorController?: EditorController;
 	ioController? : IOController;
-	runners: {name:string, runner:AbstractRunner}[],
 	showChangeRootPopup: boolean;
 	showDeleteFilePopup: boolean;
 	showNewFilePopup: boolean;
@@ -180,7 +179,6 @@ export default Vue.extend({
 		return {
 			editorController: undefined,
 			ioController: undefined,
-			runners: [],
 			showChangeRootPopup: false,
 			showDeleteFilePopup: false,
 			showNewFilePopup: false,
@@ -293,6 +291,9 @@ export default Vue.extend({
 		isNotElectron(): boolean {
 			return !this.isElectron;
 		},
+		runners(): {name:string, runner:AbstractRunner}[] {
+			return this.$store.state.programRunners;
+		}
 	},
 	destroyed() {
 		//Remove global event listeners before destroying the element
@@ -374,17 +375,21 @@ export default Vue.extend({
 
 			let runner: AbstractRunner;
 
+			let folder = path.dirname(config.file);
+
 			if (config.interpreter === INTERPRETERS.WHILE_JS) {
 				//Create a While.js runner for the program
 				runner = new WhileJsRunner({
 					expression: inputExpression,
 					file: config.file,
+					directory: folder,
 				});
 			} else {
 				//Create an HWhile runner for the program
 				runner = new HWhileRunner({
 					expression: inputExpression,
 					file: config.file,
+					directory: folder,
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
 					onerror: this._handleRunDebugError,
 				});
@@ -421,6 +426,7 @@ export default Vue.extend({
 				runner = new HWhileDebugger({
 					expression: inputExpression,
 					file: config.file,
+					directory: path.dirname(config.file),
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
 					breakpoints: breakpoints,
 					onerror: this._handleRunDebugError,

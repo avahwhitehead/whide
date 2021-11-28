@@ -4,6 +4,7 @@ import { RunConfiguration } from "@/types/RunConfiguration";
 import VuexPersistence from "vuex-persist";
 import createMutationsSharer from "vuex-shared-mutations";
 import { FileInfoState } from "@/types/FileInfoState";
+import { AbstractRunner } from "@/run/AbstractRunner";
 
 //Make VueX available to Vue
 Vue.use(Vuex);
@@ -30,6 +31,7 @@ export interface RootState {
 	focusedFile: number;
 	current_directory: string|undefined;
 	isElectron: boolean;
+	programRunners: {name:string, runner:AbstractRunner}[],
 }
 
 /**
@@ -88,6 +90,7 @@ const store = new Vuex.Store<RootState>({
 		current_directory: undefined,
 		isElectron: (window['require'] !== undefined),
 		breakpoints: [],
+		programRunners: [],
 	},
 	mutations: {
 		/**

@@ -27,6 +27,10 @@ export interface HWhileRunnerProps {
 	 * @param err	The error object
 	 */
 	onerror?: (err: Error) => void,
+	/**
+	 * Directory for HWhile to run in
+	 */
+	directory: string;
 }
 
 /**
@@ -50,7 +54,7 @@ export class HWhileRunner extends BaseRunner {
 	private _isStopped: boolean;
 
 	constructor(props: HWhileRunnerProps) {
-		super();
+		super(props.directory);
 		this._props = props;
 		this._shell = null;
 		this._hWhileConnector = null;
@@ -64,7 +68,7 @@ export class HWhileRunner extends BaseRunner {
 		//Start the interpreter in the same directory as the file
 		this._hWhileConnector = new HWhileConnector({
 			hwhile: this._props.hwhile,
-			cwd: path.dirname(this._props.file),
+			cwd: this.directory,
 		});
 		this._allowRun = true;
 	}
@@ -118,7 +122,7 @@ export class HWhileDebugger extends BaseDebugger {
 	private _variables: Map<string, Map<string, BinaryTree>>;
 
 	constructor(props: HWhileDebugConfigurationProps) {
-		super();
+		super(props.directory);
 		this._props = props;
 		this._allowRun = false;
 		this._allowStep = false;
@@ -133,10 +137,9 @@ export class HWhileDebugger extends BaseDebugger {
 		this._progName = file_name.split('.')[0];
 
 		//Start the interpreter in the same directory as the file
-		const folder_path = path.dirname(this._props.file);
 		this.hWhileConnector = new InteractiveHWhileConnector({
 			hwhile: 'hwhile',
-			cwd: folder_path,
+			cwd: this.directory,
 		});
 
 		//Pass interpreter output straight to the output console

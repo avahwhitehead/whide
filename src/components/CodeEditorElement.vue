@@ -93,6 +93,7 @@ import 'codemirror/addon/hint/show-hint.css';
 import { PURE_WHILE, WHILE } from "@/assets/whileSyntaxMode";
 //WHILE linter
 import { ErrorType, ErrorType as WhileError, linter as whileLinter } from "whilejs";
+import { AbstractRunner } from "@/run/AbstractRunner";
 
 //Editor themes for light and dark mode
 const DARK_THEME = 'ayu-mirage';
@@ -224,7 +225,7 @@ export default Vue.extend({
 			if (pending) clearTimeout(pending);
 			pending = setTimeout(() => {
 				if (!this.editorController) return;
-				this.editorController.saveFiles();
+				this.saveAllFiles();
 			}, 5000);
 		});
 
@@ -327,6 +328,24 @@ export default Vue.extend({
 				this.$store.commit('breakpoint.add', [lineNo, prog]);
 			} else {
 				this.$store.commit('breakpoint.del', [lineNo, prog]);
+			}
+
+			const prog_folder = path.dirname(prog);
+			const prog_name = path.basename(prog).split(/\./)[0];
+			//Update any debuggers in the file's directory with the new breakpoint
+			for (let { runner } of this.$store.state.programRunners) {
+				//Check the runner is operating in the same directory as the program
+				if (path.relative(runner.directory, prog_folder) === '') {
+					const r: AbstractRunner = runner;
+					if (r.isStopped) continue;
+					if (isEnabled && r.addBreakpoints) {
+						//Add the breakpoint to the runner
+						r.addBreakpoints({line: lineNo, prog: prog_name});
+					} else if (!isEnabled && r.delBreakpoints) {
+						//Remove the breakpoint from the runner
+						r.delBreakpoints({line: lineNo, prog: prog_name});
+					}
+				}
 			}
 		},
 
