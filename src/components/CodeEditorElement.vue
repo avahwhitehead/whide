@@ -224,7 +224,6 @@ export default Vue.extend({
 			this.currentFileState!.modified = true;
 			if (pending) clearTimeout(pending);
 			pending = setTimeout(() => {
-				if (!this.editorController) return;
 				this.saveAllFiles();
 			}, 5000);
 		});
