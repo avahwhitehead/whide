@@ -20,6 +20,10 @@ export interface WhileJsRunnerProps {
 	 * Path to the file to run
 	 */
 	file: string;
+	/**
+	 * Directory for HWhile to run in
+	 */
+	directory: string;
 }
 
 /**
@@ -33,7 +37,7 @@ export class WhileJsRunner extends BaseRunner {
 	private _isStopped: boolean;
 
 	constructor(props: WhileJsRunnerProps) {
-		super();
+		super(props.directory);
 		this._props = props;
 		this._allowRun = false;
 		this._isStopped = true;
@@ -148,13 +152,11 @@ export class WhileJsRunner extends BaseRunner {
 	private async _loadAllProgramFiles(programFile: string): Promise<[AST_PROG, MacroManager]> {
 		let ast: AST_PROG = await this._loadProgramFromFile(programFile);
 
-		const parentDir = path.resolve(programFile, '..');
-
 		let macroManager: MacroManager = new MacroManager(ast);
 		while (macroManager.hasUnregistered) {
 			let macro: string | null = macroManager.getNextUnregistered();
 			let ast1: AST_PROG = await this._loadProgramFromFile(
-				path.join(parentDir, macro + '.while')
+				path.join(this.directory, macro + '.while')
 			);
 			macroManager.register(ast1);
 		}

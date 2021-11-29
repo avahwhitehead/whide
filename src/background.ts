@@ -1,11 +1,15 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron';
+import * as Electron from 'electron';
+import { app, BrowserWindow, ipcMain, protocol } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 import { ExtendedCommand, makeCommandLineParser, ProgramOptions } from "@/types/CommandLine";
-const isDevelopment = process.env.NODE_ENV !== 'production';
 import path from "path";
+import { makeElectronMenus } from "@/menus";
+
+const isMac: boolean = process.platform === 'darwin';
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 //Parse command line arguments
 const program : ExtendedCommand = makeCommandLineParser();
@@ -49,8 +53,14 @@ async function createWindow() {
 	} else {
 		createProtocol('app');
 		// Load the index.html when not in development
-		win.loadURL('app://./index.html');
+		await win.loadURL('app://./index.html');
 	}
+
+	//Configure the electron menus
+	const menuTemplate = makeElectronMenus(win.webContents, isMac);
+	Electron.Menu.setApplicationMenu(
+		Electron.Menu.buildFromTemplate(menuTemplate)
+	);
 }
 
 // Quit when all windows are closed.

@@ -1,16 +1,22 @@
 <template>
 	<div class="full-height">
 		<v-app-bar app dense flat clipped-left clipped-right class="header">
-			<MenuBar :menus="menus" style="max-width: max-content" />
+			<MenuBar
+				:menus="menus"
+				style="max-width: max-content"
+				v-if="!isElectron"
+			/>
 
-			<v-spacer />
-			<v-spacer />
+			<v-spacer v-if="!isElectron" />
+			<v-spacer v-if="!isElectron" />
 
 			<v-btn right @click="openTreeViewer">
 				Open Tree Viewer
 			</v-btn>
 
 			<v-spacer />
+			<v-spacer v-if="isElectron" />
+			<v-spacer v-if="isElectron" />
 
 			<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
 				<FontAwesomeIcon icon="pencil-alt" />
@@ -20,7 +26,6 @@
 				v-model="chosenRunConfig"
 				:items="runConfigs"
 				item-text="name"
-				item-value="abbr"
 				placeholder="Run Configuration"
 				class="dropdown"
 				return-object
@@ -73,7 +78,7 @@
 		<v-navigation-drawer app right clipped v-model="showPopout">
 			<v-btn
 				right
-				@click="showSettingsPopup = !showSettingsPopup"
+				@click="showSettingsPopup"
 				v-text="`Global Settings`"
 			/>
 
@@ -99,39 +104,21 @@
 			</v-btn>
 		</v-navigation-drawer>
 
-		<v-dialog
-			v-model="showHWhileNotFoundError"
-			width="400px"
-		>
-			<v-card>
-				<v-card-title>Could not find HWhile</v-card-title>
-				<v-card-text>
-					Please ensure HWhile is installed on your computer and available on the global path,
-					or set the path to the HWhile executable in settings.
-				</v-card-text>
-				<v-card-actions>
-					<v-spacer />
-
-					<v-btn
-						color="blue darken-1"
-						text
-						@click="showHWhileNotFoundError = false"
-						v-text="'Ok'"
-					/>
-				</v-card-actions>
-			</v-card>
-		</v-dialog>
-
 		<DownloadFilePopup v-model="showDownloadPopup" />
-		<RunConfigPopup v-model="showRunConfigPopup" />
-		<SettingsPopup v-model="showSettingsPopup" />
-		<ChangeRootPopup v-model="showChangeRootPopup" />
+		<ChangeRootPopup
+			v-model="showChangeRootPopup"
+			v-if="isNotElectron"
+		/>
 		<NewFilePopup
 			v-model="showNewFilePopup"
+			v-if="isNotElectron"
 			:create-folder="createFolder"
 			@created="onFileCreate"
 		/>
-		<DeleteFilePopup v-model="showDeleteFilePopup" />
+		<DeleteFilePopup
+			v-model="showDeleteFilePopup"
+			v-if="isNotElectron"
+		/>
 	</div>
 </template>
 
@@ -144,8 +131,6 @@ import FilePicker from "@/components/FilePicker.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import RunPanel from "@/components/RunPanel.vue";
 import DownloadFilePopup from "@/components/DownloadFilePopup.vue";
-import RunConfigPopup from "@/components/RunConfigPopup.vue";
-import SettingsPopup from "@/components/SettingsPopup.vue";
 import ChangeRootPopup from "@/components/ChangeRootPopup.vue";
 import NewFilePopup from "@/components/NewFilePopup.vue";
 import DeleteFilePopup from "@/components/DeleteFilePopup.vue";
@@ -158,6 +143,11 @@ import { AbstractRunner } from "@/run/AbstractRunner";
 import { INTERPRETERS, RunConfiguration } from "@/types/RunConfiguration";
 import interact from "interactjs";
 import { FileInfoState } from "@/types/FileInfoState";
+import { MessageBoxOptions, OpenDialogReturnValue, SaveDialogReturnValue } from "electron";
+import path from "path";
+import { fs } from "@/files/fs";
+
+const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
 /**
  * Type declaration for the data() values
@@ -166,14 +156,10 @@ interface DataTypesDescriptor {
 	codeEditor? : CodeMirror.Editor;
 	editorController?: EditorController;
 	ioController? : IOController;
-	runners: {name:string, runner:AbstractRunner}[],
-	showRunConfigPopup: boolean;
-	showSettingsPopup: boolean;
 	showChangeRootPopup: boolean;
 	showDeleteFilePopup: boolean;
 	showNewFilePopup: boolean;
 	createFolder: boolean;
-	showHWhileNotFoundError: boolean;
 	showDownloadPopup: boolean;
 	showPopout: boolean|undefined;
 	fileViewerWidth: number;
@@ -186,8 +172,6 @@ export default Vue.extend({
 		DeleteFilePopup,
 		DownloadFilePopup,
 		ChangeRootPopup,
-		SettingsPopup,
-		RunConfigPopup,
 		FilePicker,
 		CodeEditorElement,
 		MenuBar,
@@ -198,14 +182,10 @@ export default Vue.extend({
 		return {
 			editorController: undefined,
 			ioController: undefined,
-			runners: [],
-			showRunConfigPopup: false,
-			showSettingsPopup: false,
 			showChangeRootPopup: false,
 			showDeleteFilePopup: false,
 			showNewFilePopup: false,
 			createFolder: false,
-			showHWhileNotFoundError: false,
 			showDownloadPopup: false,
 			showPopout: undefined,
 			fileViewerWidth: 200,
@@ -276,37 +256,25 @@ export default Vue.extend({
 							children: [
 								{
 									name: "New File",
-									command: () => {
-										this.createFolder = false;
-										this.showNewFilePopup = true;
-									}
+									command: this.menu_newFile_click,
 								},
 								{
 									name: "New Folder",
-									command: () => {
-										this.createFolder = true;
-										this.showNewFilePopup = true;
-									}
+									command: this.menu_newFolder_click,
 								}
 							]
 						},
 						{
 							name: "Save",
-							command: () => {
-								this.editorController!.saveFiles();
-							}
+							command: this.menu_save_click,
 						},
 						{
 							name: "Delete",
-							command: () => {
-								this.showDeleteFilePopup = true;
-							}
+							command: this.menu_delete_click,
 						},
 						{
 							name: "Export",
-							command: () => {
-								this.showDownloadPopup = true;
-							}
+							command: this.menu_export_click,
 						},
 					]
 				},
@@ -319,15 +287,44 @@ export default Vue.extend({
 			set(cwd: string): void {
 				this.$store.commit('cwd.set', cwd);
 			},
+		},
+		isElectron(): boolean {
+			return this.$store.state.isElectron;
+		},
+		isNotElectron(): boolean {
+			return !this.isElectron;
+		},
+		runners(): {name:string, runner:AbstractRunner}[] {
+			return this.$store.state.programRunners;
 		}
 	},
 	destroyed() {
-		//Remove the keypress handler before destroying the element
-		window.removeEventListener('keydown', this.handleKeypress);
+		//Remove global event listeners before destroying the element
+		if (electron) {
+			electron.ipcRenderer.off('file.new-file', this.menu_newFile_click);
+			electron.ipcRenderer.off('file.new-folder', this.menu_newFolder_click);
+			electron.ipcRenderer.off('file.save', this.menu_save_click);
+			electron.ipcRenderer.off('file.delete', this.menu_delete_click);
+			electron.ipcRenderer.off('file.delete.folder', this.menu_delete_folder_click);
+			electron.ipcRenderer.off('file.settings', this.menu_settings_click);
+		} else {
+			window.removeEventListener('keydown', this.handleKeypress);
+		}
 	},
 	mounted() {
-		//Handler for keypress events
-		window.addEventListener('keydown', this.handleKeypress);
+		//Set up listeners for the menus in electron, or keyboard shortcuts in the browser
+		if (electron) {
+			//Perform operations when menu items are clicked
+			electron.ipcRenderer.on('file.new-file', this.menu_newFile_click);
+			electron.ipcRenderer.on('file.new-folder', this.menu_newFolder_click);
+			electron.ipcRenderer.on('file.save', this.menu_save_click);
+			electron.ipcRenderer.on('file.delete', this.menu_delete_click);
+			electron.ipcRenderer.on('file.delete.folder', this.menu_delete_folder_click);
+			electron.ipcRenderer.on('file.settings', this.menu_settings_click);
+		} else {
+			//Handler for keypress events
+			window.addEventListener('keydown', this.handleKeypress);
+		}
 
 		const that = this;
 		//Make the file viewer drawer resizable
@@ -367,7 +364,6 @@ export default Vue.extend({
 			while (nameSet.has(nextName)) nextName = `${prefix} (${++start})`;
 			return nextName;
 		},
-
 		openTreeViewer() {
 			let routeData = this.$router.resolve({ path: '/trees' });
 			window.open(routeData.href, '_blank');
@@ -376,7 +372,6 @@ export default Vue.extend({
 			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
 			this.editorController.open(filePath);
 		},
-
 		async runProgramClick() {
 			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
 
@@ -385,17 +380,21 @@ export default Vue.extend({
 
 			let runner: AbstractRunner;
 
+			let folder = path.dirname(config.file);
+
 			if (config.interpreter === INTERPRETERS.WHILE_JS) {
 				//Create a While.js runner for the program
 				runner = new WhileJsRunner({
 					expression: inputExpression,
 					file: config.file,
+					directory: folder,
 				});
 			} else {
 				//Create an HWhile runner for the program
 				runner = new HWhileRunner({
 					expression: inputExpression,
 					file: config.file,
+					directory: folder,
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
 					onerror: this._handleRunDebugError,
 				});
@@ -409,7 +408,6 @@ export default Vue.extend({
 			//Run the program
 			await runner.run();
 		},
-
 		async debugProgramClick() {
 			if (!this.editorController) throw new Error("Couldn't get Editor Controller");
 			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
@@ -420,10 +418,8 @@ export default Vue.extend({
 			let runner: AbstractRunner;
 
 			//Get the breakpoints configured for the file
-			let runFileState: FileInfoState|undefined = this.$store.state.openFiles.find((f: FileInfoState) => f.path === config.file);
-			let breakpoints: number[] = runFileState ? runFileState.breakpoints : [];
-			//Convert the breakpoints from 0-indexing to 1-indexing
-			breakpoints = breakpoints.map(l => ++l);
+			let breakpoints: { line: number; prog: string }[];
+			breakpoints = this.getBreakpointsInFolder(path.dirname(config.file));
 
 			if (config.interpreter === INTERPRETERS.WHILE_JS) {
 				throw new Error("Can't debug with While.js");
@@ -432,7 +428,9 @@ export default Vue.extend({
 				runner = new HWhileDebugger({
 					expression: inputExpression,
 					file: config.file,
+					directory: path.dirname(config.file),
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
+					showAllOutput: this.$store.state.settings.general.showAllHWhileOutput,
 					breakpoints: breakpoints,
 					onerror: this._handleRunDebugError,
 				});
@@ -446,25 +444,18 @@ export default Vue.extend({
 			//Run to the first breakpoint
 			await runner.run();
 		},
-
 		_handleRunDebugError(err: any): void {
 			if (err.code === 'ENOENT') {
-				this.showHWhileNotFoundError = true;
+				this.showHWhileNotFoundError();
 			} else {
 				console.error(err)
 			}
 		},
-
 		onFileCreate(filePath: string, isFolder: boolean) {
 			if (this.editorController && !isFolder) {
 				this.editorController.open(filePath);
 			}
 		},
-
-		openRunConfigPopup() {
-			this.showRunConfigPopup = true;
-		},
-
 		onEditorControllerChange(editorController : EditorController) : void {
 			this.editorController = editorController;
 		},
@@ -473,7 +464,15 @@ export default Vue.extend({
 			this.cwd = dir;
 		},
 		handleChangeRootClick() {
-			this.showChangeRootPopup = true;
+			if (electron) {
+				electron.remote.dialog.showOpenDialog({
+					properties: ['openDirectory']
+				}).then((result: OpenDialogReturnValue) => {
+					this.cwd = result.filePaths[0];
+				})
+			} else {
+				this.showChangeRootPopup = true;
+			}
 		},
 		toggleTheme() {
 			this.isDarkTheme = !this.isDarkTheme;
@@ -496,6 +495,130 @@ export default Vue.extend({
 				e.preventDefault();
 			}
 		},
+
+		showHWhileNotFoundError(): void {
+			const title = `Could not find HWhile`;
+			const message = `Please ensure HWhile is installed on your computer and available on the global path,`
+				+ ` or set the path to the HWhile executable in settings.`;
+			if (electron) {
+				let opts: MessageBoxOptions = {
+					title,
+					message,
+					buttons: ['Ok'],
+				};
+				electron.remote.dialog.showMessageBox(opts);
+			} else {
+				window.alert(title + '\n' + message);
+			}
+		},
+
+		menu_newFile_click() {
+			if (electron) {
+				let filePathPromise: Promise<SaveDialogReturnValue> = electron.remote.dialog.showSaveDialog(null, {
+					defaultPath: path.join(this.cwd, 'myfile.while'),
+					filters: [
+						{ name: 'WHILE files', extensions: ['while'] },
+						{ name: 'All files', extensions: ['*'] },
+					],
+					properties: ['showOverwriteConfirmation', 'createDirectory']
+				});
+				filePathPromise.then((value: SaveDialogReturnValue) => {
+					if (value.canceled) return;
+					fs.promises.writeFile(value.filePath!, '');
+				});
+			} else {
+				this.createFolder = false;
+				this.showNewFilePopup = true;
+			}
+		},
+		menu_newFolder_click() {
+			if (electron) {
+				let filePathPromise: Promise<SaveDialogReturnValue> = electron.remote.dialog.showSaveDialog(null, {
+					defaultPath: path.join(this.cwd, 'folder'),
+					buttonLabel: 'Create',
+				});
+				filePathPromise.then((value: SaveDialogReturnValue) => {
+					if (value.canceled) return;
+					fs.promises.mkdir(value.filePath!);
+				});
+			} else {
+				this.createFolder = true;
+				this.showNewFilePopup = true;
+			}
+		},
+		menu_save_click() {
+			this.editorController?.saveFiles();
+		},
+		menu_delete_click() {
+			if (electron) {
+				let filePathPromise: Promise<OpenDialogReturnValue> = electron.remote.dialog.showOpenDialog(null, {
+					defaultPath: this.cwd,
+					buttonLabel: 'Delete',
+					properties: ['openFile'],
+				});
+				filePathPromise.then((value: OpenDialogReturnValue) => {
+					const filePath = value.filePaths[0];
+					if (!filePath) return;
+					try {
+						fs.unlinkSync(filePath);
+					} catch (e) {
+						let err: Error = e as Error;
+						electron.remote.dialog.showErrorBox(`${err.name}`, err.message);
+					}
+				});
+			} else {
+				this.showDeleteFilePopup = true;
+			}
+		},
+		menu_delete_folder_click() {
+			if (electron) {
+				let filePathPromise: Promise<OpenDialogReturnValue> = electron.remote.dialog.showOpenDialog(null, {
+					defaultPath: this.cwd,
+					buttonLabel: 'Delete',
+					properties: ['openDirectory'],
+				});
+				filePathPromise.then((value: OpenDialogReturnValue) => {
+					const filePath = value.filePaths[0];
+					if (!filePath) return;
+					try {
+						fs.rmdirSync(filePath);
+					} catch (e) {
+						let err: Error = e as Error;
+						electron.remote.dialog.showErrorBox(`${err.name}`, err.message);
+					}
+				});
+			} else {
+				this.showDeleteFilePopup = true;
+			}
+		},
+		menu_export_click() {
+			this.showDownloadPopup = true;
+		},
+		menu_settings_click() {
+			this.showSettingsPopup();
+		},
+
+		showSettingsPopup(): void {
+			let routeData = this.$router.resolve({ path: '/settings' });
+			window.open(routeData.href, '_blank',`width=800px,height=400px,location=no`);
+		},
+
+		openRunConfigPopup(): void {
+			let routeData = this.$router.resolve({ path: '/configurations' });
+			window.open(routeData.href, '_blank',`width=1000px,height=600px,location=no`);
+		},
+
+		getBreakpointsInFolder(folder: string): {line:number, prog:string}[] {
+			//Filter breakpoints down to only those that have a folder as the IMMEDIATE parent
+			return this.$store.state.breakpoints.filter(
+				(b: {line:number, prog:string}) => {
+					return path.relative(folder, path.dirname(b.prog)) === '';
+				}
+			).map(({line, prog}: {line:number, prog:string}) => ({
+				prog: path.basename(prog).split(/\./)[0],
+				line: line,
+			}));
+		}
 	},
 	watch: {
 		runConfigs(val: RunConfiguration[]) {

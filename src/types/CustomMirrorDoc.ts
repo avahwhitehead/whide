@@ -63,15 +63,18 @@ export class CustomMirrorDoc extends CodeMirror.Doc {
      * @param enabled   {true} Enable the breakpoint, or {@code false} to disable it.
      * @param enabled   {false} Disable the breakpoint.
      * @param enabled   {undefined} Decide automatically.
+     * @returns {true}  If a breakpoint was added
+     * @returns {false} If a breakpoint was removed
+     * @returns {undefined} Only if an invalid line handler was provided
      */
-    toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean) : void {
+    toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean) : boolean {
         if (typeof line === 'number') {
             //Get a line handle from the line number
             line = this.getLineHandle(line);
         } else {
             //Check the line handle is for this doc
             let info = this.getLineNumber(line);
-            if (!info) return;
+            if (!info) return undefined!;
         }
 
         //Toggle the breakpoint if a state wasn't specified
@@ -94,6 +97,7 @@ export class CustomMirrorDoc extends CodeMirror.Doc {
             //@ts-ignore
             this.setGutterMarker(line, "breakpoints", null);
         }
+        return enabled;
     }
 
     /**

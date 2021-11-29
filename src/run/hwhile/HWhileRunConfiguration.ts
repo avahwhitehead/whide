@@ -3,7 +3,6 @@ import { BaseDebugger, BaseRunner } from "@/run/BaseRunner";
 import path from "path";
 import { HWhileConnector, InteractiveHWhileConnector, RunResultType, StepResultType } from "@whide/hwhile-wrapper";
 import { BinaryTree } from "whilejs";
-import { treeParser } from "@whide/tree-lang";
 import { stringifyTree } from "@/utils/tree_converters";
 import { ChildProcessWithoutNullStreams } from "child_process";
 
@@ -28,6 +27,10 @@ export interface HWhileRunnerProps {
 	 * @param err	The error object
 	 */
 	onerror?: (err: Error) => void,
+	/**
+	 * Directory for HWhile to run in
+	 */
+	directory: string;
 }
 
 /**
@@ -37,7 +40,11 @@ export interface HWhileDebugConfigurationProps extends HWhileRunnerProps {
 	/**
 	 * Breakpoints to set up in the debugger
 	 */
-	breakpoints?: number[];
+	breakpoints?: (number|{line:number, prog:string})[];
+	/**
+	 * Whether to show all output to the user, or automatically hide useless information
+	 */
+	showAllOutput?: boolean;
 }
 
 /**
@@ -51,7 +58,7 @@ export class HWhileRunner extends BaseRunner {
 	private _isStopped: boolean;
 
 	constructor(props: HWhileRunnerProps) {
-		super();
+		super(props.directory);
 		this._props = props;
 		this._shell = null;
 		this._hWhileConnector = null;
@@ -65,7 +72,7 @@ export class HWhileRunner extends BaseRunner {
 		//Start the interpreter in the same directory as the file
 		this._hWhileConnector = new HWhileConnector({
 			hwhile: this._props.hwhile,
-			cwd: path.dirname(this._props.file),
+			cwd: this.directory,
 		});
 		this._allowRun = true;
 	}
@@ -112,7 +119,6 @@ export class HWhileRunner extends BaseRunner {
 export class HWhileDebugger extends BaseDebugger {
 	private _props: HWhileDebugConfigurationProps;
 	private hWhileConnector: InteractiveHWhileConnector|undefined;
-	private _currentState: ProgramState|undefined;
 	private _progName: string|undefined;
 	private _allowRun: boolean;
 	private _allowStep: boolean;
@@ -120,7 +126,7 @@ export class HWhileDebugger extends BaseDebugger {
 	private _variables: Map<string, Map<string, BinaryTree>>;
 
 	constructor(props: HWhileDebugConfigurationProps) {
-		super();
+		super(props.directory);
 		this._props = props;
 		this._allowRun = false;
 		this._allowStep = false;
@@ -135,10 +141,9 @@ export class HWhileDebugger extends BaseDebugger {
 		this._progName = file_name.split('.')[0];
 
 		//Start the interpreter in the same directory as the file
-		const folder_path = path.dirname(this._props.file);
 		this.hWhileConnector = new InteractiveHWhileConnector({
 			hwhile: 'hwhile',
-			cwd: folder_path,
+			cwd: this.directory,
 		});
 
 		//Pass interpreter output straight to the output console
@@ -146,13 +151,12 @@ export class HWhileDebugger extends BaseDebugger {
 
 		//Start the interpreter
 		await this.hWhileConnector.start();
-		//Load the chosen program
-		await this.hWhileConnector.load(this._progName, this._props.expression, true);
 
 		//Setup the program breakpoints
-		for (let b of this._props.breakpoints || []) {
-			await this.hWhileConnector.addBreakpoint(b);
-		}
+		await this.addBreakpoints(...(this._props.breakpoints || []));
+
+		//Load the chosen program
+		await this.hWhileConnector.load(this._progName, this._props.expression, this._props.showAllOutput, this._props.showAllOutput);
 
 		this._allowRun = true;
 		this._allowStep = true;
@@ -160,14 +164,14 @@ export class HWhileDebugger extends BaseDebugger {
 
 	async run(): Promise<ProgramState> {
 		//Run the program
-		let result = await this.hWhileConnector!.run(true);
-		return await this._afterRun(result);
+		let result = await this.hWhileConnector!.run(true, this._props.showAllOutput);
+		return this._afterRun(result);
 	}
 
 	async step(): Promise<ProgramState> {
 		//Step over the next line in the program
-		let result = await this.hWhileConnector!.step(true);
-		return await this._afterRun(result);
+		let result = await this.hWhileConnector!.step(true, this._props.showAllOutput);
+		return this._afterRun(result);
 	}
 
 	/**
@@ -175,24 +179,19 @@ export class HWhileDebugger extends BaseDebugger {
 	 * @param result	The result of the run/step operation
 	 * @private
 	 */
-	private async _afterRun(result: StepResultType|RunResultType) {
+	private async _afterRun(result: StepResultType|RunResultType): Promise<ProgramState> {
 		//Read the updated variable values
-		this._variables = await this.hWhileConnector!.store(true);
-		//Stop the process here if the program is done
-		if (result.cause === 'done') {
+		this._variables = result.allVariables;
+		if (result.done) {
+			this._allowRun = false;
+			this._allowStep = false;
 			await this.stop();
-			this._currentState = {
-				variables: this._variables,
-				done: true,
-			};
-		} else {
-			this._currentState = {
-				variables: this._variables,
-				done: false,
-			};
 		}
-		//Return the program state
-		return this._currentState;
+		return {
+			done: result.done,
+			variables: result.allVariables,
+			currentLine: result.line
+		};
 	}
 
 	async stop(): Promise<void> {
@@ -203,42 +202,45 @@ export class HWhileDebugger extends BaseDebugger {
 		this._allowRun = false;
 	}
 
-	async set(name: string, value: BinaryTree|string, program?: string): Promise<ProgramState> {
-		if (!program) program = this._progName!;
-
+	async set(name: string, value: BinaryTree|string): Promise<ProgramState> {
 		//Ensure there is a version of the tree as a string and a BinaryTree
-		let tree: BinaryTree;
 		let treeString: string;
 		if (typeof value === 'string') {
 			treeString = value;
-			tree = treeParser(value);
 		} else {
-			tree = value;
 			treeString = stringifyTree(value);
 		}
 
-		//Update the tree in HWhile
-		await this.hWhileConnector!.execute(`${name} := ${treeString}`, true);
+		let res = await this.hWhileConnector!.setVariable(name, treeString, this._props.showAllOutput, this._props.showAllOutput);
+		return {
+			done: res.done,
+			variables: res.allVariables,
+			currentLine: res.line,
+		};
+	}
 
-		//Create the program state if necessary
-		if (!this._currentState) this._currentState = {};
-		if (!this._currentState.variables) {
-			//Fetch the variable values from the interpreter
-			this._currentState.variables = await this.hWhileConnector!.store(true);
+	async addBreakpoints(...pnts: (number | { line: number; prog: string })[]): Promise<void> {
+		for (let val of pnts) {
+			if (typeof val === 'number') await this.addBreakpoint(val);
+			else await this.addBreakpoint(val.line, val.prog);
 		}
+		return;
+	}
 
-		//Update the tree value in the program state
-		let programMap: Map<string,BinaryTree>|undefined = this._currentState.variables.get(program);
-		if (programMap) {
-			programMap.set(name, tree);
-		} else {
-			programMap = new Map();
-			programMap.set(name, tree);
-			this._currentState.variables.set(program, programMap);
+	async delBreakpoints(...pnts: (number | { line: number; prog: string })[]): Promise<void> {
+		for (let val of pnts) {
+			if (typeof val === 'number') await this.delBreakpoint(val);
+			else await this.delBreakpoint(val.line, val.prog);
 		}
+		return;
+	}
 
-		//Return the program state
-		return this._currentState;
+	private async addBreakpoint(line: number, prog?: string): Promise<void> {
+		await this.hWhileConnector!.addBreakpoint(line, prog, this._props.showAllOutput, this._props.showAllOutput);
+	}
+
+	private async delBreakpoint(line: number, prog?: string): Promise<void> {
+		await this.hWhileConnector!.delBreakpoint(line, prog, this._props.showAllOutput, this._props.showAllOutput);
 	}
 
 	get variables(): Map<string, Map<string, BinaryTree>> {

@@ -93,6 +93,7 @@ import 'codemirror/addon/hint/show-hint.css';
 import { PURE_WHILE, WHILE } from "@/assets/whileSyntaxMode";
 //WHILE linter
 import { ErrorType, ErrorType as WhileError, linter as whileLinter } from "whilejs";
+import { AbstractRunner } from "@/run/AbstractRunner";
 
 //Editor themes for light and dark mode
 const DARK_THEME = 'ayu-mirage';
@@ -214,7 +215,7 @@ export default Vue.extend({
 		//Toggle breakpoints when the gutter is clicked
 		this.editor.on("gutterClick", async (editor: CodeMirror.Editor, line: number|CodeMirror.LineHandle) => {
 			let doc = editor.getDoc() as CustomMirrorDoc;
-			doc.toggleBreakpoint(line);
+			that.toggleBreakpoint(doc, line);
 		});
 
 		//Mark the current tab as unsaved when the content is changed
@@ -223,8 +224,7 @@ export default Vue.extend({
 			this.currentFileState!.modified = true;
 			if (pending) clearTimeout(pending);
 			pending = setTimeout(() => {
-				if (!this.editorController) return;
-				this.editorController.saveFiles();
+				this.saveAllFiles();
 			}, 5000);
 		});
 
@@ -235,7 +235,7 @@ export default Vue.extend({
 				return (this.editor.getDoc() as CustomMirrorDoc).breakpoints;
 			}
 			toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean): void {
-				(this.editor.getDoc() as CustomMirrorDoc).toggleBreakpoint(line, enabled);
+				that.toggleBreakpoint(that.editor!.getDoc() as CustomMirrorDoc, line, enabled);
 			}
 			constructor() {
 				super();
@@ -317,6 +317,36 @@ export default Vue.extend({
 			}
 		},
 
+		toggleBreakpoint(doc: CustomMirrorDoc, line: number|CodeMirror.LineHandle, enabled?: boolean) {
+			const progPath = this.openFiles[this.currentTab].path;
+			const isEnabled = doc.toggleBreakpoint(line, enabled);
+
+			let lineNo: number = (typeof line === 'number') ? line : doc.getLineNumber(line)!;
+			lineNo++;
+			if (isEnabled) {
+				this.$store.commit('breakpoint.add', [lineNo, progPath]);
+			} else {
+				this.$store.commit('breakpoint.del', [lineNo, progPath]);
+			}
+
+			const prog_folder = path.dirname(progPath);
+			//Update any debuggers in the file's directory with the new breakpoint
+			for (let { runner } of this.$store.state.programRunners) {
+				//Check the runner is operating in the same directory as the program
+				if (path.relative(runner.directory, prog_folder) === '') {
+					const r: AbstractRunner = runner;
+					if (r.isStopped) continue;
+					if (isEnabled) {
+						//Add the breakpoint to the runner
+						if (r.addBreakpoints) r.addBreakpoints({line: lineNo, prog: progPath});
+					} else {
+						//Remove the breakpoint from the runner
+						if (r.delBreakpoints) r.delBreakpoints({line: lineNo, prog: progPath});
+					}
+				}
+			}
+		},
+
 		lintCode(content: string): Annotation[]|Promise<Annotation[]> {
 			if (!content) return [];
 
@@ -390,6 +420,13 @@ export default Vue.extend({
 			);
 			//Open the file in a new tab and switch to it
 			this.currentTab = this.openFiles.push(tabInfo) - 1;
+
+			//Set up the breakpoints in the document if there are any saved
+			let breakpoints: {prog:string, line:number}[] = this.$store.state.breakpoints;
+			for (let {line} of breakpoints.filter(b => b.prog === filepath)) {
+				const lineHandle = tabInfo.doc.getLineHandle(line);
+				if (lineHandle) tabInfo.doc.toggleBreakpoint(lineHandle, true);
+			}
 
 			return tabInfo;
 		},

@@ -32,8 +32,11 @@ export abstract class BaseOutputController {
  * Parent class partially implementing {@link AbstractRunner} for use by interpreters.
  */
 export abstract class BaseRunner extends BaseOutputController implements AbstractRunner {
-	protected constructor() {
+	readonly directory: string;
+
+	protected constructor(directory: string) {
 		super();
+		this.directory = directory;
 	}
 
 	abstract init(): void|ProgramState|Promise<void>|Promise<ProgramState>;
@@ -57,8 +60,11 @@ export abstract class BaseRunner extends BaseOutputController implements Abstrac
  * Parent class partially implementing {@link AbstractRunner} for use by debuggers.
  */
 export abstract class BaseDebugger extends BaseOutputController implements AbstractRunner {
-	protected constructor() {
+	readonly directory: string;
+
+	protected constructor(directory: string) {
 		super();
+		this.directory = directory;
 	}
 
 	abstract init(): void|ProgramState|Promise<void>|Promise<ProgramState>;
@@ -70,6 +76,24 @@ export abstract class BaseDebugger extends BaseOutputController implements Abstr
 	abstract set(variable: string, value: BinaryTree|string, program?: string): void|ProgramState|Promise<void>|Promise<ProgramState>;
 
 	abstract step(): void|ProgramState|Promise<void>|Promise<ProgramState>;
+
+	/**
+	 * Add 1 or more breakpoints to a program's execution.
+	 * If a breakpoint is provided as type {@link number}, it is added to the current program.
+	 * If the breakpoint is of type {@code {line:number, prog:string\}} then the breakpoint is added to the
+	 * program with the given name.
+	 * @param val	List or sequence of breakpoints to add
+	 */
+	abstract addBreakpoints(...val: (number|{line: number, prog: string})[]): void|Promise<void>;
+
+	/**
+	 * Remove 1 or more breakpoints from a program's execution.
+	 * If a breakpoint is provided as type {@link number}, it is removed from the current program.
+	 * If the breakpoint is of type {@code {line:number, prog:string\}} then the breakpoint is removed from the
+	 * program with the given name.
+	 * @param val	List or sequence of breakpoints to remove
+	 */
+	abstract delBreakpoints(...val: (number|{line: number, prog: string})[]): void|Promise<void>;
 
 	abstract get isStopped(): boolean;
 	abstract get allowRun(): boolean;

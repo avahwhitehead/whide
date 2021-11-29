@@ -2,7 +2,9 @@ import Vue from 'vue'
 import Vuex from 'vuex';
 import { RunConfiguration } from "@/types/RunConfiguration";
 import VuexPersistence from "vuex-persist";
+import createMutationsSharer from "vuex-shared-mutations";
 import { FileInfoState } from "@/types/FileInfoState";
+import { AbstractRunner } from "@/run/AbstractRunner";
 
 //Make VueX available to Vue
 Vue.use(Vuex);
@@ -25,8 +27,11 @@ export interface RootState {
 	chosenRunConfig: RunConfiguration|undefined;
 	settings: SettingsState;
 	openFiles: FileInfoState[];
+	breakpoints: {line: number, prog: string}[];
 	focusedFile: number;
 	current_directory: string|undefined;
+	isElectron: boolean;
+	programRunners: {name:string, runner:AbstractRunner}[],
 }
 
 /**
@@ -42,6 +47,7 @@ export interface SettingsState {
  */
 export interface SettingsGeneralState {
 	hwhilePath: string;
+	showAllHWhileOutput: boolean;
 }
 
 /**
@@ -75,6 +81,7 @@ const store = new Vuex.Store<RootState>({
 		settings: {
 			general: {
 				hwhilePath: '',
+				showAllHWhileOutput: false,
 			},
 			appearance: {
 				theme: APP_THEME.AUTO,
@@ -83,6 +90,9 @@ const store = new Vuex.Store<RootState>({
 		openFiles: [],
 		focusedFile: -1,
 		current_directory: undefined,
+		isElectron: (window['require'] !== undefined),
+		breakpoints: [],
+		programRunners: [],
 	},
 	mutations: {
 		/**
@@ -114,11 +124,11 @@ const store = new Vuex.Store<RootState>({
 				state.chosenRunConfig = state.runConfigurations[index];
 			}
 		},
-		overwriteRunConfig(state: RootState, [oldConfig, newConfig]: [RunConfiguration, RunConfiguration]): void {
-			let index = state.runConfigurations.indexOf(oldConfig);
-			if (index === -1) return;
+		overwriteRunConfig(state: RootState, [configIndex, newConfig]: [number, RunConfiguration]): void {
+			let oldConfig = state.runConfigurations[configIndex];
+			if (oldConfig === undefined) return;
 			//Replace the old run config with the new one
-			state.runConfigurations.splice(index, 1, newConfig);
+			state.runConfigurations.splice(configIndex, 1, newConfig);
 			//Update the chosen run config if that is the overwritten one
 			if (oldConfig === state.chosenRunConfig) {
 				state.chosenRunConfig = newConfig;
@@ -161,10 +171,51 @@ const store = new Vuex.Store<RootState>({
 		'cwd.set': function (state: RootState, directory: string) {
 			state.current_directory = directory;
 		},
+
+		'breakpoint.add': function (state: RootState, [line, prog]: [number, string]) {
+			state.breakpoints.push({
+				prog,
+				line
+			});
+		},
+		'breakpoint.del': function (state: RootState, [line, prog]: [number, string]) {
+			// state.breakpoints = state.breakpoints.filter(b => b.line === line && b.prog === prog)
+			let i = 0;
+			while (i < state.breakpoints.length) {
+				if (state.breakpoints[i].line === line && state.breakpoints[i].prog === prog) {
+					state.breakpoints.splice(i, 1);
+				} else i++
+			}
+		},
+		'breakpoint.delAll': function (state: RootState, prog: string) {
+			// state.breakpoints = state.breakpoints.filter(b => b.prog === prog)
+			let i = 0;
+			while (i < state.breakpoints.length) {
+				if (state.breakpoints[i].prog === prog) {
+					state.breakpoints.splice(i, 1);
+				} else i++
+			}
+		},
+		'hwhile.showAllOutput': function (state: RootState, showAll: boolean) {
+			state.settings.general.showAllHWhileOutput = showAll;
+		},
 	},
 	plugins: [
 		//Enable persistence
 		vuexLocal.plugin,
+		//Enable sharing between concurrent tabs/windows
+		createMutationsSharer({
+			predicate: [
+				'addRunConfig',
+				'removeRunConfig',
+				'overwriteRunConfig',
+				'setChosenRunConfig',
+				'setAppTheme',
+				'setHWhilePath',
+				'cwd.set',
+				'hwhile.showAllOutput',
+			],
+		})
 	],
 });
 
