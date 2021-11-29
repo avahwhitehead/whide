@@ -115,7 +115,10 @@
 			:create-folder="createFolder"
 			@created="onFileCreate"
 		/>
-		<DeleteFilePopup v-model="showDeleteFilePopup" />
+		<DeleteFilePopup
+			v-model="showDeleteFilePopup"
+			v-if="isNotElectron"
+		/>
 	</div>
 </template>
 
@@ -302,6 +305,7 @@ export default Vue.extend({
 			electron.ipcRenderer.off('file.new-folder', this.menu_newFolder_click);
 			electron.ipcRenderer.off('file.save', this.menu_save_click);
 			electron.ipcRenderer.off('file.delete', this.menu_delete_click);
+			electron.ipcRenderer.off('file.delete.folder', this.menu_delete_folder_click);
 			electron.ipcRenderer.off('file.settings', this.menu_settings_click);
 		} else {
 			window.removeEventListener('keydown', this.handleKeypress);
@@ -315,6 +319,7 @@ export default Vue.extend({
 			electron.ipcRenderer.on('file.new-folder', this.menu_newFolder_click);
 			electron.ipcRenderer.on('file.save', this.menu_save_click);
 			electron.ipcRenderer.on('file.delete', this.menu_delete_click);
+			electron.ipcRenderer.on('file.delete.folder', this.menu_delete_folder_click);
 			electron.ipcRenderer.on('file.settings', this.menu_settings_click);
 		} else {
 			//Handler for keypress events
@@ -545,7 +550,46 @@ export default Vue.extend({
 			this.editorController?.saveFiles();
 		},
 		menu_delete_click() {
-			this.showDeleteFilePopup = true;
+			if (electron) {
+				let filePathPromise: Promise<OpenDialogReturnValue> = electron.remote.dialog.showOpenDialog(null, {
+					defaultPath: this.cwd,
+					buttonLabel: 'Delete',
+					properties: ['openFile'],
+				});
+				filePathPromise.then((value: OpenDialogReturnValue) => {
+					const filePath = value.filePaths[0];
+					if (!filePath) return;
+					try {
+						fs.unlinkSync(filePath);
+					} catch (e) {
+						let err: Error = e as Error;
+						electron.remote.dialog.showErrorBox(`${err.name}`, err.message);
+					}
+				});
+			} else {
+				this.showDeleteFilePopup = true;
+			}
+		},
+		menu_delete_folder_click() {
+			if (electron) {
+				let filePathPromise: Promise<OpenDialogReturnValue> = electron.remote.dialog.showOpenDialog(null, {
+					defaultPath: this.cwd,
+					buttonLabel: 'Delete',
+					properties: ['openDirectory'],
+				});
+				filePathPromise.then((value: OpenDialogReturnValue) => {
+					const filePath = value.filePaths[0];
+					if (!filePath) return;
+					try {
+						fs.rmdirSync(filePath);
+					} catch (e) {
+						let err: Error = e as Error;
+						electron.remote.dialog.showErrorBox(`${err.name}`, err.message);
+					}
+				});
+			} else {
+				this.showDeleteFilePopup = true;
+			}
 		},
 		menu_export_click() {
 			this.showDownloadPopup = true;
