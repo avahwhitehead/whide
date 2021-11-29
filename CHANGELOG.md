@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.3.0](https://github.com/sonrad10/Whide/compare/v2.2.0...v2.3.0) (2021-11-29)
+
+
+### Features
+
+* added support for breakpoints in macro files ([250d7da](https://github.com/sonrad10/Whide/commit/250d7da9429f21fcf9cdf87be392df952b0a4d91))
+* added toggle in settings to enable HWhile debug mode ([1f810e2](https://github.com/sonrad10/Whide/commit/1f810e2051961849e0cc408cc2bba667e2a4459d))
+* allowed for adding/removing breakpoints during program execution ([0341e48](https://github.com/sonrad10/Whide/commit/0341e4843159fefd25d13119dec3530877db5014))
+* files and folders can be created with the system dialogue in electron ([5b8a638](https://github.com/sonrad10/Whide/commit/5b8a6386dd5611cac5b78db5313e6ae784503cfa))
+* moved the desktop app menu dropdowns to the window menu bar ([29f3e1a](https://github.com/sonrad10/Whide/commit/29f3e1a94e2c2bd50c2f8cdb0f8c56476c8d6724))
+* updated HWhile wrapper to reduce the amount of unnecessary information in the debugger output ([7c91662](https://github.com/sonrad10/Whide/commit/7c916629a967fa4c2e6827170f93825a0c529f55))
+
 ## [2.2.0](https://github.com/sonrad10/Whide/compare/v2.1.0...v2.2.0) (2021-10-30)
 
 
