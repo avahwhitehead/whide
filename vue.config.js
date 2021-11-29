@@ -47,5 +47,8 @@ module.exports = {
 				},
 			}
 		}
-	}
+	},
+	//GitHub Pages configuration
+	outputDir: path.resolve(__dirname, 'docs'),
+	publicPath: process.env.NODE_ENV === 'production' ? '/Whide/' : '/'
 }
