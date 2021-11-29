@@ -319,31 +319,30 @@ export default Vue.extend({
 		},
 
 		toggleBreakpoint(doc: CustomMirrorDoc, line: number|CodeMirror.LineHandle, enabled?: boolean) {
-			const prog = this.openFiles[this.currentTab].path;
+			const progPath = this.openFiles[this.currentTab].path;
 			const isEnabled = doc.toggleBreakpoint(line, enabled);
 
 			let lineNo: number = (typeof line === 'number') ? line : doc.getLineNumber(line)!;
 			lineNo++;
 			if (isEnabled) {
-				this.$store.commit('breakpoint.add', [lineNo, prog]);
+				this.$store.commit('breakpoint.add', [lineNo, progPath]);
 			} else {
-				this.$store.commit('breakpoint.del', [lineNo, prog]);
+				this.$store.commit('breakpoint.del', [lineNo, progPath]);
 			}
 
-			const prog_folder = path.dirname(prog);
-			const prog_name = path.basename(prog).split(/\./)[0];
+			const prog_folder = path.dirname(progPath);
 			//Update any debuggers in the file's directory with the new breakpoint
 			for (let { runner } of this.$store.state.programRunners) {
 				//Check the runner is operating in the same directory as the program
 				if (path.relative(runner.directory, prog_folder) === '') {
 					const r: AbstractRunner = runner;
 					if (r.isStopped) continue;
-					if (isEnabled && r.addBreakpoints) {
+					if (isEnabled) {
 						//Add the breakpoint to the runner
-						r.addBreakpoints({line: lineNo, prog: prog_name});
-					} else if (!isEnabled && r.delBreakpoints) {
+						if (r.addBreakpoints) r.addBreakpoints({line: lineNo, prog: progPath});
+					} else {
 						//Remove the breakpoint from the runner
-						r.delBreakpoints({line: lineNo, prog: prog_name});
+						if (r.delBreakpoints) r.delBreakpoints({line: lineNo, prog: progPath});
 					}
 				}
 			}

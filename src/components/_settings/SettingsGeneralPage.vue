@@ -12,19 +12,32 @@
 						label="Path to HWhile"
 						class="ma-0 pa-0"
 						required
+						dense
 						:rules="_hwhilePathRules"
 					/>
 					<v-btn
 						depressed
+						small
 						title="Open file picker"
 						@click="showFilePicker = true"
 					>
 						<v-icon>far fa-folder</v-icon>
 					</v-btn>
 				</v-row>
-				<v-row>
+				<v-row class="mt-0">
 					<small>This should be a path to the HWhile executable file, not its containing folder.</small>
 					<small>Leave this blank to use HWhile on the global path.</small>
+				</v-row>
+
+				<v-row class="mt-5">
+					<v-checkbox
+						v-model="showAllHWhileOutput"
+						dense
+						label="Enable HWhile debug mode"
+					/>
+				</v-row>
+				<v-row class="mt-0">
+					<small>When disabled, certain HWhile commands are hidden to simplify the output.</small>
 				</v-row>
 			</v-form>
 		</v-container>
@@ -73,6 +86,14 @@ export default Vue.extend({
 			},
 			set(hwhilePath: string): void {
 				this.$store.commit('setHWhilePath', hwhilePath);
+			}
+		},
+		showAllHWhileOutput: {
+			get(): string {
+				return this.$store.state.settings.general.showAllHWhileOutput;
+			},
+			set(val: boolean): void {
+				this.$store.commit('hwhile.showAllOutput', val);
 			}
 		},
 		isFormValid: {

@@ -277,7 +277,7 @@ export default Vue.extend({
 			if (!this.currentOpenConfig) {
 				this.$store.commit('addRunConfig', newConfig);
 			} else {
-				this.$store.commit('overwriteRunConfig', [this.currentOpenConfig, newConfig]);
+				this.$store.commit('overwriteRunConfig', [this.configIndex, newConfig]);
 			}
 
 			this.$store.commit('setChosenRunConfig', newConfig);

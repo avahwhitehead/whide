@@ -47,6 +47,7 @@ export interface SettingsState {
  */
 export interface SettingsGeneralState {
 	hwhilePath: string;
+	showAllHWhileOutput: boolean;
 }
 
 /**
@@ -80,6 +81,7 @@ const store = new Vuex.Store<RootState>({
 		settings: {
 			general: {
 				hwhilePath: '',
+				showAllHWhileOutput: false,
 			},
 			appearance: {
 				theme: APP_THEME.AUTO,
@@ -122,11 +124,11 @@ const store = new Vuex.Store<RootState>({
 				state.chosenRunConfig = state.runConfigurations[index];
 			}
 		},
-		overwriteRunConfig(state: RootState, [oldConfig, newConfig]: [RunConfiguration, RunConfiguration]): void {
-			let index = state.runConfigurations.indexOf(oldConfig);
-			if (index === -1) return;
+		overwriteRunConfig(state: RootState, [configIndex, newConfig]: [number, RunConfiguration]): void {
+			let oldConfig = state.runConfigurations[configIndex];
+			if (oldConfig === undefined) return;
 			//Replace the old run config with the new one
-			state.runConfigurations.splice(index, 1, newConfig);
+			state.runConfigurations.splice(configIndex, 1, newConfig);
 			//Update the chosen run config if that is the overwritten one
 			if (oldConfig === state.chosenRunConfig) {
 				state.chosenRunConfig = newConfig;
@@ -194,6 +196,9 @@ const store = new Vuex.Store<RootState>({
 				} else i++
 			}
 		},
+		'hwhile.showAllOutput': function (state: RootState, showAll: boolean) {
+			state.settings.general.showAllHWhileOutput = showAll;
+		},
 	},
 	plugins: [
 		//Enable persistence
@@ -208,6 +213,7 @@ const store = new Vuex.Store<RootState>({
 				'setAppTheme',
 				'setHWhilePath',
 				'cwd.set',
+				'hwhile.showAllOutput',
 			],
 		})
 	],

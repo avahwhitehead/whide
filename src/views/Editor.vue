@@ -413,11 +413,8 @@ export default Vue.extend({
 			let runner: AbstractRunner;
 
 			//Get the breakpoints configured for the file
-			let runFileState: FileInfoState|undefined = this.$store.state.openFiles.find((f: FileInfoState) => f.path === config.file);
-
 			let breakpoints: { line: number; prog: string }[];
-			if (!runFileState) breakpoints = [];
-			else breakpoints = this.getBreakpointsInFolder(path.resolve(runFileState!.path, '..'));
+			breakpoints = this.getBreakpointsInFolder(path.dirname(config.file));
 
 			if (config.interpreter === INTERPRETERS.WHILE_JS) {
 				throw new Error("Can't debug with While.js");
@@ -428,6 +425,7 @@ export default Vue.extend({
 					file: config.file,
 					directory: path.dirname(config.file),
 					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
+					showAllOutput: this.$store.state.settings.general.showAllHWhileOutput,
 					breakpoints: breakpoints,
 					onerror: this._handleRunDebugError,
 				});
@@ -569,11 +567,13 @@ export default Vue.extend({
 		getBreakpointsInFolder(folder: string): {line:number, prog:string}[] {
 			//Filter breakpoints down to only those that have a folder as the IMMEDIATE parent
 			return this.$store.state.breakpoints.filter(
-				(b: {line:number, prog:string}) => path.resolve(b.prog, '..') === folder
-			).map((b: {line:number, prog:string}) => {
-				b.prog = path.basename(b.prog).split(/\./)[0]
-				return b;
-			});
+				(b: {line:number, prog:string}) => {
+					return path.relative(folder, path.dirname(b.prog)) === '';
+				}
+			).map(({line, prog}: {line:number, prog:string}) => ({
+				prog: path.basename(prog).split(/\./)[0],
+				line: line,
+			}));
 		}
 	},
 	watch: {

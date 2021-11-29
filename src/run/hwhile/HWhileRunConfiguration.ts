@@ -41,6 +41,10 @@ export interface HWhileDebugConfigurationProps extends HWhileRunnerProps {
 	 * Breakpoints to set up in the debugger
 	 */
 	breakpoints?: (number|{line:number, prog:string})[];
+	/**
+	 * Whether to show all output to the user, or automatically hide useless information
+	 */
+	showAllOutput?: boolean;
 }
 
 /**
@@ -147,11 +151,12 @@ export class HWhileDebugger extends BaseDebugger {
 
 		//Start the interpreter
 		await this.hWhileConnector.start();
-		//Load the chosen program
-		await this.hWhileConnector.load(this._progName, this._props.expression, true, false);
 
 		//Setup the program breakpoints
 		await this.addBreakpoints(...(this._props.breakpoints || []));
+
+		//Load the chosen program
+		await this.hWhileConnector.load(this._progName, this._props.expression, this._props.showAllOutput, this._props.showAllOutput);
 
 		this._allowRun = true;
 		this._allowStep = true;
@@ -159,13 +164,13 @@ export class HWhileDebugger extends BaseDebugger {
 
 	async run(): Promise<ProgramState> {
 		//Run the program
-		let result = await this.hWhileConnector!.run(true);
+		let result = await this.hWhileConnector!.run(true, this._props.showAllOutput);
 		return this._afterRun(result);
 	}
 
 	async step(): Promise<ProgramState> {
 		//Step over the next line in the program
-		let result = await this.hWhileConnector!.step(true);
+		let result = await this.hWhileConnector!.step(true, this._props.showAllOutput);
 		return this._afterRun(result);
 	}
 
@@ -206,7 +211,7 @@ export class HWhileDebugger extends BaseDebugger {
 			treeString = stringifyTree(value);
 		}
 
-		let res = await this.hWhileConnector!.setVariable(name, treeString);
+		let res = await this.hWhileConnector!.setVariable(name, treeString, this._props.showAllOutput, this._props.showAllOutput);
 		return {
 			done: res.done,
 			variables: res.allVariables,
@@ -231,11 +236,11 @@ export class HWhileDebugger extends BaseDebugger {
 	}
 
 	private async addBreakpoint(line: number, prog?: string): Promise<void> {
-		await this.hWhileConnector!.addBreakpoint(line, prog);
+		await this.hWhileConnector!.addBreakpoint(line, prog, this._props.showAllOutput, this._props.showAllOutput);
 	}
 
 	private async delBreakpoint(line: number, prog?: string): Promise<void> {
-		await this.hWhileConnector!.delBreakpoint(line, prog);
+		await this.hWhileConnector!.delBreakpoint(line, prog, this._props.showAllOutput, this._props.showAllOutput);
 	}
 
 	get variables(): Map<string, Map<string, BinaryTree>> {
