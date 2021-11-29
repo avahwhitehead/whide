@@ -42,6 +42,12 @@ export function makeElectronMenus(webContents: WebContents, isMac: boolean): Men
 					webContents.send('file.delete');
 				}
 			},
+			{
+				label: 'Delete Folder',
+				click() {
+					webContents.send('file.delete.folder');
+				}
+			},
 			{ type: 'separator' },
 			isMac
 				? { label: 'Preferences', click() { webContents.send('file.settings'); } }
