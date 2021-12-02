@@ -1,6 +1,6 @@
 import Electron, { MenuItemConstructorOptions, WebContents } from "electron";
 
-const { app } = Electron;
+const { app, shell } = Electron;
 
 export function makeElectronMenus(webContents: WebContents, isMac: boolean): MenuItemConstructorOptions[] {
 	const macMenu: MenuItemConstructorOptions = {
@@ -125,6 +125,12 @@ export function makeElectronMenus(webContents: WebContents, isMac: boolean): Men
 				label: 'About',
 				click: () => {
 					webContents.send('about.help');
+				}
+			},
+			{
+				label: 'View on GitHub',
+				async click() {
+					await shell.openExternal('https://github.com/sonrad10/Whide/');
 				}
 			},
 		]

@@ -278,6 +278,21 @@ export default Vue.extend({
 						},
 					]
 				},
+				{
+					name: "Help",
+					children: [
+						{
+							name: 'About',
+							command: this.menu_help_about_click,
+						},
+						{
+							name: 'View on GitHub',
+							command() {
+								window.open('https://github.com/sonrad10/Whide/', 'about:blank');
+							}
+						},
+					]
+				},
 			];
 		},
 		cwd: {
