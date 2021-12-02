@@ -1,6 +1,6 @@
 import Electron, { MenuItemConstructorOptions, WebContents } from "electron";
 
-const { app, shell } = Electron;
+const { app } = Electron;
 
 export function makeElectronMenus(webContents: WebContents, isMac: boolean): MenuItemConstructorOptions[] {
 	const macMenu: MenuItemConstructorOptions = {
@@ -122,11 +122,11 @@ export function makeElectronMenus(webContents: WebContents, isMac: boolean): Men
 		role: 'help',
 		submenu: [
 			{
-				label: 'Learn More',
-				click: async () => {
-					await shell.openExternal('https://electronjs.org')
+				label: 'About',
+				click: () => {
+					webContents.send('about.help');
 				}
-			}
+			},
 		]
 	};
 

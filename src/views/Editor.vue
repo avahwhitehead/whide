@@ -307,6 +307,7 @@ export default Vue.extend({
 			electron.ipcRenderer.off('file.delete', this.menu_delete_click);
 			electron.ipcRenderer.off('file.delete.folder', this.menu_delete_folder_click);
 			electron.ipcRenderer.off('file.settings', this.menu_settings_click);
+			electron.ipcRenderer.off('about.help', this.menu_help_about_click);
 		} else {
 			window.removeEventListener('keydown', this.handleKeypress);
 		}
@@ -321,6 +322,7 @@ export default Vue.extend({
 			electron.ipcRenderer.on('file.delete', this.menu_delete_click);
 			electron.ipcRenderer.on('file.delete.folder', this.menu_delete_folder_click);
 			electron.ipcRenderer.on('file.settings', this.menu_settings_click);
+			electron.ipcRenderer.on('about.help', this.menu_help_about_click);
 		} else {
 			//Handler for keypress events
 			window.addEventListener('keydown', this.handleKeypress);
@@ -596,6 +598,11 @@ export default Vue.extend({
 		},
 		menu_settings_click() {
 			this.showSettingsPopup();
+		},
+
+		menu_help_about_click(): void {
+			let routeData = this.$router.resolve({ path: '/about' });
+			window.open(routeData.href, '_blank',`width=600px,height=500px,location=no`);
 		},
 
 		showSettingsPopup(): void {

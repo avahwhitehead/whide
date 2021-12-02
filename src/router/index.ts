@@ -6,6 +6,7 @@ import EditorWindow from "@/views/Editor.vue";
 import TreeWindow from "@/views/TreeWindow.vue";
 import SettingsWindow from "@/views/SettingsWindow.vue";
 import RunConfigWindow from "@/views/RunConfigWindow.vue";
+import AboutWindow from "@/views/About.vue";
 
 //Use the router
 Vue.use(VueRouter);
@@ -13,6 +14,7 @@ Vue.use(VueRouter);
 //Route definitions
 const routes : RouteConfig[] = [
 	{ path: '/', component: EditorWindow },
+	{ path: '/about', component: AboutWindow },
 	{ path: '/trees', component: TreeWindow },
 	{ path: '/settings', component: SettingsWindow },
 	{ path: '/configurations', component: RunConfigWindow },
