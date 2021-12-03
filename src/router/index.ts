@@ -7,6 +7,7 @@ import TreeWindow from "@/views/TreeWindow.vue";
 import SettingsWindow from "@/views/SettingsWindow.vue";
 import RunConfigWindow from "@/views/RunConfigWindow.vue";
 import AboutWindow from "@/views/About.vue";
+import PrivacyWindow from "@/views/Privacy.vue";
 
 //Use the router
 Vue.use(VueRouter);
@@ -18,6 +19,7 @@ const routes : RouteConfig[] = [
 	{ path: '/trees', component: TreeWindow },
 	{ path: '/settings', component: SettingsWindow },
 	{ path: '/configurations', component: RunConfigWindow },
+	{ path: '/privacy', component: PrivacyWindow },
 ];
 
 //Create the router
