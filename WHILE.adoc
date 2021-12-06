@@ -1,0 +1,164 @@
+= WHILE Language Quick Reference
+:doctype: article
+:icons: font
+//URL aliases:
+:hwhile: https://github.com/alexj136/HWhile
+:hwhile-examples: https://github.com/alexj136/HWhile/tree/master/examples
+:whide: https://github.com/sonrad10/Whide
+:treeviewer-list-123: https://sonrad10.github.io/Whide/#/trees?t=%5B1%2C2%2C3%5D&c=%3Cint.%3Cint.%3Cint.nil%3E%3E%3E
+
+== Example Programs
+
+For some program examples, see the link:{hwhile-examples}}[HWhile examples] folder, or the Limits of Computation Canvas page.
+
+== WHILE vs Extended WHILE
+
+WHILE is the pure version of the language.
+It is syntactically simple, but not always easy to read.
+
+Extended WHILE is, as the name suggests, an extended version of the pure language that has been modified to be easier to use.
+This extended language uses syntactic sugar to allow for more readable code, without adding any new features.
+Any program which is valid in Pure WHILE is also valid in Extended WHILE (however, not always the other way round).
+
+From a computational point of view, both versions of the language are equally powerful.
+
+== Context Free Grammar
+
+[#CFG:pure]
+=== WHILE
+
+The following context-free grammar shows the syntax of the WHILE language, as written by Dr. Reus in the textboom "The Limits of Computation".
+See <<CFG:extended>> for a grammar of the extended WHILE language.
+
+[source]
+----
+<expression>      ::= <variable>                           // Variable Expression
+                    | nil                                  // Atom nil
+                    | cons <expression> <expression>       // Construct tree
+                    | hd <expression>                      // Left subtree
+                    | tl <expression>                      // Right subtree
+                    | ( <expression> )                     // Right subtree
+
+<block>           ::= {}                                   // Block of commands
+                    | { <statement-list> }                 // Empty block
+
+<statement-list>  ::= <command>                            // Single command list
+                    | <command>; <statement-list>          // List of commands
+
+<elseblock>       ::= else <block>                         // Else case
+
+<command>         ::= <variable> := <expression>           // Assignment
+                    | while <expression> <block>           // While loop
+                    | if <expression> <block>              // If-then
+                    | if <expression> <block> <elseblock>  // If-then-else
+
+<program>         ::= <name> read <variable> <block> write <variable>
+----
+
+There is no set definition for `<variable>` and `<name>`, however HWhile uses the following RegEx definition for both:
+
+[source]
+----
+ID ::= [a-zA-Z_'][a-zA-Z0-9_']*
+----
+
+So identifier names may contain any letter, any number, or `'` or `_` but they may not begin with a number.
+
+[#CFG:extended]
+=== Extended WHILE
+
+This grammar depicts the full extended WHILE language.
+Features in the extended language which are not available in the pure language have been annotated with an asterisk `+*+`.
+
+[source]
+----
+<expression>        ::= <variable>                          // Variable Expression
+                    | nil                                   // Atom nil
+                    | cons <expression> <expression>        // Construct tree
+                    | hd <expression>                       // Left subtree
+                    | tl <expression>                       // Right subtree
+                    | ( <expression> )                      // Right subtree
+*                   | <expression> = <expression>           // Equality expressions
+*                   | <number>                              // All the natural numbers
+*                   | true                                  // Booleans
+*                   | false
+*                   | []                                    // Empty list constructor
+*                   | [<expression-list>]                   // Non-empty list constuctor
+
+<block>             ::= {}                                  // Block of commands
+                    | { <statement-list> }                  // Empty block
+
+<statement-list>    ::= <command>                           // Single command list
+                    | <command>; <statement-list>           // List of commands
+
+<elseblock>         ::= else <block>                        // Else case
+
+* <expression-list> ::= ...
+*                   | <expression>                          // Single expression list
+*                   | <expression>, <expression-list>       // Multiple expression list
+
+<command>           ::= <variable> := <expression>          // Assignment
+                    | while <expression> <block>            // While loop
+                    | if <expression> <block>               // If-then
+                    | if <expression> <block> <elseblock>   // If-then-else
+                    // Here '<<name>>' means a 'name' word surrounded by < and >
+*                   | <variable> := <<name>> <expression>   // Macro calls
+                    // Switch statements
+*                   | switch <expression> { <rule-list> }
+*                   | switch <expression> { <rule-list> default : <statement-list> }
+
+* <rule>            ::= case <expression-list> : <statement-list>
+
+* <rule-list>       ::= <rule>
+*                   | <rule> <rule-list>
+
+<program>         ::= <name> read <variable> <block> write <variable>
+----
+
+== Common Issues
+
+* The last statement in a block should *not* end with a semicolon.
++
+This is because, in WHILE, semicolons are used to separate statements rather than to represent new lines.
+
+
+== Type definitions
+
+The following is a reference guide to the type definitions used by Whide, HWhile, and While.js to convert binary trees to a human-readable format.
+
+=== Integers
+
+Numbers are recursively defined in WHILE as follows, where stem:[x] is an integer:
+
+stem:[
+`x' =\begin{cases}
+\langle \text{nil}.`x-1'\rangle    & \text{if } x\geq 1\\
+\text{nil},                        & \text{otherwise}
+\end{cases}
+]
+
+In simple terms, this means that a number `n` is represented as a binary tree of height `n`, where each left node is `nil`.
+
+For example:
+
+* 0 = `nil`
+* 1 = `<nil.nil>`
+* 2 = `<nil.<nil.nil>>`
+* 3 = `<nil.<nil.<nil.nil>>>`
+* ...
+
+TIP: A number `n` is equivalent to a list of `n` ``nil``s, so 3 = ``[0, 0, 0]``
+
+=== Lists
+
+Lists in While are represented by using the right-nodes of a tree as a "spine", where the left-nodes act as branches containing the elements of the list.
+This means that the ``n``th element of a list is contained in left node of depth `n+1`.
+The final right-node in the tree is a terminating `nil`
+
+The following image shows the tree representation of the list `[1,2,3]`.
+This can be written as `<1.<2.<3.nil>>>`:
+
+[#img:tree-of-list]
+image::res/list-tree.png[,150]
+
+(See the link:{treeviewer-list-123}[live demo online])
