@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.3.1](https://github.com/sonrad10/Whide/compare/v2.3.0...v2.3.1) (2021-12-06)
+
+
+### Features
+
+* added "about app" page ([c72112e](https://github.com/sonrad10/Whide/commit/c72112edba536df25c429299808c37a8d4f5de19))
+* added privacy policy ([4b25768](https://github.com/sonrad10/Whide/commit/4b25768ab9cfe8df53e5202a874504ea523bd2b0))
+
 ## [2.3.0](https://github.com/sonrad10/Whide/compare/v2.2.0...v2.3.0) (2021-11-29)
 
 
