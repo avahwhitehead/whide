@@ -122,11 +122,23 @@ export function makeElectronMenus(webContents: WebContents, isMac: boolean): Men
 		role: 'help',
 		submenu: [
 			{
-				label: 'Learn More',
-				click: async () => {
-					await shell.openExternal('https://electronjs.org')
+				label: 'About',
+				click: () => {
+					webContents.send('about.help');
 				}
-			}
+			},
+			{
+				label: 'View on GitHub',
+				async click() {
+					await shell.openExternal('https://github.com/sonrad10/Whide/');
+				}
+			},
+			{
+				label: 'Privacy',
+				async click() {
+					webContents.send('about.privacy');
+				}
+			},
 		]
 	};
 

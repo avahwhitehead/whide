@@ -1,12 +1,13 @@
 = Whide - While IDE
-Alaric Whitehead <aw548@sussex.ac.uk>, Supervisor: Dr Bernhard Reus <bernhard@sussex.ac.uk>
-1.0, 14 November, 2020
 :doctype: article
 :icons: font
+//Maths system
+:stem: latexmath
 //Local URL aliases:
 :license: ./LICENSE.md
 :wiki: ./wiki
 //URL aliases:
+:CodeMirror: https://codemirror.net/
 :chai: https://www.npmjs.com/package/chai
 :electron: https://www.electronjs.org/
 :git: https://git-scm.com/
@@ -19,13 +20,70 @@ Alaric Whitehead <aw548@sussex.ac.uk>, Supervisor: Dr Bernhard Reus <bernhard@su
 :node: https://nodejs.org/en/
 :vscode-syntax-highlight: https://github.com/davidpomerenke/while-syntax-vscode
 :vuejs: https://vuejs.org/
+:vuetify: https://vuetifyjs.com/
 
 This is the IDE for DR Reus' WHILE language at link:https://sussex.ac.uk/[The University of Sussex].
 
-[#sect:getting-started]
+For information about the WHILE language, see link:WHILE.adoc[] or link:{hwhile}[the HWhile Respository].
+
 == Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+Download the latest program binary for your operating system from the link:https://github.com/sonrad10/Whide/releases[releases page]. These should just work without requiring any other software.
+
+While not required, it is recommended you also install link:https://github.com/alexj136/HWhile[HWhile] to take advantage features such as debugging from within the IDE.
+
+TIP: Whide is also available online at https://sonrad10.github.io/Whide/
+
+NOTE: You won't be able to use HWhile in the web app as that is a desktop application. You may, however, still use While.js for interpreting code.
+
+== TreeLang Quick Reference
+
+=== Overview
+
+In order to display binary trees in a friendlier format, Whide takes advantage of a simple description language.
+
+This language takes a binary tree and a "conversion string" as input and displays the output in a human-readable format.
+
+The language was designed in such a way that it is full compatible with HWhile's syntax.
+
+The language was defined so that any tree input can be itself used as a conversion string.
+
+Any tree which can be displayed by HWhile can be used by this tree language.
+
+Check out the link:https://sonrad10.github.io/Whide/#/trees[Tree Viewer] for a demo of how the language works.
+
+=== Quick Reference
+
+Atoms:
+
+* `nil` - The empty tree
+* `any` - Display a tree "as-is"
+* `false` `true` - The trees `nil` and `<nil.nil>` respectively
+* `bool` `boolean` - Either `true` or `false` (`false|true`)
+* `0`, `1`, `2`, ... - The tree representing a specific number
+* `int` - any number (`0|1|2|...`)
+
+Modifiers:
+
+* `<Atom.Atom>` - Binary tree
+* `Atom[]` - List of `Atom`s
+* `[Atom,Atom,Atom]` - List of exactly 3 `Atom`s
+* `Atom|Atom` - Accept an atom of these types
+* `(Atom|Atom)` - Optional parentheses to specify type bindings
+
+Modifiers can be used to combine atoms to any depth:
+
+* `<int|any.bool>` - A tree where the left element is either a number or a generic tree
+* `(bool|int)[]` - Any list of booleans and integers
+* `[1, 2, 3, 4]` - Exclusively matches the list `[1,2,3,4]`
+* `<int.int>[]` - List of trees where both nodes are numbers
+* `int[][]` - A list of lists of numbers
+
+See https://github.com/sonrad10/whide-treeLang for more information and a context free grammar describing the language's syntax.
+
+For information about how the types are defined, see link:WHILE.adoc[].
+
+== Installing (For Developers)
 
 [#subsect:prerequisites]
 === Prerequisites
@@ -36,13 +94,11 @@ Preferably with SSH access configured;
 see link:{github-ssh}[GitHub's post] about requiring tokens for git operations.
 You can set up SSH access using link:{github-ssh-instructions}[these instructions].
 
-* link:{node}[Node.js 12.19 and NPM 6.14] - for running/compiling the code.
-+
-Once link:{electron}[Electron v12] comes out of beta, Node 14 can be supported here as well.
+* link:{node}[Node.js 12 and NPM 6] - for running/compiling the code.
 +
 After you have a version of npm installed, I recommend using the link:{n}[`n` package] to manage node/npm versions and updates.
 
-* link:{hwhile}[HWhile] - For running WHILE programs
+* (Optional) link:{hwhile}[HWhile] - For running WHILE programs
 
 [#subsect:installing]
 === Installing
@@ -92,22 +148,11 @@ npm install
 npm run electron:serve
 ----
 
-[#subsect:testing]
-== Running the tests
-
-Simply run the following command to run the tests:
-
-[source]
-----
-npm run test
-----
-
-Testing is done using the link:{mocha}[mocha] testing framework, and the link:{chai}[chai] assertion library.
-
 [#subsect:deployment]
 == Deployment
 
-To compile Whide into an executable file, run the following command:
+To compile Whide into executable binaries, run the following command.
+This will place the generated executables in the `+dist_electron/+` folder.
 
 [source]
 ----
@@ -116,7 +161,12 @@ npm run electron:build -- -lmw
 
 NOTE: `lmw` stands for **L**inux, **M**ac, and **W**indows; you may remove any of these depending on your desired result.
 
-This will place the generated executables in the `+dist_electron/+` folder.
+Additionally, the following command compiles the program into a version that can be hosted by a web server.
+
+[source]
+----
+npm run build
+----
 
 == Building the program icon
 
@@ -134,22 +184,12 @@ cp icon.ico ../public/favicon.ico
 
 NOTE: The `+makeicons+` script requires link:https://inkscape.org/[inkscape], link:https://imagemagick.org[imagemagick], and link:https://manpages.ubuntu.com/manpages/hirsute/en/man1/png2icns.1.html[png2icns] to be installed.
 
-[#subsect:program-information]
-== Program Information
-
-See the link:{wiki}[wiki] for more detailed information on how the editor works under  the hood.
-
-[#subsect:plugins]
-== Installing Plugins
-
-You can find a guide for writing and installing your own plugins in link:{wiki}/Example-Plugins.adoc[the wiki].
-
 [#subsect:buildTools]
 == Built With
 
-* Written in link:{node}[Node.js] and link:{https://www.typescriptlang.org/}[TypeScript].
+* Written in link:{node}[Node.js] and link:{https://www.typescriptlang.org/}[TypeScript]
 
-* Interface built with link:{vuejs}[Vue.js].
+* Interface built with link:{vuejs}[Vue.js] and link:{vuetify}[Vuetify]
 
 * Packaged as a desktop app with link:{electron}[Electron]
 
