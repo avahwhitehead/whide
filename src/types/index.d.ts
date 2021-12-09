@@ -1,7 +1,5 @@
 export { BinaryTree } from "@whide/hwhile-wrapper";
 
-export {
-	ExtendedBinaryTree,
-	Menu,
-	MenuItem,
-} from "./types";
+export { ExtendedBinaryTree } from "./ExtendedBinaryTree";
+export { Menu, MenuItem } from "./Menus";
+export { SettingsItem } from "./Settings";
