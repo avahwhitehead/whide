@@ -61,9 +61,9 @@
 		<v-main class="pa-0 fill-height overflow-hidden main-container">
 			<CodeEditorElement
 				class="top"
+				ref="codeEditor"
 				:class="{'full-height': !showRunPanel}"
 				:style="{'height': codeEditorHeight}"
-				@controller="onEditorControllerChange"
 			/>
 
 			<div class="bottom" ref="runPanel"
@@ -135,7 +135,7 @@ import ChangeRootPopup from "@/components/ChangeRootPopup.vue";
 import NewFilePopup from "@/components/NewFilePopup.vue";
 import DeleteFilePopup from "@/components/DeleteFilePopup.vue";
 //Other imports
-import { EditorController, IOController, Menu } from "@/types";
+import { Menu } from "@/types";
 import CodeMirror from "codemirror";
 import { HWhileDebugger, HWhileRunner } from "@/run/hwhile/HWhileRunConfiguration";
 import { WhileJsRunner } from "@/run/whilejs/WhileJsRunConfiguration";
@@ -146,6 +146,9 @@ import { FileInfoState } from "@/types/FileInfoState";
 import { MessageBoxOptions, OpenDialogReturnValue, SaveDialogReturnValue } from "electron";
 import path from "path";
 import { fs } from "@/files/fs";
+import { displayPad, ErrorType, parseProgram, toPad } from "whilejs";
+import { AST_PROG, AST_PROG_PARTIAL } from "whilejs/lib/types/ast";
+import { HWHILE_DISPLAY_FORMAT, ProgDataType } from "whilejs/lib/tools/progAsData";
 
 const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
@@ -154,8 +157,6 @@ const electron = (window['require'] !== undefined) ? require("electron") : undef
  */
 interface DataTypesDescriptor {
 	codeEditor? : CodeMirror.Editor;
-	editorController?: EditorController;
-	ioController? : IOController;
 	showChangeRootPopup: boolean;
 	showDeleteFilePopup: boolean;
 	showNewFilePopup: boolean;
@@ -180,8 +181,6 @@ export default Vue.extend({
 	},
 	data() : DataTypesDescriptor {
 		return {
-			editorController: undefined,
-			ioController: undefined,
 			showChangeRootPopup: false,
 			showDeleteFilePopup: false,
 			showNewFilePopup: false,
@@ -279,6 +278,19 @@ export default Vue.extend({
 					]
 				},
 				{
+					name: "Tools",
+					children: [
+						{
+							name: 'To Pure WHILE',
+							command: this.menu_to_pure_click,
+						},
+						{
+							name: 'To Programs as Data',
+							command: this.menu_to_pad_click,
+						},
+					]
+				},
+				{
 					name: "Help",
 					children: [
 						{
@@ -315,7 +327,10 @@ export default Vue.extend({
 		},
 		runners(): {name:string, runner:AbstractRunner}[] {
 			return this.$store.state.programRunners;
-		}
+		},
+		editorController(): any {
+			return this.$refs.codeEditor as (typeof CodeEditorElement);
+		},
 	},
 	destroyed() {
 		//Remove global event listeners before destroying the element
@@ -392,8 +407,7 @@ export default Vue.extend({
 			window.open(routeData.href, '_blank');
 		},
 		async openFile(filePath: string) : Promise<void> {
-			if (!this.editorController) throw new Error("Couldn't get editor controller instance");
-			this.editorController.open(filePath);
+			await this.editorController._openFile(filePath);
 		},
 		async runProgramClick() {
 			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
@@ -474,13 +488,9 @@ export default Vue.extend({
 				console.error(err)
 			}
 		},
-		onFileCreate(filePath: string, isFolder: boolean) {
-			if (this.editorController && !isFolder) {
-				this.editorController.open(filePath);
-			}
-		},
-		onEditorControllerChange(editorController : EditorController) : void {
-			this.editorController = editorController;
+		async onFileCreate(filePath: string, isFolder: boolean) {
+			if (isFolder) return;
+			await this.editorController._openFile(filePath);
 		},
 		dirChange(dir: string) {
 			//Change the working directory
@@ -508,7 +518,7 @@ export default Vue.extend({
 			if (isCtrl) {
 				if (e.key === 's') {
 					//Save files
-					this.editorController?.saveFiles();
+					this.editorController.saveAllFiles();
 				} else {
 					//Do nothing
 					return;
@@ -570,7 +580,7 @@ export default Vue.extend({
 			}
 		},
 		menu_save_click() {
-			this.editorController?.saveFiles();
+			this.editorController.saveAllFiles();
 		},
 		menu_delete_click() {
 			if (electron) {

@@ -67,10 +67,8 @@
 <script lang="ts">
 import Vue from "vue";
 import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
-import { EditorController as EditorControllerInterface, } from "@/types";
 import { FileInfoState } from "@/types/FileInfoState";
 import { CustomMirrorDoc } from "@/types/CustomMirrorDoc";
-import { EventEmitter } from "events";
 import VueDraggable from "vuedraggable";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { SortableEvent } from 'sortablejs';
@@ -101,7 +99,6 @@ const LIGHT_THEME = 'default';
 
 interface DataType {
 	editor: CodeMirror.Editor|undefined;
-	editorController: EditorControllerInterface|undefined;
 	openFiles: FileInfoState[];
 	errors: LineWidgetType[];
 	infos: LineWidgetType[];
@@ -141,27 +138,6 @@ function makeWidget(editor : CodeMirror.Editor, line: number|CodeMirror.LineHand
 	return lineWidget;
 }
 
-/**
- * Partially implemented EditorController object to allow controlling the editor from within plugins
- */
-abstract class EditorController extends EventEmitter implements EditorControllerInterface {
-	protected constructor() {
-		super();
-	}
-
-	abstract get editor() : CodeMirror.Editor;
-	abstract get focusedFile() : string|undefined;
-	abstract get openFiles() : string[];
-
-	abstract open(filePath: string) : Promise<void>;
-	abstract close(filePath: string) : Promise<void>;
-	abstract saveFiles() : Promise<void>;
-
-	abstract toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean) : void;
-
-	abstract getBreakpoints(): number[];
-}
-
 export default Vue.extend({
 	name: 'CodeEditorContainer',
 	components: {
@@ -177,7 +153,6 @@ export default Vue.extend({
 		return {
 			//The code editor object - undefined until the object is created in `mounted`
 			editor: undefined,
-			editorController: undefined,
 			openFiles: [],
 			errors: [],
 			infos: [],
@@ -215,7 +190,7 @@ export default Vue.extend({
 		//Toggle breakpoints when the gutter is clicked
 		this.editor.on("gutterClick", async (editor: CodeMirror.Editor, line: number|CodeMirror.LineHandle) => {
 			let doc = editor.getDoc() as CustomMirrorDoc;
-			that.toggleBreakpoint(doc, line);
+			this.toggleBreakpoint(doc, line);
 		});
 
 		//Mark the current tab as unsaved when the content is changed
@@ -227,44 +202,6 @@ export default Vue.extend({
 				this.saveAllFiles();
 			}, 5000);
 		});
-
-		//Create the editor controller object
-		const that = this;
-		this.editorController = new (class extends EditorController {
-			getBreakpoints(): number[] {
-				return (this.editor.getDoc() as CustomMirrorDoc).breakpoints;
-			}
-			toggleBreakpoint(line: number|CodeMirror.LineHandle, enabled?: boolean): void {
-				that.toggleBreakpoint(that.editor!.getDoc() as CustomMirrorDoc, line, enabled);
-			}
-			constructor() {
-				super();
-			}
-			get editor(): CodeMirror.Editor {
-				return codeMirror;
-			}
-			get focusedFile(): string|undefined {
-				if (that.currentFileState === undefined) return undefined;
-				return that.currentFileState.path;
-			}
-			get openFiles() : string[] {
-				return that.openFiles.map(t => t.path);
-			}
-			async close(filePath: string): Promise<void> {
-				let file: FileInfoState|undefined = that.openFiles.find(f => f.path === filePath);
-				if (!file) {
-					console.error(`File "${filePath}" is not open`);
-					return;
-				}
-				await that._closeTab(file);
-			}
-			async open(filePath: string): Promise<void> {
-				await that._openFile(filePath);
-			}
-			async saveFiles(): Promise<void> {
-				return that.saveAllFiles();
-			}
-		})();
 	},
 	beforeDestroy() {
 		// Close the current document in the editor before destroying this element
@@ -498,12 +435,6 @@ export default Vue.extend({
 				//Trigger a lint of the new content
 				this.triggerLint();
 			}
-		},
-		/**
-		 * Emit an event when the editor controller object changes
-		 */
-		editorController(newController) {
-			this.$emit("controller", newController);
 		},
 		allowExtended(allowExtended: boolean) {
 			if (this.editor) {
