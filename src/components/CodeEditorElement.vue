@@ -22,7 +22,16 @@
 			</v-card>
 		</draggable>
 
-		<div ref="codeHolder" class="codeHolder"></div>
+		<v-container class="pa-0 ma-0 fill-height">
+			<v-row class="fill-height" style="overflow-x: auto; max-width: 100%">
+				<v-col :cols="showSecondEditor?6:12" class="fill-height pt-0 pb-0">
+					<div ref="codeHolder" class="codeHolder fill-height" />
+				</v-col>
+				<v-col cols="6" class="fill-height pt-0 pb-0" :class="{'hidden': !showSecondEditor}">
+					<div ref="codeHolder2" class="codeHolder fill-height" />
+				</v-col>
+			</v-row>
+		</v-container>
 
 		<v-dialog
 			persistent
@@ -99,12 +108,14 @@ const LIGHT_THEME = 'default';
 
 interface DataType {
 	editor: CodeMirror.Editor|undefined;
+	editor2: CodeMirror.Editor|undefined;
 	openFiles: FileInfoState[];
 	errors: LineWidgetType[];
 	infos: LineWidgetType[];
 	warnings: LineWidgetType[];
 	showSaveDialog: boolean;
 	closingTab: FileInfoState|undefined;
+	secondEditorContent: string|undefined;
 }
 
 function addWidget(editor: CodeMirror.Editor, line: number|CodeMirror.LineHandle, element: HTMLElement) : CodeMirror.LineWidget {
@@ -151,14 +162,15 @@ export default Vue.extend({
 	},
 	data() : DataType {
 		return {
-			//The code editor object - undefined until the object is created in `mounted`
 			editor: undefined,
+			editor2: undefined,
 			openFiles: [],
 			errors: [],
 			infos: [],
 			warnings: [],
 			showSaveDialog: false,
 			closingTab: undefined,
+			secondEditorContent: undefined,
 		}
 	},
 	mounted() {
@@ -202,6 +214,19 @@ export default Vue.extend({
 				this.saveAllFiles();
 			}, 5000);
 		});
+
+		//Create the code editor in the div
+		let codeMirror2 : CodeMirror.Editor = CodeMirror(this.$refs.codeHolder2 as HTMLElement, {
+			lineNumbers: true,
+			gutters: ["CodeMirror-linenumbers", "CodeMirror-lint-markers"],
+			tabSize: 4,
+			value: "",
+			mode: WHILE,
+			theme: this.isDarkTheme ? DARK_THEME : LIGHT_THEME,
+			readOnly: true,
+		});
+		codeMirror2.setSize("100%", "100%");
+		this.editor2 = codeMirror2;
 	},
 	beforeDestroy() {
 		// Close the current document in the editor before destroying this element
@@ -235,16 +260,17 @@ export default Vue.extend({
 				this.$store.commit('openFiles.setFocused', val);
 			},
 		},
-		currentFileState: {
-			get(): FileInfoState|undefined {
-				if (this.currentTab === -1) return undefined;
-				return this.openFiles[this.currentTab];
-			},
+		currentFileState(): FileInfoState|undefined {
+			if (this.currentTab === -1) return undefined;
+			return this.openFiles[this.currentTab];
 		},
 		allowExtended(): boolean {
 			if (this.currentFileState === undefined) return true;
 			return this.currentFileState.extWhile;
 		},
+		showSecondEditor(): boolean {
+			return this.secondEditorContent !== undefined;
+		}
 	},
 	methods: {
 		onDragEnd(event: SortableEvent): any {
@@ -414,14 +440,22 @@ export default Vue.extend({
 
 		async saveAllFiles(): Promise<void> {
 			for (let t of this.openFiles) await this._saveFile(t);
+		},
+
+		_onFileStateSecondEditorChange(val: string|undefined) {
+			this.secondEditorContent = val;
 		}
 	},
 	watch: {
 		editor(new_val) {
 			this.$emit("editorChange", new_val);
 		},
-		currentFileState(currentFileState: FileInfoState|undefined) {
+		currentFileState(currentFileState: FileInfoState|undefined, oldFileState: FileInfoState|undefined) {
 			if (!this.editor) throw new Error("Couldn't get code editor");
+
+			oldFileState?.off('secondEditorContent', this._onFileStateSecondEditorChange);
+			this.secondEditorContent = undefined;
+			currentFileState?.on('secondEditorContent', this._onFileStateSecondEditorChange);
 
 			if (currentFileState === undefined) {
 				//Prevent writing in the editor if there are no files open
@@ -432,6 +466,7 @@ export default Vue.extend({
 				//Load the new tab's content into the editor
 				this.editor.swapDoc(currentFileState.doc);
 				this.editor.setOption('readOnly', false);
+				this.secondEditorContent = currentFileState.secondEditorContent;
 				//Trigger a lint of the new content
 				this.triggerLint();
 			}
@@ -454,7 +489,18 @@ export default Vue.extend({
 			if (this.currentTab >= openFiles.length) {
 				this.currentTab = openFiles.length - 1;
 			}
-		}
+		},
+		secondEditorContent(secondEditorContent: string|undefined) {
+			if (secondEditorContent !== undefined)
+			this.editor2?.getDoc().setValue(secondEditorContent)
+		},
+		showSecondEditor(showSecondEditor: boolean) {
+			if (showSecondEditor) {
+				this.$nextTick(() => {
+					this.editor2?.refresh();
+				})
+			}
+		},
 	}
 });
 </script>
@@ -506,5 +552,9 @@ export default Vue.extend({
 	width: 100%;
 	/*Scroll the editor*/
 	overflow-y: auto;
+}
+
+.hidden {
+	display: none;
 }
 </style>

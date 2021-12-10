@@ -1,4 +1,5 @@
 import { CustomMirrorDoc, CustomMirrorDocOptions } from "@/types/CustomMirrorDoc";
+import EventEmitter from "events";
 
 /**
  * Configuration options for creating a {@link FileInfoState} object.
@@ -28,7 +29,7 @@ export type FileInfoStateOptions = Partial<{
 /**
  * Information about a file opened in an editor tab.
  */
-export class FileInfoState {
+export class FileInfoState extends EventEmitter {
     /**
      * The CodeMirror Doc object containing the file content
      * @private
@@ -55,12 +56,16 @@ export class FileInfoState {
      */
     private _extWhile: boolean;
 
+    private _secondEditorContent: string|undefined;
+
     /**
      * @param name      Name of the file
      * @param path      Path to the file
      * @param options   (Optional) configuration objects for the file
      */
     constructor(name: string, path: string, options?: FileInfoStateOptions) {
+        super();
+
         if (!options) options = {
             extWhile: true,
             modified: false,
@@ -82,18 +87,21 @@ export class FileInfoState {
     }
     set name(value: string) {
         this._name = value;
+        this.emit('name', value);
     }
     get modified(): boolean {
         return this._modified;
     }
     set modified(value: boolean) {
         this._modified = value;
+        this.emit('modified', value);
     }
     get doc(): CustomMirrorDoc {
         return this._doc;
     }
     set doc(value: CustomMirrorDoc) {
         this._doc = value;
+        this.emit('doc', value);
     }
 
     /**
@@ -109,6 +117,7 @@ export class FileInfoState {
     }
     set path(value: string) {
         this._path = value;
+        this.emit('path', value);
     }
 
     get extWhile(): boolean {
@@ -116,5 +125,15 @@ export class FileInfoState {
     }
     set extWhile(value: boolean) {
         this._extWhile = value;
+        this.emit('extWhile', value);
+    }
+
+    get secondEditorContent(): string|undefined {
+        return this._secondEditorContent;
+    }
+
+    set secondEditorContent(value: string|undefined) {
+        this._secondEditorContent = value;
+        this.emit('secondEditorContent', value);
     }
 }

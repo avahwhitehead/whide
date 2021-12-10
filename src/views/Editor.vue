@@ -91,6 +91,11 @@
 				:disabled="focusedFile === undefined"
 			/>
 
+			<v-radio-group v-model="secondEditorContentModel" dense :disabled="!focusedFile">
+				<v-radio value="NOTHING" label="Nothing" />
+				<v-radio value="SHOW_PAD" label="Show Prog as Data" />
+			</v-radio-group>
+
 			<v-btn
 				absolute
 				left
@@ -165,6 +170,7 @@ interface DataTypesDescriptor {
 	showPopout: boolean|undefined;
 	fileViewerWidth: number;
 	runPanelHeight: number;
+	secondEditorContentModel: string;
 }
 
 export default Vue.extend({
@@ -189,6 +195,7 @@ export default Vue.extend({
 			showPopout: undefined,
 			fileViewerWidth: 200,
 			runPanelHeight: 200,
+			secondEditorContentModel: 'NOTHING',
 		}
 	},
 	computed: {
@@ -278,6 +285,15 @@ export default Vue.extend({
 					]
 				},
 				{
+					name: "Tools",
+					children: [
+						{
+							name: 'To Programs as Data',
+							command: this.menu_to_pad_click,
+						},
+					]
+				},
+				{
 					name: "Help",
 					children: [
 						{
@@ -330,6 +346,7 @@ export default Vue.extend({
 			electron.ipcRenderer.off('file.settings', this.menu_settings_click);
 			electron.ipcRenderer.off('about.help', this.menu_help_about_click);
 			electron.ipcRenderer.off('about.privacy', this.menu_help_privacy_click);
+			electron.ipcRenderer.off('tools.to-pad', this.menu_to_pad_click);
 		} else {
 			window.removeEventListener('keydown', this.handleKeypress);
 		}
@@ -346,6 +363,7 @@ export default Vue.extend({
 			electron.ipcRenderer.on('file.settings', this.menu_settings_click);
 			electron.ipcRenderer.on('about.help', this.menu_help_about_click);
 			electron.ipcRenderer.on('about.privacy', this.menu_help_privacy_click);
+			electron.ipcRenderer.on('tools.to-pad', this.menu_to_pad_click);
 		} else {
 			//Handler for keypress events
 			window.addEventListener('keydown', this.handleKeypress);
@@ -626,6 +644,32 @@ export default Vue.extend({
 			window.open(routeData.href, '_blank',`width=1000px,height=700px,location=no`);
 		},
 
+		menu_to_pad_click(): void {
+			//TODO: Better way to output problems here
+			if (!this.focusedFile) {
+				alert("Open a program to convert it to Programs-as-Data form");
+				return;
+			}
+
+			//Attempt to parse the program
+			const [prog, err]: [AST_PROG|AST_PROG_PARTIAL, ErrorType[]] = parseProgram(this.focusedFile.doc.getValue());
+			if (!prog.complete) {
+				//Error if parsing failed
+				let es = '';
+				for (let i = 0; i < err.length; i++) {
+					es += `\nError on line ${err[i].position.col} at position ${err[i].position.row}: ${err[i].message}`;
+				}
+				alert(`Program could not be parsed properly: ${es}`);
+				return;
+			}
+
+			//Convert the program to Prog as Data form
+			const pad: ProgDataType = toPad(prog);
+
+			//Display the result
+			this.focusedFile.secondEditorContent = displayPad(pad, HWHILE_DISPLAY_FORMAT);
+		},
+
 		showSettingsPopup(): void {
 			let routeData = this.$router.resolve({ path: '/settings' });
 			window.open(routeData.href, '_blank',`width=800px,height=400px,location=no`);
@@ -655,6 +699,20 @@ export default Vue.extend({
 			else if (this.chosenRunConfig === undefined)
 				this.chosenRunConfig = val[0];
 		},
+		secondEditorContentModel(secondEditorContentModel: string) {
+			if (!this.focusedFile) return;
+
+			if (secondEditorContentModel === 'NOTHING') {
+				this.focusedFile.secondEditorContent = undefined;
+			} else if (secondEditorContentModel === 'SHOW_PAD') {
+				this.menu_to_pad_click();
+			}
+		},
+		focusedFile(focusedFile: FileInfoState|undefined) {
+			if (!focusedFile) {
+				this.secondEditorContentModel = 'NOTHING';
+			}
+		}
 	}
 });
 </script>

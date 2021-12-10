@@ -86,6 +86,7 @@ export function makeElectronMenus(webContents: WebContents, isMac: boolean): Men
 			]) as MenuItemConstructorOptions[]
 		]
 	};
+
 	const viewMenu: MenuItemConstructorOptions = {
 		label: 'View',
 		// role: 'viewMenu',
@@ -118,6 +119,19 @@ export function makeElectronMenus(webContents: WebContents, isMac: boolean): Men
 			]) as MenuItemConstructorOptions[],
 		]
 	};
+
+	const toolsMenu: MenuItemConstructorOptions = {
+		label: 'Tools',
+		submenu: [
+			{
+				label: 'To Programs as Data',
+				click() {
+					webContents.send('tools.to-pad');
+				}
+			},
+		]
+	};
+
 	const helpMenu: MenuItemConstructorOptions = {
 		role: 'help',
 		submenu: [
@@ -147,6 +161,7 @@ export function makeElectronMenus(webContents: WebContents, isMac: boolean): Men
 		editMenu,
 		viewMenu,
 		windowMenu,
+		toolsMenu,
 		helpMenu,
 	];
 	if (isMac) menuTemplate.splice(0, 0, macMenu);
