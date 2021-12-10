@@ -152,7 +152,7 @@ import { FileInfoState } from "@/types/FileInfoState";
 import { MessageBoxOptions, OpenDialogReturnValue, SaveDialogReturnValue } from "electron";
 import path from "path";
 import { fs } from "@/files/fs";
-import { displayPad, ErrorType, MacroManager, parseProgram, ProgramManager, toPad } from "whilejs";
+import { displayPad, ErrorType, MacroManager, parseProgram, ProgramManager } from "whilejs";
 import { AST_PROG, AST_PROG_PARTIAL } from "whilejs/lib/types/ast";
 import { HWHILE_DISPLAY_FORMAT, ProgDataType } from "whilejs/lib/tools/progAsData";
 import { ENCODING_UTF8 } from "memfs/lib/encoding";
@@ -652,7 +652,7 @@ export default Vue.extend({
 			window.open(routeData.href, '_blank',`width=1000px,height=700px,location=no`);
 		},
 
-		menu_to_pad_click(): void {
+		async menu_to_pad_click(): Promise<void> {
 			//TODO: Better way to output problems here
 			if (!this.focusedFile) {
 				alert("Open a program to convert it to Programs-as-Data form");
@@ -660,19 +660,40 @@ export default Vue.extend({
 			}
 
 			//Attempt to parse the program
-			const [prog, err]: [AST_PROG|AST_PROG_PARTIAL, ErrorType[]] = parseProgram(this.focusedFile.doc.getValue());
-			if (!prog.complete) {
-				//Error if parsing failed
-				let es = '';
-				for (let i = 0; i < err.length; i++) {
-					es += `\nError on line ${err[i].position.col} at position ${err[i].position.row}: ${err[i].message}`;
-				}
-				alert(`Program could not be parsed properly: ${es}`);
+			const [prog, err]: [AST_PROG|null, string|null] = this._parseProgram(
+				this.focusedFile.doc.getValue(),
+				this.focusedFile.name
+			)
+			if (!prog) {
+				alert(err);
 				return;
 			}
 
-			//Convert the program to Prog as Data form
-			const pad: ProgDataType = toPad(prog);
+			//Load all the macros linked by the program
+			let macroManager = new MacroManager(prog);
+			while (macroManager.hasUnregistered) {
+				const macro: string = macroManager.getNextUnregistered()!;
+				const filePath = path.join(path.dirname(this.focusedFile.path), macro + '.while');
+				if (!fs.existsSync(filePath)) {
+					alert("Couldn't find macro " + filePath);
+					return;
+				}
+				//Parse the macro program
+				let progStr: string = await fs.promises.readFile(filePath, { encoding: ENCODING_UTF8 });
+				const [ast, err]: [AST_PROG|null, string|null] = this._parseProgram(progStr, filePath);
+				if (!ast) {
+					alert(err);
+					return;
+				}
+				//Register the macro in the manager
+				macroManager.register(ast);
+			}
+
+			//Convert the program to Pure WHILE, ready for conversion
+			let progManager: ProgramManager = new ProgramManager(prog).toPure(macroManager.macros);
+
+			//Convert to Prog as Data form
+			const pad: ProgDataType = progManager.toPad();
 
 			//Display the result
 			this.focusedFile.secondEditorContent = displayPad(pad, HWHILE_DISPLAY_FORMAT);
