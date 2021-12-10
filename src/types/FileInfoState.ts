@@ -57,6 +57,7 @@ export class FileInfoState extends EventEmitter {
     private _extWhile: boolean;
 
     private _secondEditorContent: string|undefined;
+    private _secondEditorDisplayMode: 'NOTHING'|'PURE_WHILE'|'SHOW_PAD';
 
     /**
      * @param name      Name of the file
@@ -77,6 +78,8 @@ export class FileInfoState extends EventEmitter {
         this._path = path;
         this._modified = (options.modified !== undefined) ? options.modified : false;
         this._extWhile = (options.extWhile === undefined) ? true : options.extWhile;
+
+        this._secondEditorDisplayMode = 'NOTHING';
 
         //Create a new CodeMirror Doc
         this._doc = new CustomMirrorDoc(options.docOptions?.text || '', this, options.docOptions);
@@ -131,9 +134,16 @@ export class FileInfoState extends EventEmitter {
     get secondEditorContent(): string|undefined {
         return this._secondEditorContent;
     }
-
     set secondEditorContent(value: string|undefined) {
         this._secondEditorContent = value;
         this.emit('secondEditorContent', value);
+    }
+
+    get secondEditorDisplayMode(): 'NOTHING'|'PURE_WHILE'|'SHOW_PAD' {
+        return this._secondEditorDisplayMode;
+    }
+    set secondEditorDisplayMode(value: 'NOTHING'|'PURE_WHILE'|'SHOW_PAD') {
+        this._secondEditorDisplayMode = value;
+        this.emit('secondEditorDisplayMode', value);
     }
 }
