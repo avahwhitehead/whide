@@ -129,6 +129,12 @@ export function makeElectronMenus(webContents: WebContents, isMac: boolean): Men
 					webContents.send('tools.to-pad');
 				}
 			},
+			{
+				label: 'To Pure WHILE',
+				click() {
+					webContents.send('tools.to-pure');
+				}
+			},
 		]
 	};
 

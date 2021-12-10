@@ -93,6 +93,7 @@
 
 			<v-radio-group v-model="secondEditorContentModel" dense :disabled="!focusedFile">
 				<v-radio value="NOTHING" label="Nothing" />
+				<v-radio value="PURE_WHILE" label="Show Pure WHILE" />
 				<v-radio value="SHOW_PAD" label="Show Prog as Data" />
 			</v-radio-group>
 
@@ -151,9 +152,10 @@ import { FileInfoState } from "@/types/FileInfoState";
 import { MessageBoxOptions, OpenDialogReturnValue, SaveDialogReturnValue } from "electron";
 import path from "path";
 import { fs } from "@/files/fs";
-import { displayPad, ErrorType, parseProgram, toPad } from "whilejs";
+import { displayPad, ErrorType, MacroManager, parseProgram, ProgramManager, toPad } from "whilejs";
 import { AST_PROG, AST_PROG_PARTIAL } from "whilejs/lib/types/ast";
 import { HWHILE_DISPLAY_FORMAT, ProgDataType } from "whilejs/lib/tools/progAsData";
+import { ENCODING_UTF8 } from "memfs/lib/encoding";
 
 const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
@@ -291,6 +293,10 @@ export default Vue.extend({
 							name: 'To Programs as Data',
 							command: this.menu_to_pad_click,
 						},
+						{
+							name: 'To Pure WHILE',
+							command: this.menu_to_pure_click,
+						},
 					]
 				},
 				{
@@ -347,6 +353,7 @@ export default Vue.extend({
 			electron.ipcRenderer.off('about.help', this.menu_help_about_click);
 			electron.ipcRenderer.off('about.privacy', this.menu_help_privacy_click);
 			electron.ipcRenderer.off('tools.to-pad', this.menu_to_pad_click);
+			electron.ipcRenderer.off('tools.to-pure', this.menu_to_pure_click);
 		} else {
 			window.removeEventListener('keydown', this.handleKeypress);
 		}
@@ -364,6 +371,7 @@ export default Vue.extend({
 			electron.ipcRenderer.on('about.help', this.menu_help_about_click);
 			electron.ipcRenderer.on('about.privacy', this.menu_help_privacy_click);
 			electron.ipcRenderer.on('tools.to-pad', this.menu_to_pad_click);
+			electron.ipcRenderer.on('tools.to-pure', this.menu_to_pure_click);
 		} else {
 			//Handler for keypress events
 			window.addEventListener('keydown', this.handleKeypress);
@@ -670,6 +678,51 @@ export default Vue.extend({
 			this.focusedFile.secondEditorContent = displayPad(pad, HWHILE_DISPLAY_FORMAT);
 		},
 
+		async menu_to_pure_click(): Promise<void> {
+			//TODO: Better way to output problems here
+			if (!this.focusedFile) {
+				alert("Open a program to convert it to Pure WHILE");
+				return;
+			}
+
+			//Attempt to parse the program
+			const [prog, err]: [AST_PROG|null, string|null] = this._parseProgram(
+				this.focusedFile.doc.getValue(),
+				this.focusedFile.name
+			)
+			if (!prog) {
+				alert(err);
+				return;
+			}
+
+			//Load all the macros linked by the program
+			let macroManager = new MacroManager(prog);
+			while (macroManager.hasUnregistered) {
+				const macro: string = macroManager.getNextUnregistered()!;
+				const filePath = path.join(path.dirname(this.focusedFile.path), macro + '.while');
+				if (!fs.existsSync(filePath)) {
+					alert("Couldn't find macro " + filePath);
+					return;
+				}
+				//Parse the macro program
+				let progStr: string = await fs.promises.readFile(filePath, { encoding: ENCODING_UTF8 });
+				const [ast, err]: [AST_PROG|null, string|null] = this._parseProgram(progStr, filePath);
+				if (!ast) {
+					alert(err);
+					return;
+				}
+				//Register the macro in the manager
+				macroManager.register(ast);
+			}
+
+			//Convert the program to Pure WHILE
+			let progManager: ProgramManager = new ProgramManager(prog);
+			progManager.toPure(macroManager.macros);
+
+			//Display the result
+			this.focusedFile.secondEditorContent = progManager.displayProgram();
+		},
+
 		showSettingsPopup(): void {
 			let routeData = this.$router.resolve({ path: '/settings' });
 			window.open(routeData.href, '_blank',`width=800px,height=400px,location=no`);
@@ -690,7 +743,20 @@ export default Vue.extend({
 				prog: path.basename(prog).split(/\./)[0],
 				line: line,
 			}));
-		}
+		},
+
+		_parseProgram(progStr: string, fileName: string): [AST_PROG, null]|[null, string] {
+			const [ast, err]: [AST_PROG|AST_PROG_PARTIAL, ErrorType[]] = parseProgram(progStr);
+			if (!ast.complete) {
+				//Error if parsing failed
+				let es = `Failed to parse program in file ${fileName}:`;
+				for (let i = 0; i < err.length; i++) {
+					es += `\nError on line ${err[i].position.col} at position ${err[i].position.row}: ${err[i].message}`;
+				}
+				return [null, es];
+			}
+			return [ast, null];
+		},
 	},
 	watch: {
 		runConfigs(val: RunConfiguration[]) {
@@ -706,6 +772,8 @@ export default Vue.extend({
 				this.focusedFile.secondEditorContent = undefined;
 			} else if (secondEditorContentModel === 'SHOW_PAD') {
 				this.menu_to_pad_click();
+			} else if (secondEditorContentModel === 'PURE_WHILE') {
+				this.menu_to_pure_click();
 			}
 		},
 		focusedFile(focusedFile: FileInfoState|undefined) {
