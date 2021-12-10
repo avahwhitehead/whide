@@ -278,19 +278,6 @@ export default Vue.extend({
 					]
 				},
 				{
-					name: "Tools",
-					children: [
-						{
-							name: 'To Pure WHILE',
-							command: this.menu_to_pure_click,
-						},
-						{
-							name: 'To Programs as Data',
-							command: this.menu_to_pad_click,
-						},
-					]
-				},
-				{
 					name: "Help",
 					children: [
 						{
