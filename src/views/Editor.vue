@@ -172,7 +172,6 @@ interface DataTypesDescriptor {
 	showPopout: boolean|undefined;
 	fileViewerWidth: number;
 	runPanelHeight: number;
-	secondEditorContentModel: string;
 }
 
 export default Vue.extend({
@@ -197,7 +196,6 @@ export default Vue.extend({
 			showPopout: undefined,
 			fileViewerWidth: 200,
 			runPanelHeight: 200,
-			secondEditorContentModel: 'NOTHING',
 		}
 	},
 	computed: {
@@ -340,6 +338,16 @@ export default Vue.extend({
 		editorController(): any {
 			return this.$refs.codeEditor as (typeof CodeEditorElement);
 		},
+		secondEditorContentModel: {
+			get(): 'NOTHING'|'PURE_WHILE'|'SHOW_PAD' {
+				return this.focusedFile?.secondEditorDisplayMode || 'NOTHING';
+			},
+			set(val: 'NOTHING'|'PURE_WHILE'|'SHOW_PAD') {
+				if (this.focusedFile){
+					this.focusedFile.secondEditorDisplayMode = val;
+				}
+			},
+		}
 	},
 	destroyed() {
 		//Remove global event listeners before destroying the element
