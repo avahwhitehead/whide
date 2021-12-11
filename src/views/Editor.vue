@@ -125,6 +125,12 @@
 			v-model="showDeleteFilePopup"
 			v-if="isNotElectron"
 		/>
+
+		<v-dialog v-model="progErrPopupVisible">
+			<v-card style="white-space: pre; text-align: left;">
+				<code v-text="progErrPopupContent" />
+			</v-card>
+		</v-dialog>
 	</div>
 </template>
 
@@ -152,10 +158,10 @@ import { FileInfoState } from "@/types/FileInfoState";
 import { MessageBoxOptions, OpenDialogReturnValue, SaveDialogReturnValue } from "electron";
 import path from "path";
 import { fs } from "@/files/fs";
-import { displayPad, ErrorType, MacroManager, parseProgram, ProgramManager } from "whilejs";
+import { displayPad, ErrorType, parseProgram, ProgramManager } from "whilejs";
 import { AST_PROG, AST_PROG_PARTIAL } from "whilejs/lib/types/ast";
 import { HWHILE_DISPLAY_FORMAT, ProgDataType } from "whilejs/lib/tools/progAsData";
-import { ENCODING_UTF8 } from "memfs/lib/encoding";
+import { prog_to_pure_while } from "@/utils/program_converters";
 
 const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
@@ -172,6 +178,8 @@ interface DataTypesDescriptor {
 	showPopout: boolean|undefined;
 	fileViewerWidth: number;
 	runPanelHeight: number;
+	progErrPopupVisible: boolean;
+	progErrPopupContent: string;
 }
 
 export default Vue.extend({
@@ -196,6 +204,8 @@ export default Vue.extend({
 			showPopout: undefined,
 			fileViewerWidth: 200,
 			runPanelHeight: 200,
+			progErrPopupVisible: false,
+			progErrPopupContent: '',
 		}
 	},
 	computed: {
@@ -663,93 +673,50 @@ export default Vue.extend({
 		async menu_to_pad_click(): Promise<void> {
 			//TODO: Better way to output problems here
 			if (!this.focusedFile) {
-				alert("Open a program to convert it to Programs-as-Data form");
+				this.progErrPopupContent = "Open a program to convert it to Programs-as-Data form";
+				this.progErrPopupVisible = true;
 				return;
 			}
 
-			//Attempt to parse the program
-			const [prog, err]: [AST_PROG|null, string|null] = this._parseProgram(
+			//Convert the program to pure WHILE ready for the PaD conversion
+			const [progMgr, err]: [ProgramManager|null,null|string] = await prog_to_pure_while(
 				this.focusedFile.doc.getValue(),
-				this.focusedFile.name
-			)
-			if (!prog) {
-				alert(err);
+				this.focusedFile.name,
+				path.dirname(this.focusedFile.path)
+			);
+			if (err) {
+				this.progErrPopupContent = err;
+				this.progErrPopupVisible = true;
 				return;
 			}
-
-			//Load all the macros linked by the program
-			let macroManager = new MacroManager(prog);
-			while (macroManager.hasUnregistered) {
-				const macro: string = macroManager.getNextUnregistered()!;
-				const filePath = path.join(path.dirname(this.focusedFile.path), macro + '.while');
-				if (!fs.existsSync(filePath)) {
-					alert("Couldn't find macro " + filePath);
-					return;
-				}
-				//Parse the macro program
-				let progStr: string = await fs.promises.readFile(filePath, { encoding: ENCODING_UTF8 });
-				const [ast, err]: [AST_PROG|null, string|null] = this._parseProgram(progStr, filePath);
-				if (!ast) {
-					alert(err);
-					return;
-				}
-				//Register the macro in the manager
-				macroManager.register(ast);
-			}
-
-			//Convert the program to Pure WHILE, ready for conversion
-			let progManager: ProgramManager = new ProgramManager(prog).toPure(macroManager.macros);
-
-			//Convert to Prog as Data form
-			const pad: ProgDataType = progManager.toPad();
 
 			//Display the result
+			const pad: ProgDataType = progMgr!.toPad();
 			this.focusedFile.secondEditorContent = displayPad(pad, HWHILE_DISPLAY_FORMAT);
 		},
 
 		async menu_to_pure_click(): Promise<void> {
 			//TODO: Better way to output problems here
 			if (!this.focusedFile) {
-				alert("Open a program to convert it to Pure WHILE");
+				this.progErrPopupContent = "Open a program to convert it to Programs-as-Data form";
+				this.progErrPopupVisible = true;
 				return;
 			}
 
-			//Attempt to parse the program
-			const [prog, err]: [AST_PROG|null, string|null] = this._parseProgram(
+			//Convert the program to pure WHILE
+			const [progMgr, err]: [ProgramManager|null,null|string] = await prog_to_pure_while(
 				this.focusedFile.doc.getValue(),
-				this.focusedFile.name
-			)
-			if (!prog) {
-				alert(err);
+				this.focusedFile.name,
+				path.dirname(this.focusedFile.path)
+			);
+			if (err) {
+				this.progErrPopupContent = err;
+				this.progErrPopupVisible = true;
 				return;
 			}
-
-			//Load all the macros linked by the program
-			let macroManager = new MacroManager(prog);
-			while (macroManager.hasUnregistered) {
-				const macro: string = macroManager.getNextUnregistered()!;
-				const filePath = path.join(path.dirname(this.focusedFile.path), macro + '.while');
-				if (!fs.existsSync(filePath)) {
-					alert("Couldn't find macro " + filePath);
-					return;
-				}
-				//Parse the macro program
-				let progStr: string = await fs.promises.readFile(filePath, { encoding: ENCODING_UTF8 });
-				const [ast, err]: [AST_PROG|null, string|null] = this._parseProgram(progStr, filePath);
-				if (!ast) {
-					alert(err);
-					return;
-				}
-				//Register the macro in the manager
-				macroManager.register(ast);
-			}
-
-			//Convert the program to Pure WHILE
-			let progManager: ProgramManager = new ProgramManager(prog);
-			progManager.toPure(macroManager.macros);
 
 			//Display the result
-			this.focusedFile.secondEditorContent = progManager.displayProgram();
+			this.focusedFile.secondEditorContent = progMgr!.displayProgram();
 		},
 
 		showSettingsPopup(): void {
