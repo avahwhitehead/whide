@@ -671,6 +671,8 @@ export default Vue.extend({
 		},
 
 		async menu_to_pad_click(): Promise<void> {
+			this.secondEditorContentModel = 'SHOW_PAD';
+
 			//TODO: Better way to output problems here
 			if (!this.focusedFile) {
 				this.progErrPopupContent = "Open a program to convert it to Programs-as-Data form";
@@ -696,6 +698,8 @@ export default Vue.extend({
 		},
 
 		async menu_to_pure_click(): Promise<void> {
+			this.secondEditorContentModel = 'PURE_WHILE';
+
 			//TODO: Better way to output problems here
 			if (!this.focusedFile) {
 				this.progErrPopupContent = "Open a program to convert it to Programs-as-Data form";
