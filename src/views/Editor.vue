@@ -85,14 +85,15 @@
 
 			<div class="title pt-2 pb-0">Options</div>
 			<v-switch
-				class="mt-0"
+				class="mt-0 pt-0 remove-messages"
 				ref="pureWhileToggle"
 				v-model="extendedWhile"
-				:label="`${extendedWhile ? 'Extended' : 'Pure'} WHILE`"
+				:label="`${extendedWhile ? 'Extended' : 'Pure'} Parser`"
 				:disabled="focusedFile === undefined"
+				title="If enabled, extended WHILE syntax is allowed in the program code. Otherwise only pure WHILE syntax."
 			/>
 
-			<v-radio-group v-model="secondEditorContentModel" dense :disabled="!focusedFile">
+			<v-radio-group class="remove-messages mt-0" v-model="secondEditorContentModel" dense :disabled="!focusedFile" label="Tools:">
 				<v-radio value="NOTHING" label="Nothing" />
 				<v-radio value="PURE_WHILE" label="Show Pure WHILE" />
 				<v-radio value="SHOW_PAD" label="Show Prog as Data" />
@@ -817,6 +818,10 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 
 .v-navigation-drawer--mini-variant, .v-navigation-drawer {
 	overflow: visible !important;
+}
+
+.remove-messages .v-messages {
+	display: none;
 }
 </style>
 
