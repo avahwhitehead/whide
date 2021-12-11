@@ -22,13 +22,25 @@
 			</v-card>
 		</draggable>
 
-		<v-container class="pa-0 ma-0 fill-height">
-			<v-row class="fill-height" style="overflow-x: auto; max-width: 100%">
-				<v-col :cols="showSecondEditor?6:12" class="fill-height pt-0 pb-0">
+		<v-container class="pa-0 ma-0 editor-container">
+			<v-row class="fill-height ma-0">
+				<v-col :cols="showSecondEditor?6:12" class="fill-height pa-0 editor-col">
 					<div ref="codeHolder" class="codeHolder fill-height" />
 				</v-col>
-				<v-col cols="6" class="fill-height pt-0 pb-0" :class="{'hidden': !showSecondEditor}">
+
+				<v-divider vertical />
+
+				<v-col :cols="6" class="fill-height pa-0 editor-col" :class="{'hidden': !showSecondEditor}">
 					<div ref="codeHolder2" class="codeHolder fill-height" />
+
+					<v-divider />
+
+					<div class="pa-0 errorHolder" v-if="showErrorList">
+						<div v-for="(e,i) in errorList" :key="i" class="errorLine">
+							<v-icon class="errorIcon">fa-times-circle</v-icon>
+							<span class="errorText">{{ e }}</span>
+						</div>
+					</div>
 				</v-col>
 			</v-row>
 		</v-container>
@@ -150,7 +162,7 @@ function makeWidget(editor : CodeMirror.Editor, line: number|CodeMirror.LineHand
 }
 
 export default Vue.extend({
-	name: 'CodeEditorContainer',
+	name: 'Codeeditor-container',
 	components: {
 		draggable: VueDraggable
 	},
@@ -270,7 +282,13 @@ export default Vue.extend({
 			return this.currentFileState.extWhile;
 		},
 		showSecondEditor(): boolean {
-			return this.secondEditorContent !== undefined;
+			return this.secondEditorContent !== undefined || this.errorList.length > 0;
+		},
+		errorList(): string[] {
+			return this.currentFileState?.secondEditorErrorList || [];
+		},
+		showErrorList(): boolean {
+			return this.showSecondEditor && this.errorList.length > 0;
 		}
 	},
 	methods: {
@@ -530,12 +548,31 @@ export default Vue.extend({
 	/*Fill the available width*/
 	width: 100%;
 	/*Don't scroll with the tabs*/
+	overflow-y: hidden !important;
+}
+
+.editor-container {
+	flex: 1;
 	overflow-y: hidden;
 }
 
-.tabs {
-	/*By default v-tabs grows with flex 1*/
-	flex: 0;
+.editor-col {
+	display: flex;
+	flex-direction: column;
+	overflow: auto !important;
+}
+
+.errorHolder {
+	flex: 1;
+	max-height: 10em;
+	overflow-y: auto;
+	width: 100%;
+	text-align: left;
+}
+
+.errorLine > .errorIcon {
+	color: #BB0000;
+	margin-right: 10px;
 }
 
 .tab-close {

@@ -59,6 +59,7 @@ export class FileInfoState extends EventEmitter {
     private _secondEditorContent: string|undefined;
     private _secondEditorDisplayMode: 'NOTHING'|'PURE_WHILE'|'SHOW_PAD';
     private _secondEditorLiveMode: boolean;
+    private _secondEditorErrorList: string[];
 
     /**
      * @param name      Name of the file
@@ -81,7 +82,8 @@ export class FileInfoState extends EventEmitter {
         this._extWhile = (options.extWhile === undefined) ? true : options.extWhile;
 
         this._secondEditorDisplayMode = 'NOTHING';
-        this._secondEditorLiveMode = false;
+        this._secondEditorLiveMode = true;
+        this._secondEditorErrorList = [];
 
         //Create a new CodeMirror Doc
         this._doc = new CustomMirrorDoc(options.docOptions?.text || '', this, options.docOptions);
@@ -155,5 +157,13 @@ export class FileInfoState extends EventEmitter {
     set secondEditorLiveMode(value: boolean) {
         this._secondEditorLiveMode = value;
         this.emit('secondEditorLiveMode', value);
+    }
+
+    get secondEditorErrorList(): string[] {
+        return this._secondEditorErrorList
+    }
+    set secondEditorErrorList(value: string[]) {
+        this._secondEditorErrorList = value;
+        this.emit('secondEditorErrorList', value);
     }
 }

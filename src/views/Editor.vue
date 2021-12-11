@@ -113,7 +113,7 @@
 				min-width="5px"
 				width="5px"
 				@click="showPopout = !showPopout"
-				:style="{top: '8%', transform:'translateX(-150%)', visibility: 'visible !important'}"
+				:style="{top: '0', transform:'translateX(-150%)', visibility: 'visible !important', 'z-index': 100}"
 			>
 				<FontAwesomeIcon :icon="showPopout ? 'angle-right' : 'angle-left'"/>
 			</v-btn>
@@ -368,7 +368,8 @@ export default Vue.extend({
 		},
 		secondEditorLiveMode: {
 			get(): boolean {
-				return this.focusedFile?.secondEditorLiveMode || false;
+				if (!this.focusedFile) return true;
+				return this.focusedFile.secondEditorLiveMode;
 			},
 			set(val: boolean) {
 				if (this.focusedFile){
@@ -691,24 +692,22 @@ export default Vue.extend({
 		async menu_to_pad_click(): Promise<void> {
 			this.secondEditorContentModel = 'SHOW_PAD';
 
-			//TODO: Better way to output problems here
 			if (!this.focusedFile) {
-				this.progErrPopupContent = "Open a program to convert it to Programs-as-Data form";
-				this.progErrPopupVisible = true;
+				alert("Open a program to convert it to Programs-as-Data form");
 				return;
 			}
 
 			//Convert the program to pure WHILE ready for the PaD conversion
-			const [progMgr, err]: [ProgramManager|null,null|string] = await prog_to_pure_while(
+			const [progMgr, errs]: [ProgramManager|null,null|string[]] = await prog_to_pure_while(
 				this.focusedFile.doc.getValue(),
 				this.focusedFile.name,
 				path.dirname(this.focusedFile.path)
 			);
-			if (err) {
-				this.progErrPopupContent = err;
-				this.progErrPopupVisible = true;
+			if (errs) {
+				this.focusedFile.secondEditorErrorList = errs;
 				return;
 			}
+			this.focusedFile.secondEditorErrorList = [];
 
 			//Display the result
 			const pad: ProgDataType = progMgr!.toPad();
@@ -720,22 +719,21 @@ export default Vue.extend({
 
 			//TODO: Better way to output problems here
 			if (!this.focusedFile) {
-				this.progErrPopupContent = "Open a program to convert it to Programs-as-Data form";
-				this.progErrPopupVisible = true;
+				alert("Open a program to convert it to Programs-as-Data form");
 				return;
 			}
 
 			//Convert the program to pure WHILE
-			const [progMgr, err]: [ProgramManager|null,null|string] = await prog_to_pure_while(
+			const [progMgr, errs]: [ProgramManager|null,null|string[]] = await prog_to_pure_while(
 				this.focusedFile.doc.getValue(),
 				this.focusedFile.name,
 				path.dirname(this.focusedFile.path)
 			);
-			if (err) {
-				this.progErrPopupContent = err;
-				this.progErrPopupVisible = true;
+			if (errs) {
+				this.focusedFile.secondEditorErrorList = errs;
 				return;
 			}
+			this.focusedFile.secondEditorErrorList = [];
 
 			//Display the result
 			this.focusedFile.secondEditorContent = progMgr!.displayProgram();

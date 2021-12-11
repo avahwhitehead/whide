@@ -4,9 +4,9 @@ import path from "path";
 import { fs } from "@/files/fs";
 import { ENCODING_UTF8 } from "memfs/lib/encoding";
 
-export async function prog_to_pure_while(progStr: string, progName: string, folder: string): Promise<[ProgramManager, null] | [null, string]> {
+export async function prog_to_pure_while(progStr: string, progName: string, folder: string): Promise<[ProgramManager,null] | [null,string[]]> {
 	//Attempt to parse the program
-	const [prog, err]: [AST_PROG|null, string|null] = _parseProgram(progStr, progName);
+	const [prog, err]: [AST_PROG|null, string[]|null] = _parseProgram(progStr, progName);
 	if (!prog) return [null, err!];
 
 	//Load all the macros linked by the program
@@ -15,14 +15,14 @@ export async function prog_to_pure_while(progStr: string, progName: string, fold
 		const macro: string = macroManager.getNextUnregistered()!;
 		const filePath = path.join(folder, macro + '.while');
 		//Check te macro file exists
-		if (!fs.existsSync(filePath)) return [null, `Couldn't find macro ${filePath}`];
+		if (!fs.existsSync(filePath)) return [null, [`Couldn't find macro ${filePath}`]];
 
 		//Parse the macro program
 		let progStr: string;
 		try {
 			progStr = await fs.promises.readFile(filePath, {encoding: ENCODING_UTF8});
 		} catch (e) {
-			return [null, `Couldn't read macro file ${filePath}: ` + e.message];
+			return [null, [`Couldn't read macro file ${filePath}: ` + e.message]];
 		}
 		const [ast, err] = _parseProgram(progStr, filePath);
 		if (!ast) return [null, err!];
@@ -42,15 +42,11 @@ export async function prog_to_pure_while(progStr: string, progName: string, fold
  * @param progStr	The program to parse
  * @param fileName	The name of the program
  */
-function _parseProgram(progStr: string, fileName: string): [AST_PROG, null]|[null, string] {
+function _parseProgram(progStr: string, fileName: string): [AST_PROG, null]|[null, string[]] {
 	const [ast, err]: [AST_PROG|AST_PROG_PARTIAL, ErrorType[]] = parseProgram(progStr);
 	if (!ast.complete) {
 		//Error if parsing failed
-		let es = `Failed to parse program ${fileName}:`;
-		for (let i = 0; i < err.length; i++) {
-			es += `\nError on line ${err[i].position.row + 1} at position ${err[i].position.col}: ${err[i].message}`;
-		}
-		return [null, es];
+		return [null, err.map(e => `(${fileName}) Error on line ${e.position.row + 1} at position ${e.position.col}: ${e.message}`)];
 	}
 	return [ast, null];
 }
