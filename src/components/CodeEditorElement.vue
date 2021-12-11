@@ -208,6 +208,7 @@ export default Vue.extend({
 		//Mark the current tab as unsaved when the content is changed
 		let pending: NodeJS.Timeout|undefined;
 		codeMirror.on("change", () => {
+			this.$emit('change');
 			this.currentFileState!.modified = true;
 			if (pending) clearTimeout(pending);
 			pending = setTimeout(() => {

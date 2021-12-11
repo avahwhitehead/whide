@@ -62,6 +62,7 @@
 			<CodeEditorElement
 				class="top"
 				ref="codeEditor"
+				@change="onCodeEditorValueChange"
 				:class="{'full-height': !showRunPanel}"
 				:style="{'height': codeEditorHeight}"
 			/>
@@ -95,6 +96,14 @@
 				<v-radio value="NOTHING" label="Nothing" />
 				<v-radio value="PURE_WHILE" label="Show Pure WHILE" />
 				<v-radio value="SHOW_PAD" label="Show Prog as Data" />
+
+				<v-checkbox
+						label="Live update"
+						dense
+						class="ma-0 pa-0"
+						v-model="secondEditorLiveMode"
+						:disabled="!focusedFile || secondEditorContentModel === 'NOTHING'"
+				/>
 			</v-radio-group>
 
 			<v-btn
@@ -158,8 +167,7 @@ import { FileInfoState } from "@/types/FileInfoState";
 import { MessageBoxOptions, OpenDialogReturnValue, SaveDialogReturnValue } from "electron";
 import path from "path";
 import { fs } from "@/files/fs";
-import { displayPad, ErrorType, parseProgram, ProgramManager } from "whilejs";
-import { AST_PROG, AST_PROG_PARTIAL } from "whilejs/lib/types/ast";
+import { displayPad, ProgramManager } from "whilejs";
 import { HWHILE_DISPLAY_FORMAT, ProgDataType } from "whilejs/lib/tools/progAsData";
 import { prog_to_pure_while } from "@/utils/program_converters";
 
@@ -355,6 +363,16 @@ export default Vue.extend({
 			set(val: 'NOTHING'|'PURE_WHILE'|'SHOW_PAD') {
 				if (this.focusedFile){
 					this.focusedFile.secondEditorDisplayMode = val;
+				}
+			},
+		},
+		secondEditorLiveMode: {
+			get(): boolean {
+				return this.focusedFile?.secondEditorLiveMode || false;
+			},
+			set(val: boolean) {
+				if (this.focusedFile){
+					this.focusedFile.secondEditorLiveMode = val;
 				}
 			},
 		}
@@ -743,6 +761,19 @@ export default Vue.extend({
 				prog: path.basename(prog).split(/\./)[0],
 				line: line,
 			}));
+		},
+
+		onCodeEditorValueChange() {
+			if (!this.focusedFile) return;
+
+			const displayMode = this.focusedFile.secondEditorDisplayMode;
+			if (displayMode !== 'NOTHING' && this.focusedFile.secondEditorLiveMode) {
+				if (displayMode === 'SHOW_PAD') {
+					this.menu_to_pad_click();
+				} else if (displayMode === 'PURE_WHILE') {
+					this.menu_to_pure_click();
+				}
+			}
 		},
 	},
 	watch: {
