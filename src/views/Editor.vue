@@ -744,19 +744,6 @@ export default Vue.extend({
 				line: line,
 			}));
 		},
-
-		_parseProgram(progStr: string, fileName: string): [AST_PROG, null]|[null, string] {
-			const [ast, err]: [AST_PROG|AST_PROG_PARTIAL, ErrorType[]] = parseProgram(progStr);
-			if (!ast.complete) {
-				//Error if parsing failed
-				let es = `Failed to parse program in file ${fileName}:`;
-				for (let i = 0; i < err.length; i++) {
-					es += `\nError on line ${err[i].position.col} at position ${err[i].position.row}: ${err[i].message}`;
-				}
-				return [null, es];
-			}
-			return [ast, null];
-		},
 	},
 	watch: {
 		runConfigs(val: RunConfiguration[]) {
