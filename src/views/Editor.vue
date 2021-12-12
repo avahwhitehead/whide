@@ -54,8 +54,15 @@
 		</v-app-bar>
 
 		<v-navigation-drawer app permanent clipped :width="fileViewerWidth" ref="filePanel">
-			<v-btn @click="handleChangeRootClick">Change Root</v-btn>
-			<FilePicker :directory="cwd" @changeFile="openFile" />
+			<div class="full-height" style="display: flex; flex-direction: column">
+				<div style="flex: 0">
+					<v-btn @click="handleChangeRootClick">Change Root</v-btn>
+				</div>
+				<FilePicker :directory="cwd" :filter="filterFiles" @changeFile="openFile" style="flex: 1" />
+
+				<v-divider />
+				<v-checkbox v-model="filterFiles" title="Show only *.while files" style="flex: 0" label="While files only" />
+			</div>
 		</v-navigation-drawer>
 
 		<v-main class="pa-0 fill-height overflow-hidden main-container">
@@ -189,6 +196,7 @@ interface DataTypesDescriptor {
 	runPanelHeight: number;
 	progErrPopupVisible: boolean;
 	progErrPopupContent: string;
+	filterFiles: boolean;
 }
 
 export default Vue.extend({
@@ -215,6 +223,7 @@ export default Vue.extend({
 			runPanelHeight: 200,
 			progErrPopupVisible: false,
 			progErrPopupContent: '',
+			filterFiles: true,
 		}
 	},
 	computed: {

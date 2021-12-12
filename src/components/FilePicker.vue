@@ -9,6 +9,7 @@
 				:open.sync="open"
 				:items="items"
 				:load-children="loadFolderChildren"
+				:search="filter ? '.while' : undefined"
 				item-text="name"
 				item-key="path"
 				item-children="children"
@@ -63,18 +64,17 @@ export default Vue.extend({
 		hideFiles: {
 			type: Boolean,
 			default: false,
-		}
+		},
+		filter: {
+			type: Boolean,
+			default: false,
+		},
 	},
 	data() : DataTypeInterface {
 		return {
 			open: [],
 			active: [],
 			items: [],
-		}
-	},
-	computed: {
-		rootName(): string {
-			return `${path.basename(this.directory)}/`
 		}
 	},
 	mounted() {
@@ -149,8 +149,8 @@ export default Vue.extend({
 					let stats: Stats = await fs.promises.stat(fullPath);
 					let isDirectory = stats.isDirectory();
 
-					//Don't save any files if requested
-					if (!isDirectory && this.hideFiles) continue;
+					//Don't show any files if requested
+					if (this.hideFiles && !isDirectory) continue;
 
 					//Add a trailing slash to folder names
 					if (isDirectory) name += '/';
@@ -168,8 +168,8 @@ export default Vue.extend({
 				}
 			}
 			//Combine the folder's new children with its old children to prevent unnecessary reloading
-			if (res && folder.children) this.mergeChildren(res, folder.children);
-			//Add the children to the parent node in the tree
+			this.mergeChildren(res, folder.children);
+			//Update the filtered children list
 			folder.children = res;
 		},
 		/**
@@ -213,20 +213,19 @@ export default Vue.extend({
 			this._watchDirectory(directory);
 
 			//Create a new root element
-			let root = {
+			let root: FileType = {
 				name: `${path.basename(this.directory)}/`,
 				path: this.directory,
 				children: [],
 			};
 
-			//Load the root's children
-			//(Otherwise the treeviewer doesn't load)
+			//Load the root folder's immediate children
 			await this.loadFolderChildren(root);
 
 			//Update the tree with the new root
 			this.items = [root];
 			this.open = [root];
-		}
+		},
 	},
 	watch: {
 		active(active: FileType[]) {
