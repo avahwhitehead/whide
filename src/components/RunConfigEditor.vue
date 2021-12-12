@@ -179,7 +179,7 @@ export default Vue.extend({
 		return {
 			runnerProg: { name:'While.js', interpreter:INTERPRETERS.WHILE_JS },
 			interpreterList: [
-				{ name:'HWhile', interpreter:INTERPRETERS.HWHILE },
+				...(electron ? [{ name:'HWhile', interpreter:INTERPRETERS.HWHILE }] : []),
 				{ name:'While.js', interpreter:INTERPRETERS.WHILE_JS },
 			],
 			nameModel: '',
