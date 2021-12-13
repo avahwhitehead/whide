@@ -61,7 +61,7 @@
 				<FilePicker :directory="cwd" :filter="filterFiles" @changeFile="openFile" style="flex: 1" />
 
 				<v-divider />
-				<v-checkbox v-model="filterFiles" title="Show only *.while files" style="flex: 0" label="While files only" />
+				<v-checkbox v-model="filterFiles" title="Show only *.while files" class="ma-0 remove-messages" style="flex: 0" label="While files only" />
 			</div>
 		</v-navigation-drawer>
 
