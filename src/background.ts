@@ -1,7 +1,7 @@
 'use strict'
 
 import * as Electron from 'electron';
-import { app, BrowserWindow, ipcMain, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, NewWindowWebContentsEvent, protocol, shell } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
 import { ExtendedCommand, makeCommandLineParser, ProgramOptions } from "@/types/CommandLine";
@@ -92,6 +92,25 @@ app.on('ready', async () => {
 	}
 	createWindow();
 })
+
+function _openExternalUrlInBrowser(e: NewWindowWebContentsEvent, urlString: string) {
+	let url: URL = new URL(urlString);
+	//If the URL is not pointing to a page of this app
+	if (url.protocol !== 'app:' && url.hostname !== 'localhost') {
+		//Open the link in an external browser window
+		e.preventDefault();
+		shell.openExternal(urlString);
+	}
+}
+
+app.on('browser-window-created', function (event, window: BrowserWindow) {
+	window.on('ready-to-show', function () {
+		window.webContents.on('new-window', _openExternalUrlInBrowser)
+	});
+	window.on('close', function () {
+		window.webContents.off('new-window', _openExternalUrlInBrowser)
+	});
+});
 
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {

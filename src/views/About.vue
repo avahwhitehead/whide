@@ -6,13 +6,13 @@
 
 		<v-divider class="mb-2" />
 
-		<p>For information and help, see the <a href="https://github.com/sonrad10/Whide">project homepage</a> on GitHub.</p>
+		<p>For information and help, see the <a href="https://github.com/sonrad10/Whide" target="_blank">project homepage</a> on GitHub.</p>
 
 		<h3>Related projects:</h3>
 		<div class="ml-2">
 			<div v-for="(project, i) in projects" :key="i">
 				<h4>
-					<a v-if="project.url" :href="project.url" v-text="project.name" />
+					<a v-if="project.url" :href="project.url" v-text="project.name" target="_blank" />
 					<span v-else v-text="project.name" />
 				</h4>
 
@@ -23,8 +23,8 @@
 		<v-divider />
 
 		<div class="copyright">
-			<p class="ma-0">&copy; 2020 - {{ thisYear}} sonrad10; <a :href="license">MIT License</a>.</p>
-			<p class="ma-0">3rd party libraries are listed in the <a :href="packageJson">package.json</a> file.</p>
+			<p class="ma-0">&copy; 2020 - {{ thisYear}} sonrad10; <a :href="license" target="_blank">MIT License</a>.</p>
+			<p class="ma-0">3rd party libraries are listed in the <a :href="packageJson" target="_blank">package.json</a> file.</p>
 		</div>
 
 		<v-dialog v-model="showPopup" max-width="600px">

@@ -33,9 +33,9 @@
 
 		<p>All information and data stored by this application is stored exclusively and entirely on the user's computer using
 			cookies,
-			<a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage">local storage</a>,
+			<a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage" target="_blank">local storage</a>,
 			and
-			<a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API">indexedDB</a>.
+			<a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API" target="_blank">indexedDB</a>.
 		</p>
 
 		<p>
@@ -65,7 +65,7 @@
 
 		<h3>Contact Information</h3>
 
-		<p>For any questions or concerns regarding this privacy policy, please open an issue on the <a href="https://github.com/sonrad10/Whide/issues">GitHub repository</a>.</p>
+		<p>For any questions or concerns regarding this privacy policy, please open an issue on the <a href="https://github.com/sonrad10/Whide/issues" target="_blank">GitHub repository</a>.</p>
 
 		<v-divider />
 
