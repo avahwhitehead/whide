@@ -1,33 +1,26 @@
 <template>
-	<v-container>
-		<v-row>
-			<slot name="controls"></slot>
-		</v-row>
-		<v-row>
-			<TreeView
-				:open.sync="open"
-				:items="items"
-				:load-children="loadFolderChildren"
-				:search="filter ? '.while' : undefined"
-				text-key="name"
-				id-key="path"
-				children-key="children"
-				keep-empty-parent
-				dense
-				@click="onFileClick"
-			>
-				<template v-slot:prepend="{ item, open }">
-					<template v-if="item.children">
-						<v-icon v-if="open">fa-folder-open</v-icon>
-						<v-icon v-else>fa-folder</v-icon>
-					</template>
-					<v-icon v-else>
-						fa-file-alt
-					</v-icon>
-				</template>
-			</TreeView>
-		</v-row>
-	</v-container>
+	<TreeView
+		:open.sync="open"
+		:items="items"
+		:load-children="loadFolderChildren"
+		:search="filter ? '.while' : undefined"
+		text-key="name"
+		id-key="path"
+		children-key="children"
+		keep-empty-parent
+		dense
+		@click="onFileClick"
+	>
+		<template v-slot:prepend="{ item, open }">
+			<template v-if="item.children">
+				<v-icon v-if="open">fa-folder-open</v-icon>
+				<v-icon v-else>fa-folder</v-icon>
+			</template>
+			<v-icon v-else>
+				fa-file-alt
+			</v-icon>
+		</template>
+	</TreeView>
 </template>
 
 <script lang="ts">
