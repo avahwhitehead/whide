@@ -4,23 +4,17 @@
 			<slot name="controls"></slot>
 		</v-row>
 		<v-row>
-			<v-treeview
-				:active.sync="active"
+			<TreeView
 				:open.sync="open"
 				:items="items"
 				:load-children="loadFolderChildren"
 				:search="filter ? '.while' : undefined"
-				item-text="name"
-				item-key="path"
-				item-children="children"
-				selection-type="independent"
-				activatable
+				text-key="name"
+				id-key="path"
+				children-key="children"
+				keep-empty-parent
 				dense
-				hoverable
-				return-object
-				transition
-				style="text-align: left;"
-				ref="treeViewer"
+				@click="onFileClick"
 			>
 				<template v-slot:prepend="{ item, open }">
 					<template v-if="item.children">
@@ -31,7 +25,7 @@
 						fa-file-alt
 					</v-icon>
 				</template>
-			</v-treeview>
+			</TreeView>
 		</v-row>
 	</v-container>
 </template>
@@ -42,21 +36,25 @@ import { fs } from "@/files/fs";
 import path from "path";
 import { Stats } from "fs";
 import FolderWatcherManager from "@/files/FolderWatcherManager";
+import TreeView from "@/components/TreeView.vue";
 
 interface DataTypeInterface {
 	items: FileType[];
 	open: FileType[];
-	active: FileType[];
 }
 
 interface FileType {
 	name: string;
 	path: string;
+	open: boolean;
 	children?: FileType[];
 }
 
 export default Vue.extend({
 	name: 'FilePicker',
+	components: {
+		TreeView
+	},
 	props: {
 		directory: {
 			type: String,
@@ -73,7 +71,6 @@ export default Vue.extend({
 	data() : DataTypeInterface {
 		return {
 			open: [],
-			active: [],
 			items: [],
 		}
 	},
@@ -159,6 +156,7 @@ export default Vue.extend({
 					res.push({
 						name: name,
 						path: fullPath,
+						open: false,
 						//Only add a `children` list if this is a folder
 						//`undefined` means file, empty list means unloaded, populated list means loaded
 						children: isDirectory ? [] : undefined,
@@ -190,23 +188,6 @@ export default Vue.extend({
 			}
 			return newChildren;
 		},
-		/**
-		 * Force a node's children to be reloaded next time it is opened.
-		 * See bug report here: https://github.com/vuetifyjs/vuetify/issues/10587#issuecomment-770680909
-		 * @param ids    ID values of the nodes to unload
-		 */
-		markNodeUnloaded(...ids: string[]) {
-			let treeViewer = this.$refs.treeViewer as (Vue & { nodes: any[]; updateVnodeState: (id: string) => void });
-			if (!treeViewer) return;
-
-			let nodes = treeViewer.nodes;
-			for (const nodeKey in nodes) {
-				if (nodes[nodeKey].vnode) {
-					nodes[nodeKey].vnode.hasLoaded = false
-				}
-			}
-			for (let id of ids) treeViewer.updateVnodeState(id);
-		},
 		async _onDirectoryChange(directory: string, olddir?: string): Promise<void> {
 			//Close the file watcher on the old root
 			if (olddir !== undefined) this._unwatchDirectory(olddir);
@@ -217,6 +198,7 @@ export default Vue.extend({
 				name: `${path.basename(this.directory)}/`,
 				path: this.directory,
 				children: [],
+				open: true,
 			};
 
 			//Load the root folder's immediate children
@@ -226,22 +208,21 @@ export default Vue.extend({
 			this.items = [root];
 			this.open = [root];
 		},
-	},
-	watch: {
-		active(active: FileType[]) {
-			if (active.length === 0) return;
 
-			let filePath = active[0].path;
+		onFileClick(item: FileType) {
+			let filePath = item.path;
 			//Emit a general 'change' event when any file is selected
 			this.$emit('change', filePath);
 
 			//Emit a specific file or folder 'change' event
-			if (active[0].children) {
+			if (item.children) {
 				this.$emit('changeFolder', filePath);
 			} else {
 				this.$emit('changeFile', filePath);
 			}
 		},
+	},
+	watch: {
 		directory(directory: string, olddir: string) {
 			this._onDirectoryChange(directory, olddir)
 		},
@@ -263,18 +244,9 @@ export default Vue.extend({
 			for (let folder of openedFolders) {
 				this._watchDirectory(folder.path);
 			}
-
-			//Force the child files to be reloaded next time the folder is open
-			//See: https://github.com/vuetifyjs/vuetify/issues/10587#issuecomment-770680909
-			this.markNodeUnloaded(...closedFolders.map(file => file.path));
 		},
 	},
 });
 </script>
 
 
-<style>
-.v-treeview-node__label {
-	user-select: none;
-}
-</style>
