@@ -33,6 +33,7 @@
 				<TreeView
 					v-bind="$props"
 					:items="item[childrenKey]"
+					class="pl-2"
 					@click="onItemClick"
 				>
 					<template v-for="(_,name) in $scopedSlots" :slot="name" slot-scope="slotData">
