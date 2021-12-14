@@ -1,38 +1,26 @@
 <template>
-	<v-container>
-		<v-row>
-			<slot name="controls"></slot>
-		</v-row>
-		<v-row>
-			<v-treeview
-				:active.sync="active"
-				:open.sync="open"
-				:items="items"
-				:load-children="loadFolderChildren"
-				item-text="name"
-				item-key="path"
-				item-children="children"
-				selection-type="independent"
-				activatable
-				dense
-				hoverable
-				return-object
-				transition
-				style="text-align: left;"
-				ref="treeViewer"
-			>
-				<template v-slot:prepend="{ item, open }">
-					<template v-if="item.children">
-						<v-icon v-if="open">fa-folder-open</v-icon>
-						<v-icon v-else>fa-folder</v-icon>
-					</template>
-					<v-icon v-else>
-						fa-file-alt
-					</v-icon>
-				</template>
-			</v-treeview>
-		</v-row>
-	</v-container>
+	<TreeView
+		:open.sync="open"
+		:items="items"
+		:load-children="loadFolderChildren"
+		:search="filter ? '.while' : undefined"
+		text-key="name"
+		id-key="path"
+		children-key="children"
+		keep-empty-parent
+		dense
+		@click="onFileClick"
+	>
+		<template v-slot:prepend="{ item, open }">
+			<template v-if="item.children">
+				<v-icon v-if="open">fa-folder-open</v-icon>
+				<v-icon v-else>fa-folder</v-icon>
+			</template>
+			<v-icon v-else>
+				fa-file-alt
+			</v-icon>
+		</template>
+	</TreeView>
 </template>
 
 <script lang="ts">
@@ -41,21 +29,25 @@ import { fs } from "@/files/fs";
 import path from "path";
 import { Stats } from "fs";
 import FolderWatcherManager from "@/files/FolderWatcherManager";
+import TreeView from "@/components/TreeView.vue";
 
 interface DataTypeInterface {
 	items: FileType[];
 	open: FileType[];
-	active: FileType[];
 }
 
 interface FileType {
 	name: string;
 	path: string;
+	open: boolean;
 	children?: FileType[];
 }
 
 export default Vue.extend({
 	name: 'FilePicker',
+	components: {
+		TreeView
+	},
 	props: {
 		directory: {
 			type: String,
@@ -63,18 +55,16 @@ export default Vue.extend({
 		hideFiles: {
 			type: Boolean,
 			default: false,
-		}
+		},
+		filter: {
+			type: Boolean,
+			default: false,
+		},
 	},
 	data() : DataTypeInterface {
 		return {
 			open: [],
-			active: [],
 			items: [],
-		}
-	},
-	computed: {
-		rootName(): string {
-			return `${path.basename(this.directory)}/`
 		}
 	},
 	mounted() {
@@ -149,8 +139,8 @@ export default Vue.extend({
 					let stats: Stats = await fs.promises.stat(fullPath);
 					let isDirectory = stats.isDirectory();
 
-					//Don't save any files if requested
-					if (!isDirectory && this.hideFiles) continue;
+					//Don't show any files if requested
+					if (this.hideFiles && !isDirectory) continue;
 
 					//Add a trailing slash to folder names
 					if (isDirectory) name += '/';
@@ -159,6 +149,7 @@ export default Vue.extend({
 					res.push({
 						name: name,
 						path: fullPath,
+						open: false,
 						//Only add a `children` list if this is a folder
 						//`undefined` means file, empty list means unloaded, populated list means loaded
 						children: isDirectory ? [] : undefined,
@@ -168,8 +159,8 @@ export default Vue.extend({
 				}
 			}
 			//Combine the folder's new children with its old children to prevent unnecessary reloading
-			if (res && folder.children) this.mergeChildren(res, folder.children);
-			//Add the children to the parent node in the tree
+			this.mergeChildren(res, folder.children);
+			//Update the filtered children list
 			folder.children = res;
 		},
 		/**
@@ -190,59 +181,41 @@ export default Vue.extend({
 			}
 			return newChildren;
 		},
-		/**
-		 * Force a node's children to be reloaded next time it is opened.
-		 * See bug report here: https://github.com/vuetifyjs/vuetify/issues/10587#issuecomment-770680909
-		 * @param ids    ID values of the nodes to unload
-		 */
-		markNodeUnloaded(...ids: string[]) {
-			let treeViewer = this.$refs.treeViewer as (Vue & { nodes: any[]; updateVnodeState: (id: string) => void });
-			if (!treeViewer) return;
-
-			let nodes = treeViewer.nodes;
-			for (const nodeKey in nodes) {
-				if (nodes[nodeKey].vnode) {
-					nodes[nodeKey].vnode.hasLoaded = false
-				}
-			}
-			for (let id of ids) treeViewer.updateVnodeState(id);
-		},
 		async _onDirectoryChange(directory: string, olddir?: string): Promise<void> {
 			//Close the file watcher on the old root
 			if (olddir !== undefined) this._unwatchDirectory(olddir);
 			this._watchDirectory(directory);
 
 			//Create a new root element
-			let root = {
+			let root: FileType = {
 				name: `${path.basename(this.directory)}/`,
 				path: this.directory,
 				children: [],
+				open: true,
 			};
 
-			//Load the root's children
-			//(Otherwise the treeviewer doesn't load)
+			//Load the root folder's immediate children
 			await this.loadFolderChildren(root);
 
 			//Update the tree with the new root
 			this.items = [root];
 			this.open = [root];
-		}
-	},
-	watch: {
-		active(active: FileType[]) {
-			if (active.length === 0) return;
+		},
 
-			let filePath = active[0].path;
+		onFileClick(item: FileType) {
+			let filePath = item.path;
 			//Emit a general 'change' event when any file is selected
 			this.$emit('change', filePath);
 
 			//Emit a specific file or folder 'change' event
-			if (active[0].children) {
+			if (item.children) {
 				this.$emit('changeFolder', filePath);
 			} else {
 				this.$emit('changeFile', filePath);
 			}
 		},
+	},
+	watch: {
 		directory(directory: string, olddir: string) {
 			this._onDirectoryChange(directory, olddir)
 		},
@@ -264,18 +237,9 @@ export default Vue.extend({
 			for (let folder of openedFolders) {
 				this._watchDirectory(folder.path);
 			}
-
-			//Force the child files to be reloaded next time the folder is open
-			//See: https://github.com/vuetifyjs/vuetify/issues/10587#issuecomment-770680909
-			this.markNodeUnloaded(...closedFolders.map(file => file.path));
 		},
 	},
 });
 </script>
 
 
-<style>
-.v-treeview-node__label {
-	user-select: none;
-}
-</style>
