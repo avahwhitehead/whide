@@ -1,6 +1,7 @@
 = WHILE Language Quick Reference
 :doctype: article
 :icons: font
+:stem: latexmath
 //URL aliases:
 :hwhile: https://github.com/alexj136/HWhile
 :hwhile-examples: https://github.com/alexj136/HWhile/tree/master/examples
@@ -9,7 +10,7 @@
 
 == Example Programs
 
-For some program examples, see the link:{hwhile-examples}}[HWhile examples] folder, or the Limits of Computation Canvas page.
+For some program examples, see the link:{hwhile-examples}[HWhile examples] folder, or the Limits of Computation Canvas page.
 
 == WHILE vs Extended WHILE
 

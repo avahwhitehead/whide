@@ -24,7 +24,7 @@
 
 This is the IDE for DR Reus' WHILE language at link:https://sussex.ac.uk/[The University of Sussex].
 
-For information about the WHILE language, see link:WHILE.adoc[] or link:{hwhile}[the HWhile Respository].
+For information about the WHILE language, see link:WHILE.adoc[] or link:{hwhile}[the HWhile Repository].
 
 == Getting Started
 
@@ -32,7 +32,7 @@ Download the latest program binary for your operating system from the link:https
 
 While not required, it is recommended you also install link:https://github.com/alexj136/HWhile[HWhile] to take advantage features such as debugging from within the IDE.
 
-TIP: Whide is also available online at https://sonrad10.github.io/Whide/
+TIP: Whide is also available online at https://sonrad10.github.io/whide/
 
 NOTE: You won't be able to use HWhile in the web app as that is a desktop application. You may, however, still use While.js for interpreting code.
 
