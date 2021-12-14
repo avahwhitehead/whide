@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.0](https://github.com/sonrad10/Whide/compare/v2.3.1...v2.4.0) (2021-12-14)
+
+
+### Features
+
+* added support for converting programs to Programs as Data ([ca372f1](https://github.com/sonrad10/Whide/commit/ca372f17fbe44e80babb9578665c45f25aced215))
+* added support for converting programs to Pure WHILE ([98628f6](https://github.com/sonrad10/Whide/commit/98628f6a37ae93d3d294c95d3c433c970ab4e3a8))
+* allowed filtering directory viewer to only WHILE files ([56185c8](https://github.com/sonrad10/Whide/commit/56185c8ed58150566f4e3155f625aa39702546a0))
+* programs can be converted to pure WHILE/prog-as-data in real time ([5d5ef23](https://github.com/sonrad10/Whide/commit/5d5ef237fc3936917e9add1d5ff6d4ad5d9cbfe2))
+
+
+### Bug Fixes
+
+* stopped displaying 'HWhile' option in run configurations in browser mode ([603fd0a](https://github.com/sonrad10/Whide/commit/603fd0a24761e01f58397dbb020fa73c949089c1))
+* stopped displaying 'HWhile' option in run configurations in browser mode ([1af7710](https://github.com/sonrad10/Whide/commit/1af77102e90eae090a3ac11c883dfd8a9c94785e))
+
 ### [2.3.1](https://github.com/sonrad10/Whide/compare/v2.3.0...v2.3.1) (2021-12-06)
 
 
