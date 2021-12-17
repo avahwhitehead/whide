@@ -8,6 +8,7 @@ import SettingsWindow from "@/views/SettingsWindow.vue";
 import RunConfigWindow from "@/views/RunConfigWindow.vue";
 import AboutWindow from "@/views/About.vue";
 import PrivacyWindow from "@/views/Privacy.vue";
+import { fs } from "@/files/fs";
 
 //Use the router
 Vue.use(VueRouter);
@@ -28,5 +29,12 @@ const router : VueRouter = new VueRouter({
 	mode: 'hash',
 	routes,
 });
+
+//Ensure the file system is loaded before the page is loaded
+router.beforeEach(async (to, from, next) => {
+	await (fs as any).waitForLoad()
+	next()
+});
+
 //Export the router
 export default router;

@@ -89,16 +89,18 @@ function _validateState(store: Store<RootState>): void {
 	//Ensure the stored run configurations are held as a string array with object lookup
 	//Instead of an array of objects
 	for (let config of state.runConfigurations as (string|RunConfiguration)[]) {
+		if (config === undefined) continue;
+
 		if (typeof config === 'string') {
 			if (state.runConfigLookup[config] !== undefined) {
 				runConfigs.push(config);
 				runConfigLookup[config] = state.runConfigLookup[config];
 			}
-		} else if (config === undefined) {
-			//Do nothing
 		} else {
-			runConfigLookup[config.name] = config;
-			runConfigs.push(config.name);
+			if (state.runConfigLookup[config.name] !== undefined) {
+				runConfigLookup[config.name] = config;
+				runConfigs.push(config.name);
+			}
 		}
 	}
 	store.commit('replaceRunConfigs', [runConfigs, runConfigLookup]);
@@ -160,6 +162,20 @@ const store = new Vuex.Store<RootState>({
 				if (state.chosenRunConfig === config) {
 					Math.min(index, state.runConfigurations.length - 1)
 					state.chosenRunConfig = state.runConfigurations[index];
+				}
+			}
+		},
+
+		overwriteRunConfig(state: RootState, [oldConfig, config]: [string, RunConfiguration]): void {
+			let index: number = state.runConfigurations.indexOf(oldConfig);
+			if (index > -1) {
+				state.runConfigurations.splice(index, 1, config.name);
+
+				delete state.runConfigLookup[oldConfig];
+				state.runConfigLookup[config.name] = config;
+
+				if (state.chosenRunConfig === oldConfig) {
+					state.chosenRunConfig = config.name;
 				}
 			}
 		},

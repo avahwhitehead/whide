@@ -1,9 +1,12 @@
 import nodeFs from "fs";
-import { createFsFromVolume, IFs, Volume } from 'memfs';
+import { createFsFromVolume, IFs, Volume as _Volume } from 'memfs';
 import { IPromisesAPI } from "memfs/lib/promises";
 import { Union } from "unionfs/lib/union";
 import { IFS } from "unionfs/lib/fs";
 import PersistentDataStore from "@/api/PersistentDataStore";
+
+// @ts-ignore
+type Volume = _Volume;
 
 //Get the data store object
 const store = new PersistentDataStore({
@@ -84,20 +87,52 @@ function _wrapFs(fs: IFs, saveCb: (prop: string) => void) : IFs {
 	});
 }
 
+type MyFileSystemType = Union & {
+	waitForLoad(): Promise<MyFileSystemType>;
+}
+
+async function waitForJsonLoad(vol: Volume): Promise<Volume> {
+	return new Promise<Volume>(function (resolve, reject) {
+		_readFsJson().then(json => {
+			vol.fromJSON(json || {});
+			resolve(vol);
+		}).catch(reject);
+	});
+}
+
 //Manage the filesystems
-export const ufs : Union = new Union();
+export const ufs : MyFileSystemType = new Union() as (Union & { waitForLoad(): Promise<MyFileSystemType> });
 
 //Use the physical filesystem only if available
 //Otherwise maintain a virtual filesystem in memory
 if (nodeFs && Object.keys(nodeFs).length) {
 	ufs.use(nodeFs);
+
+	ufs.waitForLoad = function (): Promise<MyFileSystemType> {
+		return new Promise<MyFileSystemType>(function (resolve) {
+			resolve(ufs);
+		});
+	};
 } else {
 	//Make the virtual filesystem
-	const vol = new Volume;
-	const memfs : IFs = createFsFromVolume(vol);
+	const vol: Volume = new _Volume();
+	const memfs : IFs = createFsFromVolume(vol as unknown as Volume);
 
 	//Load from the stored filesystem JSON object
-	_readFsJson().then(json => vol.fromJSON(json || {}));
+	let jsonPromise: Promise<Volume>|null = waitForJsonLoad(vol);
+	jsonPromise.then(() => {
+		jsonPromise = null;
+	})
+
+	ufs.waitForLoad = function (): Promise<MyFileSystemType> {
+		return new Promise<MyFileSystemType>(function (resolve) {
+			if (jsonPromise === null) {
+				resolve(ufs);
+			} else {
+				jsonPromise.then(() => resolve(ufs));
+			}
+		});
+	};
 
 	//Make a proxy around memfs to watch for FS changes, and automatically export/store the changed version
 	let saveInProgress = false;

@@ -296,12 +296,16 @@ export default Vue.extend({
 	},
 	methods: {
 		createConfig() {
+			let configName: string;
+			if (!this.focusedFile) configName = this._findNextConfigName();
+			else configName = this._findNextConfigName('Run ' + path.basename(this.focusedFile));
+
 			let newConfig: RunConfiguration = {
-				name: this.focusedFile ? path.basename(this.focusedFile) : 'Unnamed',
+				name: configName,
 				file: this.focusedFile ? this.focusedFile : '',
 				input: 'nil',
 				outputFormat: 'any',
-				interpreter: INTERPRETERS.HWHILE,
+				interpreter: this.interpreterList[0].interpreter,
 			}
 			this.$store.commit('addRunConfig', newConfig);
 			this.configIndex = this.runConfigs.indexOf(newConfig);
@@ -317,8 +321,7 @@ export default Vue.extend({
 			if (!this.currentOpenConfig) {
 				this.$store.commit('addRunConfig', newConfig);
 			} else {
-				this.$store.commit('removeRunConfig', this.currentOpenConfig.name);
-				this.$store.commit('addRunConfig', newConfig);
+				this.$store.commit('overwriteRunConfig', [this.currentOpenConfig.name, newConfig]);
 			}
 			this.$store.commit('setChosenRunConfig', newConfig.name);
 		},
@@ -335,6 +338,15 @@ export default Vue.extend({
 		onPathSelect(p: string): void {
 			this.fileModel = p;
 		},
+
+		_findNextConfigName(baseName: string = 'Unnamed') {
+			let modifier = 0;
+			let fullName = baseName;
+			while (this.$store.state.runConfigLookup[fullName] !== undefined) {
+				fullName = `${baseName} (${++modifier})`
+			}
+			return fullName;
+		}
 	},
 	watch: {
 		runnerProg(prog: InterpreterType) {

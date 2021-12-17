@@ -397,8 +397,7 @@ export default Vue.extend({
 			if (fileTabIndex > -1) {
 				//Switch to the existing tab
 				this.currentTab = fileTabIndex;
-				//TODO: Is currentTabFile and currentFileState the same?
-				return this.$store.state.fileLookup[this.currentTabFile!];
+				return this.currentFileState!;
 			}
 
 			//Load the file content from the file into an CodeMirror Doc
