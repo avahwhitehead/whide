@@ -14,6 +14,8 @@
 			</v-btn>
 
 			<v-spacer />
+			<v-spacer v-if="isElectron" />
+			<v-spacer v-if="isElectron" />
 
 			<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
 				<FontAwesomeIcon icon="pencil-alt" />
