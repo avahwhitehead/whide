@@ -8,7 +8,7 @@
 			<v-card
 				class="pa-0"
 				elevation="0"
-				v-for="(tab,i) in openFiles" :key="i"
+				v-for="(tab,i) in openFileStates" :key="i"
 				@click.middle="_closeTab(tab)"
 				@click.left="currentTab = i"
 			>
@@ -121,7 +121,7 @@ const LIGHT_THEME = 'default';
 interface DataType {
 	editor: CodeMirror.Editor|undefined;
 	editor2: CodeMirror.Editor|undefined;
-	openFiles: FileInfoState[];
+	openFiles: string[];
 	errors: LineWidgetType[];
 	infos: LineWidgetType[];
 	warnings: LineWidgetType[];
@@ -186,7 +186,7 @@ export default Vue.extend({
 		}
 	},
 	mounted() {
-		this.openFiles = [...this.$store.state.openFiles];
+		this.openFiles = this.stateOpenFiles;
 
 		//Create the code editor in the div
 		let codeMirror : CodeMirror.Editor = CodeMirror(this.$refs.codeHolder as HTMLElement, {
@@ -262,20 +262,27 @@ export default Vue.extend({
 		//Wrapper around the VueX focusedFile value
 		currentTab: {
 			get(): number {
-				return this.$store.state.focusedFile;
+				if (this.currentTabFile === undefined) return -1;
+				return this.stateOpenFiles.indexOf(this.currentTabFile);
 			},
 			set(val: number): void {
-				// Only done by v-tabs model
-				// noinspection JSIncompatibleTypesComparison
-				if (val === undefined) val = -1;
-
-				//Update the focused file in the VueX store
+				this.currentTabFile = this.stateOpenFiles[val];
+			},
+		},
+		currentTabFile: {
+			get(): string|undefined {
+				return this.$store.state.focusedFile;
+			},
+			set(val: string|undefined): void {
 				this.$store.commit('openFiles.setFocused', val);
 			},
 		},
 		currentFileState(): FileInfoState|undefined {
-			if (this.currentTab === -1) return undefined;
-			return this.openFiles[this.currentTab];
+			if (this.currentTabFile === undefined) return undefined;
+			return this.$store.state.fileLookup[this.currentTabFile];
+		},
+		openFileStates(): FileInfoState[] {
+			return this.openFiles.map(c => this.$store.state.fileLookup[c]);
 		},
 		allowExtended(): boolean {
 			if (this.currentFileState === undefined) return true;
@@ -289,7 +296,10 @@ export default Vue.extend({
 		},
 		showErrorList(): boolean {
 			return this.showSecondEditor && this.errorList.length > 0;
-		}
+		},
+		stateOpenFiles(): string[] {
+			return this.$store.state.openFiles;
+		},
 	},
 	methods: {
 		onDragEnd(event: SortableEvent): any {
@@ -300,18 +310,18 @@ export default Vue.extend({
 		},
 
 		toggleBreakpoint(doc: CustomMirrorDoc, line: number|CodeMirror.LineHandle, enabled?: boolean) {
-			const progPath = this.openFiles[this.currentTab].path;
+			if (!this.currentTabFile) return;
 			const isEnabled = doc.toggleBreakpoint(line, enabled);
 
 			let lineNo: number = (typeof line === 'number') ? line : doc.getLineNumber(line)!;
 			lineNo++;
 			if (isEnabled) {
-				this.$store.commit('breakpoint.add', [lineNo, progPath]);
+				this.$store.commit('breakpoint.add', [lineNo, this.currentTabFile]);
 			} else {
-				this.$store.commit('breakpoint.del', [lineNo, progPath]);
+				this.$store.commit('breakpoint.del', [lineNo, this.currentTabFile]);
 			}
 
-			const prog_folder = path.dirname(progPath);
+			const prog_folder = path.dirname(this.currentTabFile);
 			//Update any debuggers in the file's directory with the new breakpoint
 			for (let { runner } of this.$store.state.programRunners) {
 				//Check the runner is operating in the same directory as the program
@@ -320,10 +330,10 @@ export default Vue.extend({
 					if (r.isStopped) continue;
 					if (isEnabled) {
 						//Add the breakpoint to the runner
-						if (r.addBreakpoints) r.addBreakpoints({line: lineNo, prog: progPath});
+						if (r.addBreakpoints) r.addBreakpoints({line: lineNo, prog: this.currentTabFile});
 					} else {
 						//Remove the breakpoint from the runner
-						if (r.delBreakpoints) r.delBreakpoints({line: lineNo, prog: progPath});
+						if (r.delBreakpoints) r.delBreakpoints({line: lineNo, prog: this.currentTabFile});
 					}
 				}
 			}
@@ -382,12 +392,13 @@ export default Vue.extend({
 
 		async _openFile(filepath: string): Promise<FileInfoState> {
 			//Check to see if the file already exists as a tab
-			let fileTabIndex: number = this.openFiles.findIndex(f => f.path === filepath);
+			let fileTabIndex: number = this.openFiles.indexOf(filepath);
 
 			if (fileTabIndex > -1) {
 				//Switch to the existing tab
 				this.currentTab = fileTabIndex;
-				return this.openFiles[fileTabIndex];
+				//TODO: Is currentTabFile and currentFileState the same?
+				return this.$store.state.fileLookup[this.currentTabFile!];
 			}
 
 			//Load the file content from the file into an CodeMirror Doc
@@ -401,7 +412,8 @@ export default Vue.extend({
 				}
 			);
 			//Open the file in a new tab and switch to it
-			this.currentTab = this.openFiles.push(tabInfo) - 1;
+			this.$store.commit('openFile.open', tabInfo);
+			this.$store.commit('openFiles.setFocused', tabInfo.path);
 
 			//Set up the breakpoints in the document if there are any saved
 			let breakpoints: {prog:string, line:number}[] = this.$store.state.breakpoints;
@@ -423,8 +435,7 @@ export default Vue.extend({
 				this.closingTab = tab;
 			} else {
 				//Close the tab
-				const index = this.openFiles.indexOf(tab);
-				this.openFiles.splice(index, 1);
+				this.$store.commit('openFile.close', tab.path);
 			}
 		},
 		async _saveFile(tab: FileInfoState): Promise<void> {
@@ -443,7 +454,7 @@ export default Vue.extend({
 			//Save the file
 			await this._saveFile(this.closingTab)
 			//Close the tab
-			this.openFiles.splice(this.openFiles.indexOf(this.closingTab), 1);
+			this.$store.commit('openFile.close', this.closingTab.path);
 			//Hide the popup
 			this.showSaveDialog = false;
 			this.closingTab = undefined;
@@ -451,14 +462,14 @@ export default Vue.extend({
 		saveDialogNoSaveClick() {
 			if (!this.closingTab) return;
 			//Close the tab
-			this.openFiles.splice(this.openFiles.indexOf(this.closingTab), 1);
+			this.$store.commit('openFile.close', this.closingTab.path);
 			//Hide the popup
 			this.showSaveDialog = false;
 			this.closingTab = undefined;
 		},
 
 		async saveAllFiles(): Promise<void> {
-			for (let t of this.openFiles) await this._saveFile(t);
+			for (let t of this.openFileStates) await this._saveFile(t);
 		},
 
 		_onFileStateSecondEditorChange(val: string|undefined) {
@@ -501,13 +512,14 @@ export default Vue.extend({
 				this.editor.setOption("theme", isDark ? DARK_THEME : LIGHT_THEME);
 			}
 		},
-		openFiles(openFiles: FileInfoState[]) {
+		stateOpenFiles(stateOpenFiles: string[]): void {
+			this.openFiles = stateOpenFiles;
+		},
+		openFiles(openFiles: string[]) {
+			if (openFiles === this.stateOpenFiles) return;
+
 			//Update the open files list in the VueX store
 			this.$store.commit('openFiles.set', openFiles);
-			//Focus on the last tab in the list if the list is shortened past the focused tab
-			if (this.currentTab >= openFiles.length) {
-				this.currentTab = openFiles.length - 1;
-			}
 		},
 		secondEditorContent(secondEditorContent: string|undefined) {
 			if (secondEditorContent !== undefined)

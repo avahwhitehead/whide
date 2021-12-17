@@ -8,15 +8,12 @@
 			/>
 
 			<v-spacer v-if="!isElectron" />
-			<v-spacer v-if="!isElectron" />
 
 			<v-btn right @click="openTreeViewer">
 				Open Tree Viewer
 			</v-btn>
 
 			<v-spacer />
-			<v-spacer v-if="isElectron" />
-			<v-spacer v-if="isElectron" />
 
 			<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
 				<FontAwesomeIcon icon="pencil-alt" />
@@ -237,22 +234,22 @@ export default Vue.extend({
 		},
 		chosenRunConfig: {
 			get(): RunConfiguration|undefined {
-				return this.$store.state.chosenRunConfig;
+				if (this.$store.state.chosenRunConfig === undefined) return undefined;
+				return this.$store.state.runConfigLookup[this.$store.state.chosenRunConfig];
 			},
 			set(val: RunConfiguration|undefined): void {
-				this.$store.commit('setChosenRunConfig', val);
+				this.$store.commit('setChosenRunConfig', val?.name);
 			}
 		},
-		runConfigs: {
-			get(): RunConfiguration[] {
-				return this.$store.state.runConfigurations;
-			}
+		runConfigs(): RunConfiguration[] {
+			return this.$store.state.runConfigurations.map(
+				(c: string) => this.$store.state.runConfigLookup[c]
+			);
 		},
 		focusedFile(): FileInfoState|undefined {
 			const focusedFile = this.$store.state.focusedFile;
-			const openFiles = this.$store.state.openFiles;
-			if (focusedFile === -1) return undefined;
-			return openFiles[focusedFile];
+			if (focusedFile === undefined) return undefined;
+			return (this.$store.state.openFiles)[focusedFile];
 		},
 		extendedWhile: {
 			get(): boolean {
@@ -264,7 +261,9 @@ export default Vue.extend({
 			},
 		},
 		allowDebugging(): boolean {
-			return !!this.chosenRunConfig && this.chosenRunConfig.interpreter !== INTERPRETERS.WHILE_JS;
+			let runConfig: RunConfiguration|undefined = this.chosenRunConfig;
+			if (!runConfig) return false;
+			return runConfig.interpreter === INTERPRETERS.HWHILE;
 		},
 		allowRunning(): boolean {
 			return !!this.chosenRunConfig;
@@ -550,7 +549,7 @@ export default Vue.extend({
 		},
 		async onFileCreate(filePath: string, isFolder: boolean) {
 			if (isFolder) return;
-			await this.editorController._openFile(filePath);
+			await this.openFile(filePath);
 		},
 		dirChange(dir: string) {
 			//Change the working directory

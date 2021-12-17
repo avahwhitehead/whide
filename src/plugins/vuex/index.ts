@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import Vuex from 'vuex';
+import Vuex, { Store } from 'vuex';
 import { RunConfiguration } from "@/types/RunConfiguration";
 import VuexPersistence from "vuex-persist";
 import createMutationsSharer from "vuex-shared-mutations";
@@ -23,12 +23,14 @@ export enum APP_THEME {
  * Type definitions for the VueX store
  */
 export interface RootState {
-	runConfigurations: RunConfiguration[];
-	chosenRunConfig: RunConfiguration|undefined;
+	runConfigurations: string[];
+	chosenRunConfig: string|undefined;
+	runConfigLookup: {[key: string]: RunConfiguration},
 	settings: SettingsState;
-	openFiles: FileInfoState[];
+	openFiles: string[];
+	fileLookup: {[key: string]: FileInfoState},
 	breakpoints: {line: number, prog: string}[];
-	focusedFile: number;
+	focusedFile: string|undefined;
 	current_directory: string|undefined;
 	isElectron: boolean;
 	programRunners: {name:string, runner:AbstractRunner}[],
@@ -67,16 +69,54 @@ const vuexLocal = new VuexPersistence<RootState>({
 		return {
 			settings: state.settings,
 			chosenRunConfig: state.chosenRunConfig,
-			runConfigurations: state.runConfigurations,
+			runConfigurations: [...state.runConfigurations],
+			runConfigLookup: {...state.runConfigLookup},
 			current_directory: state.current_directory,
+			focusedFile: state.focusedFile,
 		};
 	},
 })
+
+/**
+ * Perform some validation to make sure the persisted state is loaded in the correct way for this version of the app.
+ * @param store
+ */
+function _validateState(store: Store<RootState>): void {
+	const state: RootState = store.state;
+	let runConfigs = [];
+	let runConfigLookup: {[key: string]: RunConfiguration} = {};
+
+	//Ensure the stored run configurations are held as a string array with object lookup
+	//Instead of an array of objects
+	for (let config of state.runConfigurations as (string|RunConfiguration)[]) {
+		if (typeof config === 'string') {
+			if (state.runConfigLookup[config] !== undefined) {
+				runConfigs.push(config);
+				runConfigLookup[config] = state.runConfigLookup[config];
+			}
+		} else if (config === undefined) {
+			//Do nothing
+		} else {
+			runConfigLookup[config.name] = config;
+			runConfigs.push(config.name);
+		}
+	}
+	store.commit('replaceRunConfigs', [runConfigs, runConfigLookup]);
+
+	if (runConfigLookup[state.chosenRunConfig as any] === undefined) {
+		store.commit('setChosenRunConfig', runConfigs[0]);
+	}
+}
+
+function onStoreLoaded(store: Store<RootState>): void {
+	_validateState(store);
+}
 
 //The VueX store object
 const store = new Vuex.Store<RootState>({
 	state: {
 		runConfigurations: [],
+		runConfigLookup: {},
 		chosenRunConfig: undefined,
 		settings: {
 			general: {
@@ -88,7 +128,8 @@ const store = new Vuex.Store<RootState>({
 			}
 		},
 		openFiles: [],
-		focusedFile: -1,
+		focusedFile: undefined,
+		fileLookup: {},
 		current_directory: undefined,
 		isElectron: (window['require'] !== undefined),
 		breakpoints: [],
@@ -101,42 +142,35 @@ const store = new Vuex.Store<RootState>({
 		 * @param config	Run configuration object to add
 		 */
 		addRunConfig(state: RootState, config: RunConfiguration): void {
-			state.runConfigurations.push(config);
-			//Mark this run config as selected if there are no other selected ones
-			if (state.chosenRunConfig === undefined) state.chosenRunConfig = config;
+			state.runConfigLookup[config.name] = config;
+			state.runConfigurations.push(config.name)
 		},
+
 		/**
 		 * Remove a run configuration from the list
 		 * @param state		VueX state object
 		 * @param config	Run configuration object to remove
 		 */
-		removeRunConfig(state: RootState, config: RunConfiguration|number): void {
-			//Get the index of the object and remove it from the list
-			if (typeof config !== 'number') config = state.runConfigurations.indexOf(config);
-			let deleted: RunConfiguration[] = state.runConfigurations.splice(config, 1);
+		removeRunConfig(state: RootState, config: string): void {
+			delete state.runConfigLookup[config];
 
-			if (state.chosenRunConfig === undefined) return;
-			//Update the selected run configuration if necessary
-			if (state.runConfigurations.length === 0) {
-				state.chosenRunConfig = undefined;
-			} else if (deleted.includes(state.chosenRunConfig)) {
-				let index = Math.min(config, state.runConfigurations.length - 1);
-				state.chosenRunConfig = state.runConfigurations[index];
-			}
-		},
-		overwriteRunConfig(state: RootState, [configIndex, newConfig]: [number, RunConfiguration]): void {
-			let oldConfig = state.runConfigurations[configIndex];
-			if (oldConfig === undefined) return;
-			//Replace the old run config with the new one
-			state.runConfigurations.splice(configIndex, 1, newConfig);
-			//Update the chosen run config if that is the overwritten one
-			if (oldConfig === state.chosenRunConfig) {
-				state.chosenRunConfig = newConfig;
+			let index: number = state.runConfigurations.indexOf(config);
+			if (index > -1) {
+				state.runConfigurations.splice(index, 1);
+				if (state.chosenRunConfig === config) {
+					Math.min(index, state.runConfigurations.length - 1)
+					state.chosenRunConfig = state.runConfigurations[index];
+				}
 			}
 		},
 
-		setChosenRunConfig(state: RootState, config: RunConfiguration) {
+		setChosenRunConfig(state: RootState, config: string) {
 			state.chosenRunConfig = config;
+		},
+
+		replaceRunConfigs(state: RootState, [runConfigs, runConfigLookup]: [string[], {[key: string]: RunConfiguration}]): void {
+			state.runConfigurations = runConfigs;
+			state.runConfigLookup = runConfigLookup;
 		},
 
 		/**
@@ -157,15 +191,25 @@ const store = new Vuex.Store<RootState>({
 			state.settings.general.hwhilePath = hwhilePath;
 		},
 
-		'openFiles.set': function (state: RootState, files: FileInfoState[]) {
-			state.openFiles = [...files];
+		'openFiles.set': function (state: RootState, files: string[]) {
+			state.openFiles = files;
 		},
-		'openFiles.setFocused': function (state: RootState, file: number|FileInfoState) {
-			if (typeof file === 'number') state.focusedFile = file;
-			else state.focusedFile = state.openFiles.indexOf(file);
+		'openFiles.setFocused': function (state: RootState, file: string|undefined) {
+			state.focusedFile = file;
 		},
 		'openFiles.focused.setExtended': function (state: RootState, isExt: boolean) {
-			if (state.focusedFile >= 0) state.openFiles[state.focusedFile].extWhile = isExt;
+			if (state.focusedFile !== undefined) state.fileLookup[state.focusedFile].extWhile = isExt;
+		},
+		'openFile.open': function (state: RootState, file: FileInfoState) {
+			if (!state.openFiles.includes(file.path)) {
+				state.openFiles.push(file.path);
+				state.fileLookup[file.path] = file;
+			}
+		},
+		'openFile.close': function (state: RootState, file: string) {
+			state.openFiles = state.openFiles.filter(e => e !== file);
+			delete state.fileLookup[file];
+			if (state.focusedFile === file) state.focusedFile = state.openFiles[0];
 		},
 
 		'cwd.set': function (state: RootState, directory: string) {
@@ -214,9 +258,12 @@ const store = new Vuex.Store<RootState>({
 				'setHWhilePath',
 				'cwd.set',
 				'hwhile.showAllOutput',
+				'openFiles.setFocused',
 			],
 		})
 	],
 });
+
+onStoreLoaded(store);
 
 export default store;
