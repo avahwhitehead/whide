@@ -508,7 +508,6 @@ export default Vue.extend({
 			await runner.run();
 		},
 		async debugProgramClick() {
-			if (!this.editorController) throw new Error("Couldn't get Editor Controller");
 			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
 
 			let config = this.chosenRunConfig;
