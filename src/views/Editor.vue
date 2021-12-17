@@ -24,6 +24,7 @@
 				:items="runConfigs"
 				item-text="name"
 				placeholder="Run Configuration"
+				no-data-text="No run configurations"
 				class="dropdown"
 				return-object
 				dense
