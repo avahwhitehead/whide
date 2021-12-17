@@ -405,7 +405,7 @@ export default Vue.extend({
 						{ name: 'WHILE files', extensions: ['while'] },
 						{ name: 'All files', extensions: ['*'] },
 					],
-					properties: [],
+					properties: ['openFile'],
 				}).then((result: OpenDialogReturnValue) => {
 					this.onPathSelect(result.filePaths[0]);
 				})
