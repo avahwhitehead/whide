@@ -178,6 +178,7 @@ import { fs } from "@/files/fs";
 import { displayPad, ProgramManager } from "whilejs";
 import { HWHILE_DISPLAY_FORMAT, ProgDataType } from "whilejs/lib/tools/progAsData";
 import { prog_to_pure_while } from "@/utils/program_converters";
+import { treeParser } from "@whide/tree-lang";
 
 const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
@@ -471,10 +472,54 @@ export default Vue.extend({
 		async openFile(filePath: string) : Promise<void> {
 			await this.editorController._openFile(filePath);
 		},
-		async runProgramClick() {
-			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
 
-			let config = this.chosenRunConfig;
+		checkRunConfig(runConfig: RunConfiguration): true|string {
+			//Check the program path
+			if (!runConfig.file) return 'No file selected to run. Please set one and try again.';
+			const stats = fs.statSync(runConfig.file);
+			if (!stats.isFile()) return 'Selected program is not a file. Please check the path and try again.';
+
+			if (!runConfig.input) return 'No input tree provided. Please set one and try again.';
+			try {
+				treeParser(runConfig.input)
+			} catch (e) {
+				return 'Invalid input tree: ' + e.message;
+			}
+
+			switch (runConfig.interpreter) {
+				case INTERPRETERS.HWHILE:
+					if (this.isElectron) break;
+					return 'HWhile can only be used in the desktop app. Please choose another interpreter.';
+				case INTERPRETERS.WHILE_JS:
+					//No conditions to check
+					break;
+				default:
+					return 'Invalid interpreter selected. Please choose another interpreter and try again.';
+			}
+
+			return true;
+		},
+
+		async runProgramClick() {
+			const hwhilePath = this.$store.state.settings.general.hwhilePath || 'hwhile';
+			//Make sure the run configuration is valid
+			let config: RunConfiguration|undefined = this.chosenRunConfig;
+			if (!config) {
+				electron.remote.dialog.showMessageBox(undefined, {
+					type: 'error',
+					message: 'No run configuration selected',
+				});
+				return;
+			} else {
+				let configCheck = this.checkRunConfig(config);
+				if (configCheck !== true) {
+					electron.remote.dialog.showMessageBox(undefined, {
+						type: 'error',
+						message: configCheck,
+					});
+					return;
+				}
+			}
 			let inputExpression = config.input;
 
 			let runner: AbstractRunner;
@@ -494,7 +539,7 @@ export default Vue.extend({
 					expression: inputExpression,
 					file: config.file,
 					directory: folder,
-					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
+					hwhile: hwhilePath,
 					onerror: this._handleRunDebugError,
 				});
 			}
@@ -508,9 +553,16 @@ export default Vue.extend({
 			await runner.run();
 		},
 		async debugProgramClick() {
-			if (!this.chosenRunConfig) throw new Error("No run configuration selected");
-
-			let config = this.chosenRunConfig;
+			const hwhilePath = this.$store.state.settings.general.hwhilePath || 'hwhile';
+			//Make sure the run configuration is valid
+			let config: RunConfiguration|undefined = this.chosenRunConfig;
+			if (!config) {
+				electron.remote.dialog.showMessageBox(undefined, {
+					type: 'error',
+					message: 'No run configuration selected',
+				});
+				return;
+			}
 			let inputExpression = config.input;
 
 			let runner: AbstractRunner;
@@ -520,14 +572,18 @@ export default Vue.extend({
 			breakpoints = this.getBreakpointsInFolder(path.dirname(config.file));
 
 			if (config.interpreter === INTERPRETERS.WHILE_JS) {
-				throw new Error("Can't debug with While.js");
+				electron.remote.dialog.showMessageBox(undefined, {
+					type: 'error',
+					message: "Can't debug with While.js",
+				});
+				return;
 			} else {
 				//Create an HWhile runner for the program
 				runner = new HWhileDebugger({
 					expression: inputExpression,
 					file: config.file,
 					directory: path.dirname(config.file),
-					hwhile: this.$store.state.settings.general.hwhilePath || 'hwhile',
+					hwhile: hwhilePath,
 					showAllOutput: this.$store.state.settings.general.showAllHWhileOutput,
 					breakpoints: breakpoints,
 					onerror: this._handleRunDebugError,
@@ -546,7 +602,7 @@ export default Vue.extend({
 			if (err.code === 'ENOENT') {
 				this.showHWhileNotFoundError();
 			} else {
-				console.error(err)
+				alert(err)
 			}
 		},
 		async onFileCreate(filePath: string, isFolder: boolean) {
@@ -592,7 +648,7 @@ export default Vue.extend({
 
 		showHWhileNotFoundError(): void {
 			const title = `Could not find HWhile`;
-			const message = `Please ensure HWhile is installed on your computer and available on the global path,`
+			const message = `Could not find HWhile. Please ensure HWhile is installed on your computer and available on the global path,`
 				+ ` or set the path to the HWhile executable in settings.`;
 			if (electron) {
 				let opts: MessageBoxOptions = {
