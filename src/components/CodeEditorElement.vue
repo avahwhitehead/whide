@@ -10,10 +10,10 @@
 				elevation="0"
 				v-for="(tab,i) in openFileStates" :key="i"
 				@click.middle="_closeTab(tab)"
-				@click.left="currentTab = i"
+				@click.left="currentTabFile = tab.path"
 			>
 				<v-card-text
-					:class="{'primary--text': currentTab === i}"
+					:class="{'primary--text': currentFileState === tab}"
 				>
 					<span class="tab-name">{{ tab.name }}</span>
 					<span v-if="tab.modified">*</span>
@@ -260,13 +260,13 @@ export default Vue.extend({
 			return this.$vuetify.theme.dark;
 		},
 		//Wrapper around the VueX focusedFile value
-		currentTab: {
+		currentTabIndex: {
 			get(): number {
 				if (this.currentTabFile === undefined) return -1;
-				return this.stateOpenFiles.indexOf(this.currentTabFile);
+				return this.openFiles.indexOf(this.currentTabFile);
 			},
 			set(val: number): void {
-				this.currentTabFile = this.stateOpenFiles[val];
+				this.currentTabFile = val === -1 ? undefined : this.openFiles[val];
 			},
 		},
 		currentTabFile: {
@@ -304,8 +304,8 @@ export default Vue.extend({
 	methods: {
 		onDragEnd(event: SortableEvent): any {
 			//If the focused tab was being dragged, update the index
-			if (event.oldIndex === this.currentTab) {
-				this.currentTab = event.newIndex!;
+			if (event.oldIndex === this.currentTabIndex) {
+				this.currentTabIndex = event.newIndex!;
 			}
 		},
 
@@ -396,7 +396,7 @@ export default Vue.extend({
 
 			if (fileTabIndex > -1) {
 				//Switch to the existing tab
-				this.currentTab = fileTabIndex;
+				this.currentTabFile = filepath;
 				return this.currentFileState!;
 			}
 
@@ -412,7 +412,7 @@ export default Vue.extend({
 			);
 			//Open the file in a new tab and switch to it
 			this.$store.commit('openFile.open', tabInfo);
-			this.$store.commit('openFiles.setFocused', tabInfo.path);
+			this.currentTabFile = tabInfo.path;
 
 			//Set up the breakpoints in the document if there are any saved
 			let breakpoints: {prog:string, line:number}[] = this.$store.state.breakpoints;
