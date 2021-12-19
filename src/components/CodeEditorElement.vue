@@ -515,6 +515,14 @@ export default Vue.extend({
 			this.openFiles = stateOpenFiles;
 		},
 		openFiles(openFiles: string[]) {
+			if (this.currentTabFile !== undefined && !openFiles.includes(this.currentTabFile)) {
+				if (openFiles.length > 0) {
+					this.currentTabFile = openFiles[openFiles.length - 1];
+				} else {
+					this.currentTabFile = undefined;
+				}
+			}
+
 			if (openFiles === this.stateOpenFiles) return;
 
 			//Update the open files list in the VueX store
