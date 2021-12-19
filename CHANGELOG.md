@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.5.2](https://github.com/sonrad10/Whide/compare/v2.5.1...v2.5.2) (2021-12-19)
+
+
+### Bug Fixes
+
+* fixed "convert to pad" and "convert to pure" not working ([3a0b1f0](https://github.com/sonrad10/Whide/commit/3a0b1f080cee1f4bc4e9c381f2564022c8c26515))
+* fixed "convert to pad" and "convert to pure" not working ([86fd266](https://github.com/sonrad10/Whide/commit/86fd266c0153fb9d40ea5aa54cb2c81586ccf345))
+* prog-as-data and pure while translations now also update when the "live update" button is enabled ([cfd221f](https://github.com/sonrad10/Whide/commit/cfd221f4b0c1edd468ebc46179057cdfaa4ff3eb))
+
 ### [2.5.1](https://github.com/sonrad10/Whide/compare/v2.5.0...v2.5.1) (2021-12-19)
 
 
