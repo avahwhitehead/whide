@@ -100,7 +100,7 @@
 				title="If enabled, extended WHILE syntax is allowed in the program code. Otherwise only pure WHILE syntax."
 			/>
 
-			<v-radio-group class="remove-messages mt-0" v-model="secondEditorContentModel" dense :disabled="!focusedFile" label="Tools:">
+			<v-radio-group class="remove-messages mt-0" v-model="secondEditorDisplayMode" dense :disabled="!focusedFile" label="Tools:">
 				<v-radio value="NOTHING" label="Nothing" />
 				<v-radio value="PURE_WHILE" label="Show Pure WHILE" />
 				<v-radio value="SHOW_PAD" label="Show Prog as Data" />
@@ -110,7 +110,7 @@
 						dense
 						class="ma-0 pa-0"
 						v-model="secondEditorLiveMode"
-						:disabled="!focusedFile || secondEditorContentModel === 'NOTHING'"
+						:disabled="!focusedFile || secondEditorDisplayMode === 'NOTHING'"
 				/>
 			</v-radio-group>
 
@@ -199,6 +199,7 @@ interface DataTypesDescriptor {
 	progErrPopupContent: string;
 	filterFiles: boolean;
 	settingsText: string;
+	secondEditorDisplayMode: 'NOTHING'|'PURE_WHILE'|'SHOW_PAD';
 }
 
 export default Vue.extend({
@@ -227,6 +228,7 @@ export default Vue.extend({
 			progErrPopupContent: '',
 			filterFiles: true,
 			settingsText: 'Global ' + (this.$store.state.isMac ? 'Preferences' : 'Settings'),
+			secondEditorDisplayMode: 'NOTHING'
 		}
 	},
 	computed: {
@@ -255,7 +257,7 @@ export default Vue.extend({
 		focusedFile(): FileInfoState|undefined {
 			const focusedFile = this.$store.state.focusedFile;
 			if (focusedFile === undefined) return undefined;
-			return (this.$store.state.openFiles)[focusedFile];
+			return (this.$store.state.fileLookup)[focusedFile];
 		},
 		extendedWhile: {
 			get(): boolean {
@@ -370,16 +372,6 @@ export default Vue.extend({
 		},
 		editorController(): any {
 			return this.$refs.codeEditor as (typeof CodeEditorElement);
-		},
-		secondEditorContentModel: {
-			get(): 'NOTHING'|'PURE_WHILE'|'SHOW_PAD' {
-				return this.focusedFile?.secondEditorDisplayMode || 'NOTHING';
-			},
-			set(val: 'NOTHING'|'PURE_WHILE'|'SHOW_PAD') {
-				if (this.focusedFile){
-					this.focusedFile.secondEditorDisplayMode = val;
-				}
-			},
 		},
 		secondEditorLiveMode: {
 			get(): boolean {
@@ -759,7 +751,7 @@ export default Vue.extend({
 		},
 
 		async menu_to_pad_click(): Promise<void> {
-			this.secondEditorContentModel = 'SHOW_PAD';
+			this.secondEditorDisplayMode = 'SHOW_PAD';
 
 			if (!this.focusedFile) {
 				alert("Open a program to convert it to Programs-as-Data form");
@@ -784,7 +776,7 @@ export default Vue.extend({
 		},
 
 		async menu_to_pure_click(): Promise<void> {
-			this.secondEditorContentModel = 'PURE_WHILE';
+			this.secondEditorDisplayMode = 'PURE_WHILE';
 
 			//TODO: Better way to output problems here
 			if (!this.focusedFile) {
@@ -842,6 +834,9 @@ export default Vue.extend({
 				}
 			}
 		},
+		_onFocusedFileDisplayModeChanged(mode: 'NOTHING'|'PURE_WHILE'|'SHOW_PAD') {
+			this.secondEditorDisplayMode = mode;
+		},
 	},
 	watch: {
 		runConfigs(val: RunConfiguration[]) {
@@ -850,21 +845,25 @@ export default Vue.extend({
 			else if (this.chosenRunConfig === undefined)
 				this.chosenRunConfig = val[0];
 		},
-		secondEditorContentModel(secondEditorContentModel: string) {
+		secondEditorDisplayMode(secondEditorDisplayMode: 'NOTHING'|'PURE_WHILE'|'SHOW_PAD') {
 			if (!this.focusedFile) return;
 
-			if (secondEditorContentModel === 'NOTHING') {
+			if (this.focusedFile.secondEditorDisplayMode !== secondEditorDisplayMode) {
+				this.focusedFile.secondEditorDisplayMode = secondEditorDisplayMode;
+			}
+
+			if (secondEditorDisplayMode === 'NOTHING') {
 				this.focusedFile.secondEditorContent = undefined;
-			} else if (secondEditorContentModel === 'SHOW_PAD') {
+			} else if (secondEditorDisplayMode === 'SHOW_PAD') {
 				this.menu_to_pad_click();
-			} else if (secondEditorContentModel === 'PURE_WHILE') {
+			} else if (secondEditorDisplayMode === 'PURE_WHILE') {
 				this.menu_to_pure_click();
 			}
 		},
-		focusedFile(focusedFile: FileInfoState|undefined) {
-			if (!focusedFile) {
-				this.secondEditorContentModel = 'NOTHING';
-			}
+		focusedFile(focusedFile: FileInfoState|undefined, oldFocusedFile: FileInfoState|undefined) {
+			oldFocusedFile?.off('secondEditorDisplayMode', this._onFocusedFileDisplayModeChanged);
+			this.secondEditorDisplayMode = 'NOTHING';
+			focusedFile?.on('secondEditorDisplayMode', this._onFocusedFileDisplayModeChanged);
 		}
 	}
 });
