@@ -49,7 +49,7 @@
 						<v-text-field
 							v-model="nameModel"
 							label="Configuration name*"
-							class="mb-0 mt-0 pb-0 pt-0"
+							class="pb-0 pt-0"
 							required
 							:rules="nameInputRules"
 							:disabled="disableForm"
@@ -61,7 +61,7 @@
 							v-model="interpreterModel"
 							:items="interpreterList"
 							label="WHILE Interpreter"
-							class="dropdown"
+							class="mb-1 mt-1"
 							item-text="name"
 							return-object
 							outlined
@@ -93,7 +93,7 @@
 						<v-text-field
 							v-model="fileModel"
 							label="Program*"
-							class="mb-0 mt-0 pb-0 pt-0"
+							class="mb-1 mt-2 pb-0 pt-0"
 							required
 							:rules="fileInputRules"
 							:disabled="disableForm"
@@ -112,7 +112,7 @@
 						<v-text-field
 							v-model="inputModel"
 							label="Input tree*"
-							class="mb-0 mt-0 pb-0 pt-0"
+							class="mb-1 mt-1 pb-0 pt-0"
 							required
 							:rules="treeInputRules"
 							:disabled="disableForm"
