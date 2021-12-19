@@ -6,6 +6,8 @@ import createMutationsSharer from "vuex-shared-mutations";
 import { FileInfoState } from "@/types/FileInfoState";
 import { AbstractRunner } from "@/run/AbstractRunner";
 
+const electron = (window['require'] !== undefined) ? require("electron") : undefined;
+
 //Make VueX available to Vue
 Vue.use(Vuex);
 
@@ -33,6 +35,7 @@ export interface RootState {
 	focusedFile: string|undefined;
 	current_directory: string|undefined;
 	isElectron: boolean;
+	isMac: boolean;
 	programRunners: {name:string, runner:AbstractRunner}[],
 }
 
@@ -134,6 +137,7 @@ const store = new Vuex.Store<RootState>({
 		fileLookup: {},
 		current_directory: undefined,
 		isElectron: (window['require'] !== undefined),
+		isMac: (electron?.remote.process.platform === 'darwin'),
 		breakpoints: [],
 		programRunners: [],
 	},

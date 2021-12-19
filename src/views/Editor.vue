@@ -87,7 +87,7 @@
 			<v-btn
 				right
 				@click="showSettingsPopup"
-				v-text="`Global Settings`"
+				v-text="settingsText"
 			/>
 
 			<div class="title pt-2 pb-0">Options</div>
@@ -198,6 +198,7 @@ interface DataTypesDescriptor {
 	progErrPopupVisible: boolean;
 	progErrPopupContent: string;
 	filterFiles: boolean;
+	settingsText: string;
 }
 
 export default Vue.extend({
@@ -225,6 +226,7 @@ export default Vue.extend({
 			progErrPopupVisible: false,
 			progErrPopupContent: '',
 			filterFiles: true,
+			settingsText: 'Global ' + (this.$store.state.isMac ? 'Preferences' : 'Settings'),
 		}
 	},
 	computed: {
