@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.5.0](https://github.com/sonrad10/Whide/compare/v2.4.0...v2.5.0) (2021-12-19)
+
+
+### Features
+
+* run configurations and HWhile installation are checked before running programs ([b71ae10](https://github.com/sonrad10/Whide/commit/b71ae107c7f842f2351c7053fafe02533f022acc))
+
+
+### Bug Fixes
+
+* changed to consistently using 'Preferences' instead of 'Settings' on macs ([0e8174e](https://github.com/sonrad10/Whide/commit/0e8174e1f0833b5b53d0239fa6f95d8432105e31))
+* fixed being unable to select files on Mac ([f524745](https://github.com/sonrad10/Whide/commit/f52474523cb1319a93b918227151516f888d2e43))
+* fixed run config program field sometimes incorrectly showing "file not found" ([8fb5a26](https://github.com/sonrad10/Whide/commit/8fb5a26e17e3734c0fb3d51fa8061b0229440475))
+* stopped links to external sites opening in app windows ([80b8f9d](https://github.com/sonrad10/Whide/commit/80b8f9d0c9dcd149c876403f648f9696c2875e6d))
+* stopped overlapping text in run configuration window ([9c8659d](https://github.com/sonrad10/Whide/commit/9c8659d4f95aac8628623a7b23681cfc22be878c))
+
 ## [2.4.0](https://github.com/sonrad10/Whide/compare/v2.3.1...v2.4.0) (2021-12-14)
 
 
