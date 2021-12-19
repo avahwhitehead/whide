@@ -200,6 +200,7 @@ interface DataTypesDescriptor {
 	filterFiles: boolean;
 	settingsText: string;
 	secondEditorDisplayMode: 'NOTHING'|'PURE_WHILE'|'SHOW_PAD';
+	secondEditorLiveMode: boolean;
 }
 
 export default Vue.extend({
@@ -228,7 +229,8 @@ export default Vue.extend({
 			progErrPopupContent: '',
 			filterFiles: true,
 			settingsText: 'Global ' + (this.$store.state.isMac ? 'Preferences' : 'Settings'),
-			secondEditorDisplayMode: 'NOTHING'
+			secondEditorDisplayMode: 'NOTHING',
+			secondEditorLiveMode: true,
 		}
 	},
 	computed: {
@@ -373,17 +375,6 @@ export default Vue.extend({
 		editorController(): any {
 			return this.$refs.codeEditor as (typeof CodeEditorElement);
 		},
-		secondEditorLiveMode: {
-			get(): boolean {
-				if (!this.focusedFile) return true;
-				return this.focusedFile.secondEditorLiveMode;
-			},
-			set(val: boolean) {
-				if (this.focusedFile){
-					this.focusedFile.secondEditorLiveMode = val;
-				}
-			},
-		}
 	},
 	destroyed() {
 		//Remove global event listeners before destroying the element
@@ -837,6 +828,9 @@ export default Vue.extend({
 		_onFocusedFileDisplayModeChanged(mode: 'NOTHING'|'PURE_WHILE'|'SHOW_PAD') {
 			this.secondEditorDisplayMode = mode;
 		},
+		_onFocusedFileLiveModeChanged(mode: boolean) {
+			this.secondEditorLiveMode = mode;
+		},
 	},
 	watch: {
 		runConfigs(val: RunConfiguration[]) {
@@ -860,10 +854,21 @@ export default Vue.extend({
 				this.menu_to_pure_click();
 			}
 		},
+		secondEditorLiveMode(enableLiveMode: boolean) {
+			if (!this.focusedFile) return;
+			if (this.focusedFile.secondEditorLiveMode !== enableLiveMode) {
+				this.focusedFile.secondEditorLiveMode = enableLiveMode;
+			}
+			if (enableLiveMode) {
+				this.onCodeEditorValueChange();
+			}
+		},
 		focusedFile(focusedFile: FileInfoState|undefined, oldFocusedFile: FileInfoState|undefined) {
 			oldFocusedFile?.off('secondEditorDisplayMode', this._onFocusedFileDisplayModeChanged);
+			oldFocusedFile?.off('secondEditorLiveMode', this._onFocusedFileLiveModeChanged);
 			this.secondEditorDisplayMode = 'NOTHING';
 			focusedFile?.on('secondEditorDisplayMode', this._onFocusedFileDisplayModeChanged);
+			focusedFile?.on('secondEditorLiveMode', this._onFocusedFileLiveModeChanged);
 		}
 	}
 });
