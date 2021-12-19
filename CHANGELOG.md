@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.5.1](https://github.com/sonrad10/Whide/compare/v2.5.0...v2.5.1) (2021-12-19)
+
+
+### Bug Fixes
+
+* fixed files not opening on some platforms ([03b089b](https://github.com/sonrad10/Whide/commit/03b089b4ef913dc8b7d64c3d8d7205ba438afd76))
+
 ## [2.5.0](https://github.com/sonrad10/Whide/compare/v2.4.0...v2.5.0) (2021-12-19)
 
 
