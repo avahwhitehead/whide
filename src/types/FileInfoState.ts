@@ -1,5 +1,6 @@
 import { CustomMirrorDoc, CustomMirrorDocOptions } from "@/types/CustomMirrorDoc";
 import EventEmitter from "events";
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Configuration options for creating a {@link FileInfoState} object.
@@ -31,6 +32,11 @@ export type FileInfoStateOptions = Partial<{
  */
 export class FileInfoState extends EventEmitter {
     /**
+     * Unique ID for referencing the file.
+     * @private
+     */
+    private _id: string;
+    /**
      * The CodeMirror Doc object containing the file content
      * @private
      */
@@ -49,7 +55,7 @@ export class FileInfoState extends EventEmitter {
      * Full path to the file
      * @private
      */
-    private _path: string;
+    private _path: string|undefined;
     /**
      * Whether to display this file as extended WHILE
      * @private
@@ -63,11 +69,13 @@ export class FileInfoState extends EventEmitter {
 
     /**
      * @param name      Name of the file
-     * @param path      Path to the file
+     * @param path      Path to the file (undefined if the file is not saved anywhere)
      * @param options   (Optional) configuration objects for the file
      */
-    constructor(name: string, path: string, options?: FileInfoStateOptions) {
+    constructor(name: string, path?: string|undefined, options?: FileInfoStateOptions) {
         super();
+
+        this._id = uuidv4();
 
         if (!options) options = {
             extWhile: true,
@@ -87,6 +95,14 @@ export class FileInfoState extends EventEmitter {
 
         //Create a new CodeMirror Doc
         this._doc = new CustomMirrorDoc(options.docOptions?.text || '', this, options.docOptions);
+    }
+
+    get id(): string {
+        return this._id;
+    }
+
+    set id(value: string) {
+        this._id = value;
     }
 
     get name(): string {
@@ -119,10 +135,10 @@ export class FileInfoState extends EventEmitter {
     get breakpoints(): number[] {
         return this._doc.breakpoints;
     }
-    get path(): string {
+    get path(): string|undefined {
         return this._path;
     }
-    set path(value: string) {
+    set path(value: string|undefined) {
         this._path = value;
         this.emit('path', value);
     }

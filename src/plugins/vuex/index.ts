@@ -221,9 +221,9 @@ const store = new Vuex.Store<RootState>({
 			if (state.focusedFile !== undefined) state.fileLookup[state.focusedFile].extWhile = isExt;
 		},
 		'openFile.open': function (state: RootState, file: FileInfoState) {
-			if (!state.openFiles.includes(file.path)) {
-				state.openFiles.push(file.path);
-				state.fileLookup[file.path] = file;
+			if (!state.openFiles.includes(file.id)) {
+				state.openFiles.push(file.id);
+				state.fileLookup[file.id] = file;
 			}
 		},
 		'openFile.close': function (state: RootState, file: string) {

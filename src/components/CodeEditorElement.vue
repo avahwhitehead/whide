@@ -8,9 +8,9 @@
 			<v-card
 				class="pa-0"
 				elevation="0"
-				v-for="(tab,i) in openFileStates" :key="i"
+				v-for="tab in openFileStates" :key="tab.id"
 				@click.middle="_closeTab(tab)"
-				@click.left="currentTabFile = tab.path"
+				@click.left="currentTabFile = tab.id"
 			>
 				<v-card-text
 					:class="{'primary--text': currentFileState === tab}"
@@ -81,6 +81,8 @@
 				</v-card-actions>
 			</v-card>
 		</v-dialog>
+
+		<SaveAsDialog v-model="showSaveAsDialog" @change="handleSaveAs" />
 	</div>
 </template>
 
@@ -90,6 +92,7 @@ import Vue from "vue";
 import EditorWidget from "./_internal/codeEditor/EditorWidget.vue";
 import { FileInfoState } from "@/types/FileInfoState";
 import { CustomMirrorDoc } from "@/types/CustomMirrorDoc";
+import SaveAsDialog from "@/components/SaveAsDialog.vue";
 import VueDraggable from "vuedraggable";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { SortableEvent } from 'sortablejs';
@@ -126,6 +129,7 @@ interface DataType {
 	infos: LineWidgetType[];
 	warnings: LineWidgetType[];
 	showSaveDialog: boolean;
+	showSaveAsDialog: boolean;
 	closingTab: FileInfoState|undefined;
 	secondEditorContent: string|undefined;
 }
@@ -164,7 +168,8 @@ function makeWidget(editor : CodeMirror.Editor, line: number|CodeMirror.LineHand
 export default Vue.extend({
 	name: 'Codeeditor-container',
 	components: {
-		draggable: VueDraggable
+		draggable: VueDraggable,
+		SaveAsDialog,
 	},
 	props: {
 		value: {
@@ -181,6 +186,7 @@ export default Vue.extend({
 			infos: [],
 			warnings: [],
 			showSaveDialog: false,
+			showSaveAsDialog: false,
 			closingTab: undefined,
 			secondEditorContent: undefined,
 		}
@@ -277,9 +283,14 @@ export default Vue.extend({
 				this.$store.commit('openFiles.setFocused', val);
 			},
 		},
-		currentFileState(): FileInfoState|undefined {
-			if (this.currentTabFile === undefined) return undefined;
-			return this.$store.state.fileLookup[this.currentTabFile];
+		currentFileState: {
+			get(): FileInfoState|undefined {
+				if (this.currentTabFile === undefined) return undefined;
+				return this.$store.state.fileLookup[this.currentTabFile];
+			},
+			set(val: FileInfoState|undefined): void {
+				this.currentTabFile = val?.id;
+			},
 		},
 		openFileStates(): FileInfoState[] {
 			return this.openFiles.map(c => this.$store.state.fileLookup[c]);
@@ -390,21 +401,24 @@ export default Vue.extend({
 			this.editor!.setOption("lint", this.lintOptions);
 		},
 
-		async _openFile(filepath: string): Promise<FileInfoState> {
-			//Check to see if the file already exists as a tab
-			let fileTabIndex: number = this.openFiles.indexOf(filepath);
+		async _openFile(filepath: string|undefined): Promise<FileInfoState> {
+			let content: string = '';
 
-			if (fileTabIndex > -1) {
-				//Switch to the existing tab
-				this.currentTabFile = filepath;
-				return this.currentFileState!;
+			if (filepath) {
+				//Check to see if the file already exists as a tab
+				let fileTabIndex: number = this.openFileStates.findIndex(f => f.path === filepath);
+				if (fileTabIndex > -1) {
+					//Switch to the existing tab
+					this.currentTabFile = filepath;
+					return this.currentFileState!;
+				}
+				//Load the file content from the file into an CodeMirror Doc
+				content = await this._readFile(filepath);
 			}
 
-			//Load the file content from the file into an CodeMirror Doc
-			let content: string = await this._readFile(filepath);
 			//Open the file in the editor
 			let tabInfo: FileInfoState = new FileInfoState(
-				path.basename(filepath),
+				filepath ? path.basename(filepath) : 'untitled',
 				filepath,
 				{
 					docOptions: { text: content }
@@ -412,7 +426,7 @@ export default Vue.extend({
 			);
 			//Open the file in a new tab and switch to it
 			this.$store.commit('openFile.open', tabInfo);
-			this.currentTabFile = tabInfo.path;
+			this.currentTabFile = tabInfo.id;
 
 			//Set up the breakpoints in the document if there are any saved
 			let breakpoints: {prog:string, line:number}[] = this.$store.state.breakpoints;
@@ -434,10 +448,16 @@ export default Vue.extend({
 				this.closingTab = tab;
 			} else {
 				//Close the tab
-				this.$store.commit('openFile.close', tab.path);
+				this.$store.commit('openFile.close', tab.id);
 			}
 		},
 		async _saveFile(tab: FileInfoState): Promise<void> {
+			if (tab.path === undefined) {
+				//Prompt for saving the file to a new location, then try again
+				this.currentFileState = tab;
+				this.showSaveAsDialog = true;
+				return;
+			}
 			//Write the file to persistent storage
 			await this._writeFile(tab.path, tab.doc.getValue());
 			//Mark the file as saved in the editor
@@ -451,9 +471,9 @@ export default Vue.extend({
 		async saveDialogSaveClick() {
 			if (!this.closingTab) return;
 			//Save the file
-			await this._saveFile(this.closingTab)
+			await this._saveFile(this.closingTab);
 			//Close the tab
-			this.$store.commit('openFile.close', this.closingTab.path);
+			this.$store.commit('openFile.close', this.closingTab.id);
 			//Hide the popup
 			this.showSaveDialog = false;
 			this.closingTab = undefined;
@@ -461,10 +481,16 @@ export default Vue.extend({
 		saveDialogNoSaveClick() {
 			if (!this.closingTab) return;
 			//Close the tab
-			this.$store.commit('openFile.close', this.closingTab.path);
+			this.$store.commit('openFile.close', this.closingTab.id);
 			//Hide the popup
 			this.showSaveDialog = false;
 			this.closingTab = undefined;
+		},
+		handleSaveAs(filePath: string) {
+			if (!this.currentFileState) return;
+			this.currentFileState.name = path.basename(filePath);
+			this.currentFileState.path = filePath;
+			this._saveFile(this.currentFileState);
 		},
 
 		async saveAllFiles(): Promise<void> {

@@ -132,12 +132,6 @@
 			v-model="showChangeRootPopup"
 			v-if="isNotElectron"
 		/>
-		<NewFilePopup
-			v-model="showNewFilePopup"
-			v-if="isNotElectron"
-			:create-folder="createFolder"
-			@created="onFileCreate"
-		/>
 		<DeleteFilePopup
 			v-model="showDeleteFilePopup"
 			v-if="isNotElectron"
@@ -161,7 +155,6 @@ import MenuBar from "@/components/MenuBar.vue";
 import RunPanel from "@/components/RunPanel.vue";
 import DownloadFilePopup from "@/components/DownloadFilePopup.vue";
 import ChangeRootPopup from "@/components/ChangeRootPopup.vue";
-import NewFilePopup from "@/components/NewFilePopup.vue";
 import DeleteFilePopup from "@/components/DeleteFilePopup.vue";
 //Other imports
 import { Menu } from "@/types";
@@ -189,7 +182,6 @@ interface DataTypesDescriptor {
 	codeEditor? : CodeMirror.Editor;
 	showChangeRootPopup: boolean;
 	showDeleteFilePopup: boolean;
-	showNewFilePopup: boolean;
 	createFolder: boolean;
 	showDownloadPopup: boolean;
 	showPopout: boolean|undefined;
@@ -213,13 +205,11 @@ export default Vue.extend({
 		CodeEditorElement,
 		MenuBar,
 		RunPanel,
-		NewFilePopup,
 	},
 	data() : DataTypesDescriptor {
 		return {
 			showChangeRootPopup: false,
 			showDeleteFilePopup: false,
-			showNewFilePopup: false,
 			createFolder: false,
 			showDownloadPopup: false,
 			showPopout: undefined,
@@ -454,7 +444,7 @@ export default Vue.extend({
 			let routeData = this.$router.resolve({ path: '/trees' });
 			window.open(routeData.href, '_blank');
 		},
-		async openFile(filePath: string) : Promise<void> {
+		async openFile(filePath: string|undefined) : Promise<void> {
 			await this.editorController._openFile(filePath);
 		},
 
@@ -590,10 +580,6 @@ export default Vue.extend({
 				alert(err)
 			}
 		},
-		async onFileCreate(filePath: string, isFolder: boolean) {
-			if (isFolder) return;
-			await this.openFile(filePath);
-		},
 		dirChange(dir: string) {
 			//Change the working directory
 			this.cwd = dir;
@@ -647,24 +633,8 @@ export default Vue.extend({
 			}
 		},
 
-		menu_newFile_click() {
-			if (electron) {
-				let filePathPromise: Promise<SaveDialogReturnValue> = electron.remote.dialog.showSaveDialog(null, {
-					defaultPath: path.join(this.cwd, 'myfile.while'),
-					filters: [
-						{ name: 'WHILE files', extensions: ['while'] },
-						{ name: 'All files', extensions: ['*'] },
-					],
-					properties: ['showOverwriteConfirmation', 'createDirectory']
-				});
-				filePathPromise.then((value: SaveDialogReturnValue) => {
-					if (value.canceled) return;
-					fs.promises.writeFile(value.filePath!, '');
-				});
-			} else {
-				this.createFolder = false;
-				this.showNewFilePopup = true;
-			}
+		async menu_newFile_click(): Promise<void> {
+			await this.openFile(undefined);
 		},
 		menu_newFolder_click() {
 			if (electron) {
@@ -678,7 +648,6 @@ export default Vue.extend({
 				});
 			} else {
 				this.createFolder = true;
-				this.showNewFilePopup = true;
 			}
 		},
 		menu_save_click() {
@@ -749,6 +718,12 @@ export default Vue.extend({
 				return;
 			}
 
+			if (!this.focusedFile.path) {
+				//TODO: Remove this requirement if there are no macros
+				alert("File needs to be saved to convert to Programs-as-Data");
+				return;
+			}
+
 			//Convert the program to pure WHILE ready for the PaD conversion
 			const [progMgr, errs]: [ProgramManager|null,null|string[]] = await prog_to_pure_while(
 				this.focusedFile.doc.getValue(),
@@ -772,6 +747,12 @@ export default Vue.extend({
 			//TODO: Better way to output problems here
 			if (!this.focusedFile) {
 				alert("Open a program to convert it to Programs-as-Data form");
+				return;
+			}
+
+			if (!this.focusedFile.path) {
+				//TODO: Remove this requirement if there are no macros
+				alert("File needs to be saved to convert to pure WHILE");
 				return;
 			}
 
