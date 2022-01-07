@@ -132,6 +132,7 @@ interface DataType {
 	showSaveAsDialog: boolean;
 	closingTab: FileInfoState|undefined;
 	secondEditorContent: string|undefined;
+	saveAsResolver: ((r: boolean) => void)|undefined;
 }
 
 function addWidget(editor: CodeMirror.Editor, line: number|CodeMirror.LineHandle, element: HTMLElement) : CodeMirror.LineWidget {
@@ -189,6 +190,7 @@ export default Vue.extend({
 			showSaveAsDialog: false,
 			closingTab: undefined,
 			secondEditorContent: undefined,
+			saveAsResolver: undefined,
 		}
 	},
 	mounted() {
@@ -451,18 +453,24 @@ export default Vue.extend({
 				this.$store.commit('openFile.close', tab.id);
 			}
 		},
-		async _saveFile(tab: FileInfoState): Promise<void> {
+		async _saveFile(tab: FileInfoState, allowSaveAs = true): Promise<boolean> {
 			if (tab.path === undefined) {
 				//Prompt for saving the file to a new location, then try again
-				this.currentFileState = tab;
-				this.showSaveAsDialog = true;
-				return;
+				if (!allowSaveAs) return false;
+				return await this._saveFileAs(tab);
 			}
 			//Write the file to persistent storage
 			await this._writeFile(tab.path, tab.doc.getValue());
 			//Mark the file as saved in the editor
 			tab.doc.markClean();
 			tab.modified = false;
+			return true;
+		},
+		async _saveFileAs(tab: FileInfoState): Promise<boolean> {
+			//Prompt for saving the file to a new location, then try again
+			this.currentFileState = tab;
+			this.showSaveAsDialog = true;
+			return new Promise<boolean>((resolve) => this.saveAsResolver = resolve);
 		},
 		async _writeFile(filepath: string, content: string): Promise<void> {
 			await fs.promises.writeFile(filepath, content, { encoding: ENCODING_UTF8 });
@@ -486,15 +494,19 @@ export default Vue.extend({
 			this.showSaveDialog = false;
 			this.closingTab = undefined;
 		},
-		handleSaveAs(filePath: string) {
-			if (!this.currentFileState) return;
-			this.currentFileState.name = path.basename(filePath);
-			this.currentFileState.path = filePath;
-			this._saveFile(this.currentFileState);
+		async handleSaveAs(filePath: string|undefined): Promise<void> {
+			if (this.currentFileState && filePath) {
+				this.currentFileState.name = path.basename(filePath);
+				this.currentFileState.path = filePath;
+				await this._saveFile(this.currentFileState);
+			}
+			if (this.saveAsResolver) this.saveAsResolver(!!(this.currentFileState && filePath));
 		},
 
 		async saveAllFiles(): Promise<void> {
-			for (let t of this.openFileStates) await this._saveFile(t);
+			for (let t of this.openFileStates) {
+				await this._saveFile(t);
+			}
 		},
 
 		_onFileStateSecondEditorChange(val: string|undefined) {

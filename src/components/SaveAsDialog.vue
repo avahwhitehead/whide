@@ -1,5 +1,5 @@
 <template>
-	<v-dialog v-model="value">
+	<v-dialog v-model="value" max-width="60%">
 		<v-card>
 			<v-card-title>
 				Save As
@@ -94,6 +94,7 @@ export default Vue.extend({
 	},
 	methods: {
 		onCancelClick(): void {
+			this.$emit('change', undefined);
 			this.isDialogVisible = false;
 		},
 		onSaveClick(): void {

@@ -302,6 +302,10 @@ export default Vue.extend({
 							command: this.menu_save_click,
 						},
 						{
+							name: "Save As",
+							command: this.menu_save_as_click,
+						},
+						{
 							name: "Delete",
 							command: this.menu_delete_click,
 						},
@@ -372,6 +376,7 @@ export default Vue.extend({
 			electron.ipcRenderer.off('file.new-file', this.menu_newFile_click);
 			electron.ipcRenderer.off('file.new-folder', this.menu_newFolder_click);
 			electron.ipcRenderer.off('file.save', this.menu_save_click);
+			electron.ipcRenderer.off('file.save-as', this.menu_save_as_click);
 			electron.ipcRenderer.off('file.delete', this.menu_delete_click);
 			electron.ipcRenderer.off('file.delete.folder', this.menu_delete_folder_click);
 			electron.ipcRenderer.off('file.settings', this.menu_settings_click);
@@ -390,6 +395,7 @@ export default Vue.extend({
 			electron.ipcRenderer.on('file.new-file', this.menu_newFile_click);
 			electron.ipcRenderer.on('file.new-folder', this.menu_newFolder_click);
 			electron.ipcRenderer.on('file.save', this.menu_save_click);
+			electron.ipcRenderer.on('file.save-as', this.menu_save_as_click);
 			electron.ipcRenderer.on('file.delete', this.menu_delete_click);
 			electron.ipcRenderer.on('file.delete.folder', this.menu_delete_folder_click);
 			electron.ipcRenderer.on('file.settings', this.menu_settings_click);
@@ -652,6 +658,11 @@ export default Vue.extend({
 		},
 		menu_save_click() {
 			this.editorController.saveAllFiles();
+		},
+		menu_save_as_click() {
+			if (this.focusedFile) {
+				this.editorController._saveFileAs(this.focusedFile);
+			}
 		},
 		menu_delete_click() {
 			if (electron) {

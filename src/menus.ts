@@ -37,6 +37,13 @@ export function makeElectronMenus(webContents: WebContents, isMac: boolean): Men
 				}
 			},
 			{
+				label: 'Save As',
+				accelerator: 'CommandOrControl+Shift+S',
+				click() {
+					webContents.send('file.save-as');
+				}
+			},
+			{
 				label: 'Delete File',
 				click() {
 					webContents.send('file.delete');
