@@ -6,7 +6,7 @@
 			</v-card-title>
 
 			<v-card-text>
-				<v-form ref="form" v-model="isFormValid">
+				<v-form ref="form" v-model="isFormValid" @submit.prevent="onSaveClick">
 					<v-row>
 						<v-text-field
 							v-model="fileModel"
@@ -31,7 +31,7 @@
 
 				<v-spacer />
 
-				<v-btn @click="onSaveClick">Save</v-btn>
+				<v-btn @click="onSaveClick" :disabled="!isFormValid">Save</v-btn>
 			</v-card-actions>
 		</v-card>
 
@@ -48,6 +48,7 @@ import Vue from "vue";
 import FilePickerPopup from "@/components/FilePickerPopup.vue";
 import { fs } from "@/files/fs";
 import { OpenDialogReturnValue } from "electron";
+import path from "path";
 
 const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
@@ -98,6 +99,7 @@ export default Vue.extend({
 			this.isDialogVisible = false;
 		},
 		onSaveClick(): void {
+			if (path.extname(this.fileModel) === '') this.fileModel += '.while';
 			this.$emit('change', this.fileModel);
 			this.isDialogVisible = false;
 		},
