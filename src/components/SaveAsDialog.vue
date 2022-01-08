@@ -11,6 +11,7 @@
 						<v-text-field
 							v-model="fileModel"
 							label="Program"
+							placeholder="/program.while"
 							required
 							:rules="fileInputRules"
 						/>
@@ -70,17 +71,22 @@ export default Vue.extend({
 	},
 	data() : DataTypeInterface {
 		return {
-			fileModel: '',
+			fileModel: '/prog.while',
 			isFormValid: true,
 
 			showFilePicker: false,
 			filePickerModel: '',
 		}
 	},
+	mounted(): void {
+		//@ts-ignore
+		this.$refs.form?.validate();
+	},
 	computed: {
 		fileInputRules(): ((v: string) => boolean|string)[] {
 			return [
 				this.rule_requireNonEmpty,
+				this.rule_fileNotDirectory,
 				this.rule_fileNotExists,
 			];
 		},
@@ -99,18 +105,27 @@ export default Vue.extend({
 			this.isDialogVisible = false;
 		},
 		onSaveClick(): void {
-			if (path.extname(this.fileModel) === '') this.fileModel += '.while';
+			this.fileModel = this._fileSaveName(this.fileModel);
 			this.$emit('change', this.fileModel);
 			this.isDialogVisible = false;
 		},
 		onPathSelect(p: string): void {
 			this.fileModel = p;
 		},
+		_fileSaveName(filename: string) {
+			if (path.extname(filename) === '') filename += '.while';
+			return filename;
+		},
 		rule_requireNonEmpty(val: string): boolean|string {
 			return val.replaceAll(/\s+/g, '') !== '' || "Enter a value";
 		},
+		rule_fileNotDirectory(val: string): boolean|string {
+			const a = val.charAt(val.length - 1);
+			return !['/', '\\'].includes(a) || "Enter a file name";
+		},
 		rule_fileNotExists(val: string): boolean|string {
-			return !fs.existsSync(val) || "File must not exist"
+			val = this._fileSaveName(val);
+			return !fs.existsSync(val) || `File "${val}" already exists`;
 		},
 	},
 	watch: {
@@ -127,6 +142,14 @@ export default Vue.extend({
 				})
 			}
 		},
+		value(isVisible: boolean): void {
+			if (isVisible) {
+				this.fileModel = '/prog.while';
+				this.filePickerModel = '';
+				//@ts-ignore
+				this.$refs.form?.validate();
+			}
+		}
 	},
 });
 </script>

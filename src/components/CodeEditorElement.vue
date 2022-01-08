@@ -231,8 +231,8 @@ export default Vue.extend({
 			this.$emit('change');
 			this.currentFileState!.modified = true;
 			if (pending) clearTimeout(pending);
-			pending = setTimeout(() => {
-				this.saveAllFiles();
+			pending = setTimeout(async () => {
+				await this.saveAllFiles(false);
 			}, 5000);
 		});
 
@@ -494,18 +494,18 @@ export default Vue.extend({
 			this.showSaveDialog = false;
 			this.closingTab = undefined;
 		},
-		async handleSaveAs(filePath: string|undefined): Promise<void> {
+		async handleSaveAs(filePath: string|undefined, allowSaveAs: boolean = true): Promise<void> {
 			if (this.currentFileState && filePath) {
 				this.currentFileState.name = path.basename(filePath);
 				this.currentFileState.path = filePath;
-				await this._saveFile(this.currentFileState);
+				await this._saveFile(this.currentFileState, allowSaveAs);
 			}
 			if (this.saveAsResolver) this.saveAsResolver(!!(this.currentFileState && filePath));
 		},
 
-		async saveAllFiles(): Promise<void> {
+		async saveAllFiles(allowSaveAs: boolean = true): Promise<void> {
 			for (let t of this.openFileStates) {
-				await this._saveFile(t);
+				await this._saveFile(t, allowSaveAs);
 			}
 		},
 

@@ -285,17 +285,12 @@ export default Vue.extend({
 					name: "File",
 					children: [
 						{
-							name: "New",
-							children: [
-								{
-									name: "New File",
-									command: this.menu_newFile_click,
-								},
-								{
-									name: "New Folder",
-									command: this.menu_newFolder_click,
-								}
-							]
+							name: "New Program",
+							command: this.menu_newFile_click,
+						},
+						{
+							name: "New Folder",
+							command: this.menu_newFolder_click,
 						},
 						{
 							name: "Save",
