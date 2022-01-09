@@ -211,9 +211,7 @@ export default Vue.extend({
 		});
 		codeMirror.setSize("100%", "100%");
 
-		if (this.currentFileState === undefined) {
-			codeMirror.setOption('readOnly', true);
-		} else {
+		if (this.currentFileState !== undefined) {
 			codeMirror.swapDoc(this.currentFileState.doc);
 		}
 
@@ -526,7 +524,7 @@ export default Vue.extend({
 
 			if (currentFileState === undefined) {
 				//Prevent writing in the editor if there are no files open
-				//TODO: Find a better way to handle the unnamed file
+				//This shouldn't happen
 				this.editor.swapDoc(CodeMirror.Doc(''));
 				this.editor.setOption('readOnly', true);
 			} else {
@@ -553,12 +551,19 @@ export default Vue.extend({
 			this.openFiles = stateOpenFiles;
 		},
 		openFiles(openFiles: string[]) {
+			//Ensure the current selected tab is actually open
 			if (this.currentTabFile !== undefined && !openFiles.includes(this.currentTabFile)) {
 				if (openFiles.length > 0) {
 					this.currentTabFile = openFiles[openFiles.length - 1];
 				} else {
 					this.currentTabFile = undefined;
 				}
+			}
+
+			if (this.currentTabFile === undefined) {
+				this._openFile(undefined).then((fileInfoState: FileInfoState) => {
+					this.currentFileState = fileInfoState;
+				});
 			}
 
 			if (openFiles === this.stateOpenFiles) return;
