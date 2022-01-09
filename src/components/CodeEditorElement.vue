@@ -116,6 +116,9 @@ import { PURE_WHILE, WHILE } from "@/assets/whileSyntaxMode";
 //WHILE linter
 import { ErrorType, ErrorType as WhileError, linter as whileLinter } from "whilejs";
 import { AbstractRunner } from "@/run/AbstractRunner";
+import { SaveDialogReturnValue } from "electron";
+
+const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
 //Editor themes for light and dark mode
 const DARK_THEME = 'ayu-mirage';
@@ -311,6 +314,9 @@ export default Vue.extend({
 		stateOpenFiles(): string[] {
 			return this.$store.state.openFiles;
 		},
+		cwd(): string {
+			return this.$store.state.current_directory;
+		},
 	},
 	methods: {
 		onDragEnd(event: SortableEvent): any {
@@ -471,6 +477,9 @@ export default Vue.extend({
 			return new Promise<boolean>((resolve) => this.saveAsResolver = resolve);
 		},
 		async _writeFile(filepath: string, content: string): Promise<void> {
+			if (!fs.existsSync(path.dirname(filepath))) {
+				fs.promises.mkdir(path.dirname(filepath), { recursive: true });
+			}
 			await fs.promises.writeFile(filepath, content, { encoding: ENCODING_UTF8 });
 		},
 
@@ -580,6 +589,24 @@ export default Vue.extend({
 				this.$nextTick(() => {
 					this.editor2?.refresh();
 				})
+			}
+		},
+
+		showSaveAsDialog(showFilePicker: boolean): void {
+			if (showFilePicker && electron) {
+				this.showSaveAsDialog = false;
+
+				electron.remote.dialog.showSaveDialog(null, {
+					defaultPath: path.join(this.cwd, 'myfile.while'),
+					filters: [
+						{ name: 'WHILE files', extensions: ['while'] },
+						{ name: 'All files', extensions: ['*'] },
+					],
+					properties: ['showOverwriteConfirmation', 'createDirectory']
+				}).then((result: SaveDialogReturnValue) => {
+					if (!result.filePath) return;
+					this.handleSaveAs(result.filePath);
+				});
 			}
 		},
 	}

@@ -1,5 +1,5 @@
 <template>
-	<v-dialog v-model="value" max-width="60%">
+	<v-dialog v-model="value" max-width="60%" persistent>
 		<v-card>
 			<v-card-title>
 				Save As
@@ -23,6 +23,10 @@
 						>
 							<v-icon>fa-folder</v-icon>
 						</v-btn>
+					</v-row>
+					<v-row v-if="showMakeFolderWarning">
+						<v-icon class="warning-triangle warning--text">fa-exclamation-triangle</v-icon>
+						The folder "{{ fileParent }}" doesn't exist and will be created
 					</v-row>
 				</v-form>
 			</v-card-text>
@@ -48,10 +52,7 @@
 import Vue from "vue";
 import FilePickerPopup from "@/components/FilePickerPopup.vue";
 import { fs } from "@/files/fs";
-import { OpenDialogReturnValue } from "electron";
 import path from "path";
-
-const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
 type DataTypeInterface = {
 	fileModel: string,
@@ -71,7 +72,7 @@ export default Vue.extend({
 	},
 	data() : DataTypeInterface {
 		return {
-			fileModel: '/prog.while',
+			fileModel: '',
 			isFormValid: true,
 
 			showFilePicker: false,
@@ -79,6 +80,7 @@ export default Vue.extend({
 		}
 	},
 	mounted(): void {
+		this.fileModel = this.defaultFileModelValue;
 		//@ts-ignore
 		this.$refs.form?.validate();
 	},
@@ -97,6 +99,22 @@ export default Vue.extend({
 			set(val: boolean): void {
 				this.$emit('input', val);
 			},
+		},
+		cwd(): string {
+			return this.$store.state.current_directory;
+		},
+		fileParent(): string {
+			return path.dirname(this.fileModel + '.');
+		},
+		showMakeFolderWarning(): boolean {
+			try {
+				return !fs.existsSync(this.fileParent);
+			} catch (e) {
+				return false;
+			}
+		},
+		defaultFileModelValue(): string {
+			return path.join(this.cwd, 'prog.while');
 		}
 	},
 	methods: {
@@ -114,6 +132,7 @@ export default Vue.extend({
 		},
 		_fileSaveName(filename: string) {
 			if (path.extname(filename) === '') filename += '.while';
+			if (!path.isAbsolute(filename)) filename = path.resolve(this.cwd, filename);
 			return filename;
 		},
 		rule_requireNonEmpty(val: string): boolean|string {
@@ -129,22 +148,9 @@ export default Vue.extend({
 		},
 	},
 	watch: {
-		showFilePicker(showFilePicker: boolean): void {
-			if (showFilePicker && electron) {
-				electron.remote.dialog.showOpenDialog({
-					filters: [
-						{ name: 'WHILE files', extensions: ['while'] },
-						{ name: 'All files', extensions: ['*'] },
-					],
-					properties: ['openFile'],
-				}).then((result: OpenDialogReturnValue) => {
-					this.onPathSelect(result.filePaths[0]);
-				})
-			}
-		},
 		value(isVisible: boolean): void {
 			if (isVisible) {
-				this.fileModel = '/prog.while';
+				this.fileModel = this.defaultFileModelValue;
 				this.filePickerModel = '';
 				//@ts-ignore
 				this.$refs.form?.validate();
@@ -155,5 +161,7 @@ export default Vue.extend({
 </script>
 
 <style scoped>
-
+.warning-triangle {
+	font-size: 20px !important;
+}
 </style>
