@@ -410,6 +410,9 @@ export default Vue.extend({
 		async _openFile(filepath: string|undefined): Promise<FileInfoState> {
 			let content: string = '';
 
+			//Open the file in the editor
+			let tabInfo: FileInfoState|undefined = undefined;
+
 			if (filepath) {
 				//Check to see if the file already exists as a tab
 				let fileTabInfo: FileInfoState|undefined = this.openFileStates.find(f => f.path === filepath);
@@ -420,16 +423,27 @@ export default Vue.extend({
 				}
 				//Load the file content from the file into an CodeMirror Doc
 				content = await this._readFile(filepath);
+
+				//If the tab at the end of the list is not a real file and has not been changed, replace it with the new file
+				if (this.openFileStates.length > 0) {
+					let lastFile = this.openFileStates[this.openFileStates.length - 1];
+					if (!lastFile.path && !lastFile.modified) {
+						tabInfo = lastFile;
+						tabInfo.path = filepath;
+						tabInfo.doc.setValue(content);
+						tabInfo.name = path.basename(filepath);
+						tabInfo.modified = false;
+					}
+				}
 			}
 
-			//Open the file in the editor
-			let tabInfo: FileInfoState = new FileInfoState(
+			tabInfo = tabInfo || (new FileInfoState(
 				filepath ? path.basename(filepath) : 'untitled',
 				filepath,
 				{
-					docOptions: { text: content }
+					docOptions: {text: content}
 				}
-			);
+			));
 			//Open the file in a new tab and switch to it
 			this.$store.commit('openFile.open', tabInfo);
 			this.currentTabFile = tabInfo.id;
@@ -449,7 +463,7 @@ export default Vue.extend({
 
 		async _closeTab(tab: FileInfoState): Promise<void> {
 			//Only save if the file has unsaved changes
-			if (!tab.doc.isClean()) {
+			if (tab.modified) {
 				this.showSaveDialog = true;
 				this.closingTab = tab;
 			} else {
