@@ -412,11 +412,11 @@ export default Vue.extend({
 
 			if (filepath) {
 				//Check to see if the file already exists as a tab
-				let fileTabIndex: number = this.openFileStates.findIndex(f => f.path === filepath);
-				if (fileTabIndex > -1) {
+				let fileTabInfo: FileInfoState|undefined = this.openFileStates.find(f => f.path === filepath);
+				if (fileTabInfo !== undefined) {
 					//Switch to the existing tab
-					this.currentTabFile = filepath;
-					return this.currentFileState!;
+					this.currentFileState = fileTabInfo;
+					return fileTabInfo;
 				}
 				//Load the file content from the file into an CodeMirror Doc
 				content = await this._readFile(filepath);
