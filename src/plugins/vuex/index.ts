@@ -5,6 +5,7 @@ import VuexPersistence from "vuex-persist";
 import createMutationsSharer from "vuex-shared-mutations";
 import { FileInfoState } from "@/types/FileInfoState";
 import { AbstractRunner } from "@/run/AbstractRunner";
+import fileTemplates, { FileTemplateList } from "@/templates/while";
 
 const electron = (window['require'] !== undefined) ? require("electron") : undefined;
 
@@ -37,6 +38,7 @@ export interface RootState {
 	isElectron: boolean;
 	isMac: boolean;
 	programRunners: {name:string, runner:AbstractRunner}[],
+	fileTemplates: FileTemplateList;
 }
 
 /**
@@ -140,6 +142,7 @@ const store = new Vuex.Store<RootState>({
 		isMac: (electron?.remote.process.platform === 'darwin'),
 		breakpoints: [],
 		programRunners: [],
+		fileTemplates: fileTemplates,
 	},
 	mutations: {
 		/**

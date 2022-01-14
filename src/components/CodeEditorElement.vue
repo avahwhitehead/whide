@@ -407,8 +407,8 @@ export default Vue.extend({
 			this.editor!.setOption("lint", this.lintOptions);
 		},
 
-		async _openFile(filepath: string|undefined): Promise<FileInfoState> {
-			let content: string = '';
+		async _openFile(filepath: string|undefined, content: string = '', forceContent: boolean = false): Promise<FileInfoState> {
+			content = content || '';
 
 			//Open the file in the editor
 			let tabInfo: FileInfoState|undefined = undefined;
@@ -421,8 +421,10 @@ export default Vue.extend({
 					this.currentFileState = fileTabInfo;
 					return fileTabInfo;
 				}
-				//Load the file content from the file into an CodeMirror Doc
-				content = await this._readFile(filepath);
+				if (!forceContent) {
+					//Load the file content from the file into an CodeMirror Doc
+					content = await this._readFile(filepath);
+				}
 
 				//If the tab at the end of the list is not a real file and has not been changed, replace it with the new file
 				if (this.openFileStates.length > 0) {

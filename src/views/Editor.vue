@@ -445,8 +445,8 @@ export default Vue.extend({
 			let routeData = this.$router.resolve({ path: '/trees' });
 			window.open(routeData.href, '_blank');
 		},
-		async openFile(filePath: string|undefined) : Promise<void> {
-			await this.editorController._openFile(filePath);
+		async openFile(filePath: string|undefined, content: string|undefined = undefined) : Promise<void> {
+			await this.editorController._openFile(filePath, content);
 		},
 
 		checkRunConfig(runConfig: RunConfiguration): true|string {
@@ -635,7 +635,7 @@ export default Vue.extend({
 		},
 
 		async menu_newFile_click(): Promise<void> {
-			await this.openFile(undefined);
+			await this.openFile(undefined, this.$store.state.fileTemplates.default);
 		},
 		menu_newFolder_click() {
 			if (electron) {
