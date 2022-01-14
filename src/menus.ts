@@ -13,21 +13,16 @@ export function makeElectronMenus(webContents: WebContents, isMac: boolean): Men
 		// role: 'fileMenu',
 		submenu: [
 			{
-				label: 'New',
-				submenu: [
-					{
-						label: 'New File',
-						click() {
-							webContents.send('file.new-file');
-						}
-					},
-					{
-						label: 'New Folder',
-						click() {
-							webContents.send('file.new-folder');
-						}
-					},
-				]
+				label: 'New Program',
+				click() {
+					webContents.send('file.new-file');
+				}
+			},
+			{
+				label: 'New Folder',
+				click() {
+					webContents.send('file.new-folder');
+				}
 			},
 			{
 				label: 'Save',
