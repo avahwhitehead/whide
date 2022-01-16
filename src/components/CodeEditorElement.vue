@@ -6,19 +6,24 @@
 			@end="onDragEnd"
 		>
 			<v-card
-				class="pa-0"
+				class="pa-2"
 				elevation="0"
 				v-for="tab in openFileStates" :key="tab.id"
 				@click.middle="_closeTab(tab)"
 				@click.left="currentTabFile = tab.id"
+				:class="{'primary--text': currentFileState === tab}"
+				:title="tab.path"
 			>
-				<v-card-text
-					:class="{'primary--text': currentFileState === tab}"
-				>
+				<div>
+					<v-icon
+						v-if="tab.modified"
+						class="tab-unsaved-icon"
+						x-small
+						title="Unsaved"
+					>fa-asterisk</v-icon>
 					<span class="tab-name">{{ tab.name }}</span>
-					<span v-if="tab.modified">*</span>
 					<FontAwesomeIcon icon="times" class="tab-close" @click="_closeTab(tab)" />
-				</v-card-text>
+				</div>
 			</v-card>
 		</draggable>
 
@@ -678,6 +683,11 @@ export default Vue.extend({
 .errorLine > .errorIcon {
 	color: #BB0000;
 	margin-right: 10px;
+}
+
+.tab-unsaved-icon {
+	padding-right: .25em;
+	color: inherit !important;
 }
 
 .tab-close {
