@@ -23,14 +23,7 @@ import * as d3 from "d3";
 import { HierarchyNode, HierarchyPointNode, TreeLayout, ZoomBehavior, ZoomedElementBaseType } from "d3";
 import NodeGroup from "@/components/_internal/trees/NodeGroup.vue";
 import { ZoomTransform } from "d3-zoom";
-
-export interface TreeType {
-	name: any;
-	list?: boolean,
-	error?: boolean,
-	errorMsg?: string,
-	children?: TreeType[];
-}
+import { TreeType } from "@/types/TreeType";
 
 interface DataTypeInterface {
 	/**

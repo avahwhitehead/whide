@@ -29,9 +29,10 @@
 
 <script lang="ts">
 import Vue from "vue";
-import VariableTreeViewer, { TreeType } from "@/components/VariableTreeViewer.vue";
+import VariableTreeViewer from "@/components/VariableTreeViewer.vue";
 import treeConverter, { BinaryTree, ConversionResultType, stringify, treeParser as parseTree } from "@whide/tree-lang";
 import { binaryTreeToDisplayable, convertedTreeToDisplayable } from "@/utils/tree_converters";
+import { TreeType } from "@/types/TreeType";
 
 /**
  * Type declaration for the data() values

@@ -1,5 +1,5 @@
 import treeConverter, { BinaryTree, ConversionResultType, ConvertedBinaryTree, stringify } from "@whide/tree-lang";
-import { TreeType } from "@/components/VariableTreeViewer.vue";
+import { TreeType } from "@/types/TreeType";
 
 /**
  * Change a {@link BinaryTree} object to the displayable {@link TreeType}.

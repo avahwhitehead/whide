@@ -81,7 +81,8 @@
 import Vue, { PropType } from "vue";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import treeConverter, { BinaryTree, ConversionResultType, stringify, treeParser } from "@whide/tree-lang";
-import VariableTreeViewer, { TreeType } from "@/components/VariableTreeViewer.vue";
+import VariableTreeViewer from "@/components/VariableTreeViewer.vue";
+import { TreeType } from "@/types/TreeType";
 import { binaryTreeToDisplayable, convertedTreeToDisplayable } from "@/utils/tree_converters";
 
 interface DataTypeInterface {

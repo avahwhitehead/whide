@@ -35,7 +35,7 @@
 <script lang="ts">
 import Vue, { PropType } from "vue";
 import VTooltip from 'v-tooltip';
-import { TreeType } from "@/components/VariableTreeViewer.vue";
+import { TreeType } from "@/types/TreeType";
 import { HierarchyPointNode } from "d3";
 
 Vue.use(VTooltip);
