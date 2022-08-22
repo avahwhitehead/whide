@@ -1,7 +1,7 @@
 import { FileInfoState } from "@/types/FileInfoState";
 import CodeMirror, { LineHandle } from "codemirror";
 import WHILE from "@/assets/whileSyntaxMode";
-import BreakpointWidget from "@/components/_internal/codeEditor/BreakpointWidget.vue";
+import BreakpointWidget from "@/components/_internal/codeEditor/BreakpointWidget";
 import Vue from "vue";
 
 /**
