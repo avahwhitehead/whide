@@ -55,9 +55,6 @@
 
 		<v-navigation-drawer app permanent clipped :width="fileViewerWidth" ref="filePanel">
 			<div class="full-height" style="display: flex; flex-direction: column">
-				<div style="flex: 0">
-					<v-btn @click="handleChangeRootClick">Change Root</v-btn>
-				</div>
 				<FilePicker :directory="cwd" :filter="filterFiles" @changeFile="openFile" style="flex: 1" />
 
 				<v-divider />
@@ -374,6 +371,7 @@ export default Vue.extend({
 			electron.ipcRenderer.off('file.save-as', this.menu_save_as_click);
 			electron.ipcRenderer.off('file.delete', this.menu_delete_click);
 			electron.ipcRenderer.off('file.delete.folder', this.menu_delete_folder_click);
+			electron.ipcRenderer.off('file.change-dir', this.handleChangeRootClick);
 			electron.ipcRenderer.off('file.settings', this.menu_settings_click);
 			electron.ipcRenderer.off('about.help', this.menu_help_about_click);
 			electron.ipcRenderer.off('about.privacy', this.menu_help_privacy_click);
@@ -393,6 +391,7 @@ export default Vue.extend({
 			electron.ipcRenderer.on('file.save-as', this.menu_save_as_click);
 			electron.ipcRenderer.on('file.delete', this.menu_delete_click);
 			electron.ipcRenderer.on('file.delete.folder', this.menu_delete_folder_click);
+			electron.ipcRenderer.on('file.change-dir', this.handleChangeRootClick);
 			electron.ipcRenderer.on('file.settings', this.menu_settings_click);
 			electron.ipcRenderer.on('about.help', this.menu_help_about_click);
 			electron.ipcRenderer.on('about.privacy', this.menu_help_privacy_click);
@@ -590,6 +589,7 @@ export default Vue.extend({
 				electron.remote.dialog.showOpenDialog({
 					properties: ['openDirectory']
 				}).then((result: OpenDialogReturnValue) => {
+					if (!result || !result.filePaths || result.filePaths.length === 0) return;
 					this.cwd = result.filePaths[0];
 				})
 			} else {

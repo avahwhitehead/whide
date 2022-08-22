@@ -51,11 +51,13 @@ export function makeElectronMenus(webContents: WebContents, isMac: boolean): Men
 				}
 			},
 			{ type: 'separator' },
+			{ label: 'Change Directory', click() { webContents.send('file.change-dir'); } },
+			{ type: 'separator' },
 			isMac
 				? { label: 'Preferences', click() { webContents.send('file.settings'); } }
 				: { label: 'Settings', click() { webContents.send('file.settings'); } },
 			{ type: 'separator' },
-			isMac ? { role: 'close' } : { role: 'quit' }
+			isMac ? { role: 'close' } : { role: 'quit' },
 		]
 	};
 
