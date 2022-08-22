@@ -1,56 +1,50 @@
 <template>
 	<div class="full-height">
-		<v-app-bar app dense flat clipped-left clipped-right class="header">
-			<MenuBar
-				:menus="menus"
-				style="max-width: max-content"
-				v-if="!isElectron"
-			/>
+		<v-app-bar app dense flat clipped-left clipped-right>
+			<div class="col">
+				<MenuBar
+					:menus="menus"
+					style="max-width: max-content"
+					v-if="!isElectron"
+				/>
+			</div>
 
-			<v-spacer v-if="!isElectron" />
+			<div class="col-5">
+				<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
+					<FontAwesomeIcon icon="pencil-alt" />
+				</v-btn>
 
-			<v-btn right @click="openTreeViewer">
-				Open Tree Viewer
-			</v-btn>
+				<v-select
+					v-model="chosenRunConfig"
+					:items="runConfigs"
+					item-text="name"
+					placeholder="Run Configuration"
+					no-data-text="No run configurations"
+					style="display: inline-block"
+					return-object
+					dense
+					outlined
+					hide-details
+				/>
 
-			<v-spacer />
-			<v-spacer v-if="isElectron" />
-			<v-spacer v-if="isElectron" />
+				<v-btn
+					class="pa-2 program-button run"
+					:disabled="!allowRunning"
+					depressed
+					@click="runProgramClick"
+				>
+					<FontAwesomeIcon icon="play" />
+				</v-btn>
 
-			<v-btn class="pa-2 program-button edit" depressed @click="openRunConfigPopup" >
-				<FontAwesomeIcon icon="pencil-alt" />
-			</v-btn>
-
-			<v-select
-				v-model="chosenRunConfig"
-				:items="runConfigs"
-				item-text="name"
-				placeholder="Run Configuration"
-				no-data-text="No run configurations"
-				class="dropdown"
-				return-object
-				dense
-				outlined
-				hide-details
-			/>
-
-			<v-btn
-				class="pa-2 program-button run"
-				:disabled="!allowRunning"
-				depressed
-				@click="runProgramClick"
-			>
-				<FontAwesomeIcon icon="play" />
-			</v-btn>
-
-			<v-btn
-				class="pa-2 program-button debug"
-				:disabled="!allowDebugging"
-				depressed
-				@click="debugProgramClick"
-			>
-				<FontAwesomeIcon icon="bug" />
-			</v-btn>
+				<v-btn
+					class="pa-2 program-button debug"
+					:disabled="!allowDebugging"
+					depressed
+					@click="debugProgramClick"
+				>
+					<FontAwesomeIcon icon="bug" />
+				</v-btn>
+			</div>
 		</v-app-bar>
 
 		<v-navigation-drawer app permanent clipped :width="fileViewerWidth" ref="filePanel">
@@ -440,10 +434,6 @@ export default Vue.extend({
 			while (nameSet.has(nextName)) nextName = `${prefix} (${++start})`;
 			return nextName;
 		},
-		openTreeViewer() {
-			let routeData = this.$router.resolve({ path: '/trees' });
-			window.open(routeData.href, '_blank');
-		},
 		async openFile(filePath: string|undefined, content: string|undefined = undefined) : Promise<void> {
 			await this.editorController._openFile(filePath, content);
 		},
@@ -580,10 +570,6 @@ export default Vue.extend({
 				alert(err)
 			}
 		},
-		dirChange(dir: string) {
-			//Change the working directory
-			this.cwd = dir;
-		},
 		handleChangeRootClick() {
 			if (electron) {
 				electron.remote.dialog.showOpenDialog({
@@ -595,9 +581,6 @@ export default Vue.extend({
 			} else {
 				this.showChangeRootPopup = true;
 			}
-		},
-		toggleTheme() {
-			this.isDarkTheme = !this.isDarkTheme;
 		},
 
 		handleKeypress(e: KeyboardEvent) {
@@ -889,10 +872,6 @@ https://github.com/vuetifyjs/vuetify/issues/6275#issuecomment-577148939
 	height: 100%;
 }
 
-.dropdown {
-	/*Display next to the button, filling the available space*/
-	flex: 1;
-}
 .program-button {
 	min-width: 1em !important;
 	/*padding: 5px !important;*/
